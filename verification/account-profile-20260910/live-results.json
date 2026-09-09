@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "scope": "live public entry, private configuration preservation and anonymous access checks",
+  "accountAndInvitesUnchanged": true,
+  "profileScriptServed": true,
+  "anonymousAccountDenied": true,
+  "anonymousAdminDenied": true,
+  "realAccountLogin": "Not attempted: retained current user-set password; full account flows verified with isolated accounts",
+  "providerCalls": 0
+}

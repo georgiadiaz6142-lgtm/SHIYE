@@ -73,7 +73,9 @@ const samplePage = kind => {
  return p;
 };
 function seed(){return {version:1,assets:[],books:[{id:uid(),title:'山野来信',subtitle:'LETTERS FROM THE WILD',cover:'olive',sample:true,updated:Date.now()-4000,pages:[samplePage('lake'),samplePage('forest')],page:0},{id:uid(),title:'日常的小确幸',subtitle:'THE LITTLE THINGS',cover:'cream',sample:true,updated:Date.now()-5000,pages:[samplePage('coffee')],page:0},{id:uid(),title:'慢慢生活',subtitle:'SLOW DAYS, GOOD DAYS',cover:'coral',sample:true,updated:Date.now()-6000,pages:[samplePage('coffee'),blankPage()],page:0}]};}
-let adminUser=null,identityVersion=0;
+let adminUser=null,currentIdentity=null,identityVersion=0,workspaceKey='workspace',workspaceFresh=false;
+const workspaceFor=session=>session?.authorized&&session.accountId?'workspace:account:'+session.accountId:'workspace';
+const scopedBlobKey=key=>workspaceKey==='workspace'?key:workspaceKey+':'+key;
 const identityChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('shiye-identity'):null;
 let state,db,currentView='home',activeBookId=null,editing=false,selectedId=null,drawer=null,filter='全部',collectionTab='mine',search='',bookFilter='all',bookView='grid',sort='recent',saveStatus='已保存到本机',saveTimer,savePromise=Promise.resolve(),toastTimer,history=[],future=[],dragState=null,resizeObserver;
 let workshop={step:0,selected:['coffee','flower'],preview:0,border:4,source:null,crops:[],results:[],demo:true};
@@ -87,7 +89,7 @@ async function hydrateBlobAssets(workspace){
  if(!rows.length||!db)return;
  await new Promise((resolve,reject)=>{const tx=db.transaction('data'),store=tx.objectStore('data');
   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
-  for(const a of rows){const req=store.get(a.blobKey);req.onsuccess=()=>{if(req.result instanceof Blob)assetURLs.set(a.blobKey,URL.createObjectURL(req.result));};}
+  for(const a of rows){const req=store.get(scopedBlobKey(a.blobKey));req.onsuccess=()=>{if(req.result instanceof Blob)assetURLs.set(a.blobKey,URL.createObjectURL(req.result));};}
  });
 }
 let savedWorkspace=null,mutationVersion=0,navigationVersion=0,photoTaskVersion=0;
@@ -235,12 +237,12 @@ function saveNow(){
   const {merged,copies}=await new Promise((resolve,reject)=>{
    const tx=db.transaction('data','readwrite'),store=tx.objectStore('data');let result,error;
    tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(error||tx.error);tx.onabort=()=>reject(error||tx.error);
-   const request=store.get('workspace');
+   const request=store.get(workspaceKey);
    request.onsuccess=()=>{try{
     if(!request.result)throw new Error('workspace-conflict');
     result=mergeWorkspace(base,snapshot,request.result);
-    for(const a of [...result.merged.assets,...(result.merged.archivedAssets||[])])if(a.blobKey&&blobSnapshot.has(a.blobKey))store.put(blobSnapshot.get(a.blobKey),a.blobKey);
-    store.put(result.merged,'workspace');
+    for(const a of [...result.merged.assets,...(result.merged.archivedAssets||[])])if(a.blobKey&&blobSnapshot.has(a.blobKey))store.put(blobSnapshot.get(a.blobKey),scopedBlobKey(a.blobKey));
+    store.put(result.merged,workspaceKey);
    }catch(e){error=e;tx.abort();}};
   });
   const pending=rebasePending(snapshot,state,merged,copies);state=pending.state;savedWorkspace=pending.baseline;
@@ -257,7 +259,7 @@ function dirty(){mutationVersion++;if(currentBook()&&currentView==='editor')curr
 function checkpoint(){history.push(JSON.stringify(currentBook()?.pages||[]));if(history.length>30)history.shift();future=[];}
 function change(fn){checkpoint();fn();dirty();renderEditor();}
 const statusHTML=()=>`<span class="local-status ${saveStatus.startsWith('保存失败')?'save-error':''}" role="status">${saveStatus}</span>`;
-function sidebar(){return `<aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="拾页首页"><span class="brand-mark"></span><span class="brand-word">拾页<small>SHIYE</small></span></button><div class="sidebar-tagline">把日子，慢慢收好。</div><nav class="nav" aria-label="主导航">${[['shelf','book','我的书架'],['workshop','spark','贴纸工坊'],['collection','sticker','贴纸仓库'],...(adminUser?[['admin','grid','管理工具']]:[])].map(([v,i,t])=>`<button data-action="nav" data-view="${v}" class="${currentView===v||currentView==='editor'&&v==='shelf'?'active':''}">${icon(i)}<span>${t}</span></button>`).join('')}</nav><div class="side-note"><div class="asterisk">✳</div>留住那些<br>舍不得忘记的小事。</div><button class="profile" data-action="about"><span class="avatar">S</span><span class="profile-name">${adminUser?esc(adminUser):'我的私人角落'}<small>${adminUser?'管理员':'受邀体验 · 本机保存'}</small></span></button></aside>`;}
+function sidebar(){return `<aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="拾页首页"><span class="brand-mark"></span><span class="brand-word">拾页<small>SHIYE</small></span></button><div class="sidebar-tagline">把日子，慢慢收好。</div><nav class="nav" aria-label="主导航">${[['shelf','book','我的书架'],['workshop','spark','贴纸工坊'],['collection','sticker','贴纸仓库'],...(adminUser?[['admin','grid','管理工具']]:[])].map(([v,i,t])=>`<button data-action="nav" data-view="${v}" class="${currentView===v||currentView==='editor'&&v==='shelf'?'active':''}">${icon(i)}<span>${t}</span></button>`).join('')}</nav><div class="side-note"><div class="asterisk">✳</div>留住那些<br>舍不得忘记的小事。</div><button class="profile" data-action="account-open" aria-label="账户信息"><span class="avatar">${profileAvatar()}</span><span class="profile-name">${esc(currentIdentity?.username||'我的私人角落')}<small>${adminUser?'管理员':currentIdentity?.accountId?'个人账号':'受邀体验 · 本机保存'}</small></span></button></aside>`;}
 function topbar(name){return `<header class="topbar"><div class="breadcrumb">我的空间 <span style="margin:0 11px;color:#b6b5a7">/</span> <b>${name}</b></div><div class="top-right">${statusHTML()}<button class="prototype-tag" data-action="about">交互原型</button>${ib('about','info','原型使用说明')}</div></header>`;}
 function coverHTML(book){return `<div class="cover ${book.cover}"><div class="cover-inner"><div class="cover-kicker">A PERSONAL COLLECTION</div><h3>${book.cover==='coral'&&book.sample?'Slow<br>days.':esc(book.title)}</h3><div class="cover-sub">${esc(book.subtitle||'MOMENTS TO KEEP')}</div>${book.cover==='olive'||book.cover==='blue'?`<img class="cover-photo" src="assets/${book.cover==='olive'?'lake':'forest'}.jpg" alt="风景封面"/>`:book.cover==='cream'?`<img class="cover-plant" src="${art('flower')}" alt="野花插画"/>`:'<div class="cover-star">✳</div>'}<div class="cover-foot">SHIYE &nbsp; · &nbsp; VOL. ${String(state.books.indexOf(book)+1||1).padStart(2,'0')}</div></div></div>`;}
 function footer(){return `<footer class="footer-note"><span>${icon('lock')} 只属于你的记忆，安静地保存在这里。</span><span>MADE OF LITTLE MOMENTS &nbsp; © SHIYE</span></footer>`;}
@@ -464,12 +466,13 @@ function openAccess(destination='shelf',tab='invite'){
   accessController=new AbortController();const controller=accessController,signal=controller.signal,timer=setTimeout(()=>controller.abort(),15000);
   const button=form.querySelector('[type="submit"]'),error=$('#access-error');accessPending=true;button.disabled=true;button.textContent='正在验证…';error.textContent='';
   try{
+   if(savedWorkspace&&!(await saveNow()))throw Error('请先完成本机保存再切换身份。');
    const session=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store',signal});if(!session.ok)throw Error('邀请验证暂不可用，请稍后重试。');
    const response=await fetch('/api/access/invite/verify',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal});
    const result=await response.json();if(!response.ok||result.authorized!==true)throw Error(result.error?.message||'邀请码未通过验证，请重试。');
    identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
    if(attempt!==accessRequest||!$('#dialog').open)return;
-   input.value='';closeDialog();await navigate(accessDestination);
+   input.value='';closeDialog();reloadIdentity('shelf',true);
   }catch(e){if(attempt===accessRequest&&$('#dialog').open){error.textContent=e.name==='AbortError'?'验证超时，请重试。':e instanceof TypeError?'暂时无法连接，请检查网络后重试。':e.message;input.focus();}}
   finally{clearTimeout(timer);if(attempt===accessRequest){accessPending=false;button.disabled=false;button.textContent='验证并进入';}}
  };
@@ -482,32 +485,34 @@ function bindAccountLogin(attempt){
   const controller=new AbortController();accessController=controller;const timer=setTimeout(()=>controller.abort(),15000);
   accessPending=true;button.disabled=true;button.textContent='正在登录…';error.textContent='';
   try{
+   if(savedWorkspace&&!(await saveNow()))throw Error('请先完成本机保存再登录。');
    const response=await fetch('/api/access/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username.value.trim(),password:password.value}),signal:controller.signal});
    const result=await response.json();if(!response.ok||result.authenticated!==true)throw Error(result.error?.message||'登录未完成，请重试。');
    identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
    if(attempt!==accessRequest||!$('#dialog').open)return;
-   form.reset();closeDialog();await navigate('shelf');
+   form.reset();closeDialog();reloadIdentity('shelf');
   }catch(e){if(attempt===accessRequest&&$('#dialog').open){error.textContent=e.name==='AbortError'?'登录超时，请重试。':e instanceof TypeError?'暂时无法连接，请检查网络后重试。':e.message;password.value='';password.focus();}}
   finally{clearTimeout(timer);if(attempt===accessRequest){accessPending=false;button.disabled=false;button.textContent='登录并进入';}}
  };
 }
 function applyIdentity(session){
- adminUser=session?.authorized===true&&session.role==='admin'?session.username:null;
+ currentIdentity=session;adminUser=session?.authorized===true&&session.role==='admin'?session.username:null;
  const nav=$('.sidebar .nav'),entry=nav?.querySelector('[data-view="admin"]');
  if(!adminUser)entry?.remove();
  else if(nav&&!entry)nav.insertAdjacentHTML('beforeend',`<button data-action="nav" data-view="admin">${icon('grid')}<span>管理工具</span></button>`);
- const profile=$('.profile-name');if(profile)profile.innerHTML=`${adminUser?esc(adminUser):'我的私人角落'}<small>${adminUser?'管理员':'受邀体验 · 本机保存'}</small>`;
+ const profile=$('.profile-name');if(profile)profile.innerHTML=`${esc(session?.username||'我的私人角落')}<small>${adminUser?'管理员':session?.accountId?'个人账号':'受邀体验 · 本机保存'}</small>`;const avatar=$('.profile .avatar');if(avatar)avatar.innerHTML=profileAvatar();
 }
 async function refreshIdentity(){
  const version=++identityVersion;let session=null;
  try{const response=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(3000)});if(response.ok)session=await response.json();}catch{}
  if(version!==identityVersion)return null;
- applyIdentity(session);return session;
+ if(db&&state&&savedWorkspace&&workspaceKey!==workspaceFor(session)){document.querySelector('#app').style.visibility='hidden';if(await saveNow()){location.reload();}else {document.body.classList.remove('identity-checking');showDialog('保存尚未完成','<p>请重试保存后切换账号，当前作品暂时锁定。</p>','<button data-action="identity-retry" class="button primary">重试保存</button>');}return null;}
+ document.body.classList.remove('identity-checking');applyIdentity(session);return session;
 }
 async function inviteGranted(){return (await refreshIdentity())?.authorized===true;}
-identityChannel?.addEventListener('message',()=>{identityVersion++;applyIdentity(null);void refreshIdentity();});
+identityChannel?.addEventListener('message',()=>{identityVersion++;applyIdentity(null);document.body.classList.add('identity-checking');void refreshIdentity();});
 window.addEventListener('focus',()=>{void refreshIdentity();});
-window.addEventListener('pageshow',e=>{if(e.persisted){applyIdentity(null);void refreshIdentity();}});
+window.addEventListener('pageshow',e=>{if(e.persisted){applyIdentity(null);document.body.classList.add('identity-checking');void refreshIdentity();}});
 
 
 async function navigate(view,origin=null){if(view!=='home'&&currentView==='home'&&!(await inviteGranted())){openAccess(view);return;}const version=++navigationVersion;if(currentView==='editor'&&!(await saveNow()))return;if(version!==navigationVersion)return;photoTaskVersion++;stopHomeDemo();cancelEditingTurn();cancelReaderTurn();if(view==='workshop'&&currentView!=='workshop'){workshopReturn={view:currentView,bookId:activeBookId,pageId:currentPage()?.id,editing,selectedId,drawer};workshopOrigin=origin;}currentView=view;selectedId=null;drawer=null;render();window.scrollTo(0,0);}
@@ -1017,6 +1022,7 @@ async function cropResults(){
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)saveNow();else if(!document.hidden)void refreshIdentity();});
 async function init(){
+ await refreshIdentity();workspaceKey=workspaceFor(currentIdentity);
  $('#app').innerHTML='<div class="loading-screen">拾页 SHIYE</div>';
  try{
   db=await new Promise((resolve,reject)=>{const req=indexedDB.open('shiye-concept-v1',1);req.onupgradeneeded=()=>req.result.createObjectStore('data');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
@@ -1024,14 +1030,15 @@ async function init(){
   state=await new Promise((resolve,reject)=>{
    const tx=db.transaction('data','readwrite'),store=tx.objectStore('data');let value,error;
    tx.oncomplete=()=>resolve(value);tx.onerror=()=>reject(error||tx.error);tx.onabort=()=>reject(error||tx.error);
-   const req=store.get('workspace');
-   req.onsuccess=()=>{try{value=req.result;if(!value){value=seed();store.put(value,'workspace');}}catch(e){error=e;tx.abort();}};
+   const req=store.get(workspaceKey);
+   req.onsuccess=()=>{try{value=req.result;if(!value){workspaceFresh=true;value=seed();store.put(value,workspaceKey);}}catch(e){error=e;tx.abort();}};
   });
   savedWorkspace=clone(state);
   await hydrateBlobAssets(state);
  }catch{state=seed();savedWorkspace=null;saveStatus='保存失败，请重试';}
  await refreshIdentity();
- render();if(!savedWorkspace)toast('浏览器存储不可用，本次改动无法持久保存。');
+ const landing=sessionStorage.getItem('shiye-auth-landing');sessionStorage.removeItem('shiye-auth-landing');if(landing==='shelf'&&currentIdentity?.authorized)currentView='shelf';
+ render();if(!savedWorkspace)toast('浏览器存储不可用，本次改动无法持久保存。');else await accountOnboarding();
 }
 async function saveSegmentedAssets(results,use){
  if(savingStickers)return false;savingStickers=true;

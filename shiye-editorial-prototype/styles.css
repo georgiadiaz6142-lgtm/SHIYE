@@ -354,3 +354,7 @@ dialog{border:1px solid #ddd9cd;border-radius:10px;background:var(--bg);padding:
 .access-phone input{min-width:0}
 .access-sms{display:flex;gap:8px}.access-sms input{flex:1}.access-sms button{white-space:nowrap}
 @media(max-width:560px){.access-dialog{padding:22px}.access-tabs{gap:10px}.access-tabs button{font-size:12px}.access-dialog .field input{font-size:16px}.access-sms button{padding:8px;font-size:11px}}
+
+.avatar img,.account-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}.account-summary{display:flex;align-items:center;gap:20px;margin-bottom:16px}.account-summary p{margin:6px 0}.account-avatar{width:80px;height:80px;border-radius:50%;background:#e7e3d5;display:grid;place-items:center;font-size:28px;color:var(--accent);cursor:pointer;overflow:hidden}.account-footer{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.account-error{font-size:12px;color:#a44837;min-height:18px}.account-private .field{margin-top:16px}
+@media(max-width:560px){.sidebar .profile{display:flex;position:static;flex-shrink:0;width:40px;padding:0;margin:0;justify-content:center;border:0}.sidebar .profile .profile-name{display:none}.sidebar .profile .avatar{width:32px;height:32px}.sidebar .nav{width:auto;flex:1}.sidebar .nav button{padding-left:4px;padding-right:4px}.account-footer .button{flex:1}}
+.identity-checking #app,.identity-checking #dialog{visibility:hidden}

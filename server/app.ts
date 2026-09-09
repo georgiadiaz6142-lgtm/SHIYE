@@ -9,6 +9,7 @@ import { Jobs } from './jobs.js';
 import { Naming, type NamingProvider } from './naming.js';
 import { type InviteAccess } from './access.js';
 import { type Admin } from './admin.js';
+import { accountRoutes } from './account-routes.js';
 import { adminRoutes,adminToken,accountLogin } from './admin-routes.js';
 
 export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin}) {
@@ -38,17 +39,18 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   });
   app.get('/api/health',async(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming&&(!options.admin||await options.admin.apiEnabled('naming')),limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:(!options.admin||await options.admin.apiEnabled('cutout'))&&live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
   if(options.admin)app.use('/api/admin',express.json({limit:'128kb',strict:true}),adminRoutes(options.admin));
-  if(options.admin)app.post('/api/access/login',express.json({limit:'2kb',strict:true}),accountLogin(options.admin));
+  if(options.admin)app.post('/api/access/login',express.json({limit:'2kb',strict:true}),accountLogin(options.admin,false));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
       if(req.method!=='GET'||!['/session','/access/session'].includes(req.path)){next(new Fault(401,'SESSION_REQUIRED','请重新打开工坊。'));return;}
       token=randomBytes(32).toString('hex');res.cookie('shiye_session',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:7*24*3600*1000});
     }
-    res.locals.owner=createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
+    const account=options.admin?.session(adminToken(req.headers.cookie));res.locals.owner=account?'account:'+account.accountId:createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
+  if(options.admin&&options.access)app.use('/api/account',express.json({limit:'3mb',strict:true}),accountRoutes(options.admin,options.access));
   const accessToken=(req:express.Request)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_invite='))?.slice(13);
-  app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:admin.role,accountId:admin.accountId,username:admin.username}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
+  app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:admin.role,accountId:admin.accountId,username:admin.username,avatar:(await options.admin!.profile(adminToken(req.headers.cookie))).avatar}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
   app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{
     if(!options.access)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
     const grant=await options.access.verify(req.body?.code,res.locals.owner,req.socket.remoteAddress||'local');
@@ -100,7 +102,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.use('/api',(_req,_res,next)=>next(new Fault(404,'NOT_FOUND','接口不存在。')));
   // Explicit public-file allowlist: archives, documents, runtime and secrets are never served.
   app.get('/admin',(_req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'");res.sendFile(resolve(staticRoot,'admin.html'));});
-  const entries=new Set(['/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
+  const entries=new Set(['/account-ui.js','/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
     '/edgecut.js','/edgecut.css','/edgecut-core.js','/edgecut-worker.js',
     '/vendor/opencv-4.13.0/opencv.js','/vendor/opencv-4.13.0/LICENSE']);
   app.use((req,res,next)=>{

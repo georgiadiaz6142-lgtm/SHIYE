@@ -4,17 +4,20 @@ import { z } from 'zod';
 import { Fault,type Box } from '../shared/contracts.js';
 import { InviteAccess,generateInvites,inviteHash } from './access.js';
 import { editJson } from './local-json.js';
+import { usernameSchema,usernameKey,newPassword,cleanAvatar } from './account-profile.js';
 import { BaiduProvider } from './baidu.js';
 const feature=z.enum(['cutout','naming']);export type Feature=z.infer<typeof feature>;
 const event=z.object({id:z.string(),at:z.number(),actor:z.string(),action:z.string(),target:z.string()});
 const apiSchema=z.object({enabled:z.boolean(),cipher:z.string(),revision:z.number(),testedAt:z.number().optional(),lastCall:z.object({at:z.number(),status:z.string(),error:z.string().optional()}).optional()});
-const schema=z.object({version:z.literal(1),accountId:z.string().uuid().optional(),role:z.literal('admin').optional(),username:z.string(),salt:z.string(),passwordHash:z.string(),apis:z.object({cutout:apiSchema,naming:apiSchema}),audit:z.array(event)});
+const schema=z.object({version:z.literal(1),accountId:z.string().uuid().optional(),role:z.literal('admin').optional(),username:z.string(),avatar:z.string().nullable().optional(),salt:z.string(),passwordHash:z.string(),apis:z.object({cutout:apiSchema,naming:apiSchema}),audit:z.array(event)});
 type Document=z.infer<typeof schema>;
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 const passwordHash=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,(e,key)=>e?reject(e):resolve(key)));
 const audit=(actor:string,action:string,target='')=>({id:randomUUID(),at:Date.now(),actor,action,target});
 export class Admin {
- private key!:Buffer;private accountId='';private sessions=new Map<string,{accountId:string;role:'admin';username:string;expiresAt:number}>();private limits=new Map<string,{count:number;until:number}>();
+ private key!:Buffer;private accountId='';private sessions=new Map<string,{accountId:string;role:'admin'|'user';username:string;expiresAt:number}>();private limits=new Map<string,{count:number;until:number}>();
+ private identityQueue:Promise<unknown>=Promise.resolve();
+ private identityChange<T>(fn:()=>Promise<T>):Promise<T>{const work=this.identityQueue.catch(()=>{}).then(fn);this.identityQueue=work.catch(()=>{});return work;}
  private proofs=new Map<string,{fingerprint:string;expiresAt:number;revision:number}>();private providers=new Map<string,BaiduProvider>();
  constructor(readonly file:string,readonly access:InviteAccess,private factory=(key:string,secret:string)=>new BaiduProvider(key,secret)){}
  async init(initial:{apiKey:string;secretKey:string;cutout:boolean;naming:boolean},receipt:string){
@@ -31,19 +34,53 @@ export class Admin {
  private update<T>(fn:(data:Document)=>T|Promise<T>){return editJson(this.file,v=>schema.parse(v),fn);}
  private encrypt(text:string){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',this.key,iv),body=Buffer.concat([c.update(text,'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),body]).toString('base64');}
  private decrypt(text:string){const b=Buffer.from(text,'base64'),c=createDecipheriv('aes-256-gcm',this.key,b.subarray(0,12));c.setAuthTag(b.subarray(12,28));return Buffer.concat([c.update(b.subarray(28)),c.final()]).toString('utf8');}
- session(token?:string){if(!token||token.length>128)return null;const entry=this.sessions.get(hash(token));if(!entry||entry.expiresAt<=Date.now()||entry.accountId!==this.accountId||entry.role!=='admin'){this.sessions.delete(hash(token));return null;}return entry;}
- async login(username:unknown,password:unknown,ip:string){
+ session(token?:string){if(!token||token.length>128)return null;const entry=this.sessions.get(hash(token));if(!entry||entry.expiresAt<=Date.now()||entry.role==='admin'&&entry.accountId!==this.accountId){this.sessions.delete(hash(token));return null;}return entry;}
+ async login(username:unknown,password:unknown,ip:string,adminOnly=false){
   const b=this.limits.get(ip)||{count:0,until:Date.now()+900000};if(b.until<=Date.now()){b.count=0;b.until=Date.now()+900000;}if(b.count>=8)throw new Fault(429,'ADMIN_RATE_LIMIT','尝试次数较多，请 15 分钟后重试。');b.count++;this.limits.set(ip,b);
-  const d=await this.read(),candidate=typeof password==='string'&&password.length<=128?password:'';
-  const valid=timingSafeEqual(await passwordHash(candidate,d.salt),Buffer.from(d.passwordHash,'hex'))&&username===d.username&&d.accountId===this.accountId&&d.role==='admin';
-  if(!valid){await this.update(s=>{s.audit.push(audit('未登录','管理员登录失败'));});throw new Fault(401,'ADMIN_LOGIN_FAILED','用户名或密码不正确。');}
+  const root=await this.read(),key=typeof username==='string'?usernameKey(username):'',users=(await this.access.snapshot())?.users||[];
+  const user=users.find(u=>usernameKey(u.username)===key),isAdmin=usernameKey(root.username)===key;
+  const d=isAdmin?root:user,candidate=typeof password==='string'&&password.length<=128?password:'';
+  const matches=timingSafeEqual(await passwordHash(candidate,d?.salt||root.salt),Buffer.from(d?.passwordHash||root.passwordHash,'hex'));
+  if(!d||!matches||adminOnly&&!isAdmin||isAdmin&&(root.accountId!==this.accountId||root.role!=='admin')){await this.update(s=>{s.audit.push(audit('未登录','账号登录失败'));});throw new Fault(401,'ADMIN_LOGIN_FAILED','用户名或密码不正确。');}
   this.limits.delete(ip);for(const [key,value] of this.sessions)if(value.expiresAt<=Date.now())this.sessions.delete(key);
-  const token=randomBytes(32).toString('hex');this.sessions.set(hash(token),{accountId:d.accountId!,role:d.role!,username:d.username,expiresAt:Date.now()+8*3600000});await this.update(s=>{s.audit.push(audit(d.username,'管理员登录'));});return token;
+  const token=randomBytes(32).toString('hex');this.sessions.set(hash(token),{accountId:isAdmin?root.accountId!:user!.id,role:isAdmin?'admin':'user',username:d.username,expiresAt:Date.now()+8*3600000});await this.update(s=>{s.audit.push(audit(isAdmin?root.accountId!:user!.id,'账号登录'));});return token;
  }
  async logout(token:string){const s=this.session(token);this.sessions.delete(hash(token));if(s)await this.update(d=>{d.audit.push(audit(s.username,'退出后台'));});}
  async changePassword(actor:string,old:unknown,next:unknown){
-  if(typeof old!=='string'||typeof next!=='string'||next.length<12||next.length>128)throw new Fault(422,'INVALID_PASSWORD','新密码需为 12～128 个字符。');
-  await this.update(async d=>{if(!timingSafeEqual(await passwordHash(old,d.salt),Buffer.from(d.passwordHash,'hex')))throw new Fault(403,'INVALID_PASSWORD','原密码不正确。');d.salt=randomBytes(16).toString('hex');d.passwordHash=(await passwordHash(next,d.salt)).toString('hex');d.audit.push(audit(actor,'修改管理员密码'));});this.sessions.clear();this.proofs.clear();
+  const root=await this.read();await this.setPassword(root.accountId!,old,next);
+ }
+ async profile(token?:string){
+  const session=this.session(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
+  const row=session.role==='admin'?await this.read():(await this.access.snapshot())?.users?.find(u=>u.id===session.accountId);
+  if(!row)throw new Fault(401,'ACCOUNT_REQUIRED','账号不存在，请重新登录。');
+  return {id:session.accountId,role:session.role,username:row.username,avatar:row.avatar||null};
+ }
+ private async uniqueName(name:string,except?:string){const root=await this.read(),users=(await this.access.snapshot())?.users||[];if(root.accountId!==except&&usernameKey(root.username)===usernameKey(name)||users.some(u=>u.id!==except&&usernameKey(u.username)===usernameKey(name)))throw new Fault(409,'USERNAME_TAKEN','这个用户名已被使用，请换一个。');}
+ async register(invite:string|undefined,input:unknown){
+  const data=z.object({username:usernameSchema,password:newPassword}).strict().parse(input),salt=randomBytes(16).toString('hex'),password=(await passwordHash(data.password,salt)).toString('hex');
+  return this.identityChange(async()=>{await this.uniqueName(data.username);return this.access.register(invite,{id:randomUUID(),role:'user',username:data.username,salt,passwordHash:password,avatar:null,createdAt:Date.now()});});
+ }
+ async updateProfile(token:string,input:unknown){
+  const data=z.object({username:usernameSchema.optional(),avatar:z.string().nullable().optional(),currentPassword:z.string().max(128).optional()}).strict().parse(input),avatar=await cleanAvatar(data.avatar);
+  return this.identityChange(async()=>{
+   const session=this.session(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
+   const current=await this.profile(token),name=data.username??current.username;await this.uniqueName(name,current.id);
+   const modify=async(row:{username:string;avatar?:string|null;salt:string;passwordHash:string})=>{if(name!==row.username&&!timingSafeEqual(await passwordHash(data.currentPassword||'',row.salt),Buffer.from(row.passwordHash,'hex')))throw new Fault(403,'INVALID_PASSWORD','请正确输入当前密码再修改用户名。');row.username=name;if(avatar!==undefined)row.avatar=avatar;};
+   if(session.role==='admin')await this.update(async d=>{await modify(d);d.audit.push(audit(current.id,'修改账户信息'));});
+   else await this.access.update(async d=>{const row=d.users?.find(u=>u.id===current.id);if(!row)throw new Fault(404,'NOT_FOUND','账号不存在。');await modify(row);});
+   for(const s of this.sessions.values())if(s.accountId===current.id)s.username=name;
+   return this.profile(token);
+  });
+ }
+ async setPassword(accountId:string,old:unknown,next:unknown){
+  const password=newPassword.parse(next);if(typeof old!=='string'||old.length>128)throw new Fault(422,'INVALID_PASSWORD','请输入当前密码。');
+  await this.identityChange(async()=>{
+   const root=await this.read();
+   const modify=async(row:{salt:string;passwordHash:string})=>{if(!timingSafeEqual(await passwordHash(old,row.salt),Buffer.from(row.passwordHash,'hex')))throw new Fault(403,'INVALID_PASSWORD','当前密码不正确。');row.salt=randomBytes(16).toString('hex');row.passwordHash=(await passwordHash(password,row.salt)).toString('hex');};
+   if(accountId===root.accountId)await this.update(async d=>{await modify(d);d.audit.push(audit(accountId,'修改管理员密码'));});
+   else await this.access.update(async d=>{const row=d.users?.find(u=>u.id===accountId);if(!row)throw new Fault(404,'NOT_FOUND','账号不存在。');await modify(row);});
+   for(const [key,s] of this.sessions)if(s.accountId===accountId)this.sessions.delete(key);if(accountId===root.accountId)this.proofs.clear();
+  });
  }
  async migrateInvites(codes:string[]){
   await this.access.update(d=>{let count=0;for(const row of d.invites){if(row.cipher)continue;const code=codes.find(c=>inviteHash(c)===row.hash);if(code){row.cipher=this.encrypt(code);count++;}row.createdAt??=null;row.batch??='历史邀请码';row.trackingSince??=Date.now();}if(count)(d.audit??=[]).push(audit('本机初始化','导入历史邀请码',`${count} 个`));});

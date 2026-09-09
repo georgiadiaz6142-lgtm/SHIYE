@@ -1,0 +1,12 @@
+[
+  {
+    "width": 1440,
+    "status": "FAIL",
+    "error": "locator.click: Error: strict mode violation: locator('[data-action=\"shelve\"]') resolved to 2 elements:\n    1) <button title=\"放回书架\" aria-label=\"放回书架\" class=\"icon-button\" data-action=\"shelve\">…</button> aka getByRole('button', { name: '放回书架', description: '放回书架' })\n    2) <button data-action=\"shelve\" class=\"button dark small\">…</button> aka getByText('放回书架')\n\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"shelve\"]')\u001b[22m\n\n    at newBook (/Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:13:232)\n    at async /Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:18:120"
+  },
+  {
+    "width": 390,
+    "status": "FAIL",
+    "error": "locator.click: Error: strict mode violation: locator('[data-action=\"shelve\"]') resolved to 2 elements:\n    1) <button title=\"放回书架\" aria-label=\"放回书架\" class=\"icon-button\" data-action=\"shelve\">…</button> aka getByRole('button', { name: '放回书架', description: '放回书架' })\n    2) <button data-action=\"shelve\" class=\"button dark small\">…</button> aka getByText('放回书架')\n\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"shelve\"]')\u001b[22m\n\n    at newBook (/Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:13:232)\n    at async /Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:18:120"
+  }
+]

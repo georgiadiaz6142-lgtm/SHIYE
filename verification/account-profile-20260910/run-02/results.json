@@ -1,0 +1,10 @@
+[
+  {
+    "width": 1440,
+    "status": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok((await p.locator('#app').innerText()).includes('访客手账'))\n\n    at /Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:18:645"
+  },
+  {
+    "fatal": "page.screenshot: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/account-profile-20260910/browser.cjs:27:72"
+  }
+]

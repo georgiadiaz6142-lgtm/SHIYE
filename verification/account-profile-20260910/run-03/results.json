@@ -1,0 +1,30 @@
+[
+  {
+    "width": 1440,
+    "status": "PASS",
+    "checks": [
+      "invitation setup and single binding",
+      "explicit guest import",
+      "avatar and username update",
+      "password replacement and relogin",
+      "account A/B workspace isolation",
+      "same account restores local works",
+      "independent browser profile",
+      "administrator profile retains role"
+    ]
+  },
+  {
+    "width": 390,
+    "status": "PASS",
+    "checks": [
+      "invitation setup and single binding",
+      "explicit guest import",
+      "avatar and username update",
+      "password replacement and relogin",
+      "account A/B workspace isolation",
+      "same account restores local works",
+      "independent browser profile",
+      "administrator profile retains role"
+    ]
+  }
+]
