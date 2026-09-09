@@ -6,7 +6,7 @@ export const adminToken=(cookie?:string)=>cookie?.split(';').map(x=>x.trim()).fi
 export function adminRoutes(admin:Admin){
  const router=Router();router.use((req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
  router.get('/session',(req,res)=>{const session=admin.session(adminToken(req.headers.cookie));res.json({authenticated:!!session,...(session?{username:session.username}:{})});});
- router.post('/login',async(req,res)=>{const token=await admin.login(req.body?.username,req.body?.password,req.socket.remoteAddress||'local');res.cookie('shiye_admin',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:8*3600000});res.json({authenticated:true});});
+ router.post('/login',async(req,res)=>{const token=await admin.login(req.body?.username,req.body?.password,req.socket.remoteAddress||'local');const previous=adminToken(req.headers.cookie);if(previous)await admin.logout(previous);res.cookie('shiye_admin',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:8*3600000});res.clearCookie('shiye_invite',{path:'/api'});res.json({authenticated:true});});
  router.use((req,res,next)=>{const token=adminToken(req.headers.cookie),session=admin.session(token);if(!session)throw new Fault(403,'ADMIN_REQUIRED','请先登录管理员账号。');res.locals.admin=session.username;res.locals.adminToken=token;next();});
  router.post('/logout',async(req,res)=>{await admin.logout(res.locals.adminToken);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});
  router.post('/password',async(req,res)=>{await admin.changePassword(res.locals.admin,req.body?.oldPassword,req.body?.newPassword);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});

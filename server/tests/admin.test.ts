@@ -27,3 +27,27 @@ test('HTTP administrator permissions, cookie protection, CSRF and logout are enf
  await fetch(base+'/api/admin/logout',{method:'POST',headers,body:'{}'});assert.equal((await fetch(base+'/api/admin/overview',{headers})).status,403);
  }finally{await new Promise<void>(r=>server.close(()=>r()));}
 });
+test('entering with an invitation revokes the previous administrator session instead of inheriting its role',async()=>{
+ const s=await setup(),{app}=await createApp({runtime:join(s.dir,'runtime'),staticRoot:resolve('shiye-editorial-prototype'),admin:s.admin,access:s.access}),server=app.listen(0,'127.0.0.1');await new Promise<void>(r=>server.once('listening',r));const base=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ try{
+  const owner=(await fetch(base+'/api/access/session')).headers.getSetCookie()[0].split(';')[0];
+  const headers={origin:base,'content-type':'application/json',cookie:owner};
+  const login=await fetch(base+'/api/admin/login',{method:'POST',headers,body:JSON.stringify({username:'admin',password:s.password})});
+  assert.ok(login.headers.getSetCookie().some(c=>c.startsWith('shiye_invite=;')));
+  const adminCookie=login.headers.getSetCookie()[0].split(';')[0];headers.cookie+='; '+adminCookie;
+  const invalid=await fetch(base+'/api/access/invite/verify',{method:'POST',headers,body:JSON.stringify({code:'invalid'})});assert.equal(invalid.status,403);assert.equal((await fetch(base+'/api/admin/overview',{headers})).status,200);
+  const enter=await fetch(base+'/api/access/invite/verify',{method:'POST',headers,body:JSON.stringify({code:s.batch.codes[0],role:'admin',username:'宋静雯'})});assert.equal(enter.status,200);assert.ok(enter.headers.getSetCookie().some(c=>c.startsWith('shiye_admin=;')));
+  // Even replaying the old admin cookie must fail after the browser changes identity.
+  assert.equal((await fetch(base+'/api/admin/overview',{headers})).status,403);
+  headers.cookie=owner+'; '+enter.headers.getSetCookie()[0].split(';')[0];
+  const status=await (await fetch(base+'/api/access/session',{headers})).json();assert.equal(status.authorized,true);assert.notEqual(status.role,'admin');
+  assert.equal((await (await fetch(base+'/api/admin/session',{headers})).json()).authenticated,false);
+  for(const route of ['overview','invites','apis','audit'])assert.equal((await fetch(base+'/api/admin/'+route,{headers})).status,403);
+ }finally{await new Promise<void>(r=>server.close(()=>r()));}
+});
+test('persisted Chinese administrator username replaces the old login without changing the password or API credentials',async()=>{
+ const s=await setup(),file=join(s.dir,'admin.json'),data=JSON.parse(await readFile(file,'utf8'));data.username='宋静雯';await writeFile(file,JSON.stringify(data));
+ const admin=new Admin(file,s.access);await admin.init({apiKey:'ignored',secretKey:'ignored',cutout:false,naming:true},join(s.dir,'credentials.txt'));
+ await assert.rejects(admin.login('admin',s.password,'local'),/不正确/);
+ const token=await admin.login('宋静雯',s.password,'local');assert.equal(admin.session(token)?.username,'宋静雯');assert.equal(await admin.apiEnabled('cutout'),true);assert.equal(await admin.apiEnabled('naming'),false);
+});

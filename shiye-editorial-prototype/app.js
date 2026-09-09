@@ -73,7 +73,8 @@ const samplePage = kind => {
  return p;
 };
 function seed(){return {version:1,assets:[],books:[{id:uid(),title:'山野来信',subtitle:'LETTERS FROM THE WILD',cover:'olive',sample:true,updated:Date.now()-4000,pages:[samplePage('lake'),samplePage('forest')],page:0},{id:uid(),title:'日常的小确幸',subtitle:'THE LITTLE THINGS',cover:'cream',sample:true,updated:Date.now()-5000,pages:[samplePage('coffee')],page:0},{id:uid(),title:'慢慢生活',subtitle:'SLOW DAYS, GOOD DAYS',cover:'coral',sample:true,updated:Date.now()-6000,pages:[samplePage('coffee'),blankPage()],page:0}]};}
-let adminUser=null;
+let adminUser=null,identityVersion=0;
+const identityChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('shiye-identity'):null;
 let state,db,currentView='home',activeBookId=null,editing=false,selectedId=null,drawer=null,filter='全部',collectionTab='mine',search='',bookFilter='all',bookView='grid',sort='recent',saveStatus='已保存到本机',saveTimer,savePromise=Promise.resolve(),toastTimer,history=[],future=[],dragState=null,resizeObserver;
 let workshop={step:0,selected:['coffee','flower'],preview:0,border:4,source:null,crops:[],results:[],demo:true};
 let workshopReturn=null;
@@ -256,7 +257,7 @@ function dirty(){mutationVersion++;if(currentBook()&&currentView==='editor')curr
 function checkpoint(){history.push(JSON.stringify(currentBook()?.pages||[]));if(history.length>30)history.shift();future=[];}
 function change(fn){checkpoint();fn();dirty();renderEditor();}
 const statusHTML=()=>`<span class="local-status ${saveStatus.startsWith('保存失败')?'save-error':''}" role="status">${saveStatus}</span>`;
-function sidebar(){return `<aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="拾页首页"><span class="brand-mark"></span><span class="brand-word">拾页<small>SHIYE</small></span></button><div class="sidebar-tagline">把日子，慢慢收好。</div><nav class="nav" aria-label="主导航">${[['shelf','book','我的书架'],['workshop','spark','贴纸工坊'],['collection','sticker','贴纸仓库'],...(adminUser?[['admin','grid','管理工具']]:[])].map(([v,i,t])=>`<button data-action="nav" data-view="${v}" class="${currentView===v||currentView==='editor'&&v==='shelf'?'active':''}">${icon(i)}<span>${t}</span></button>`).join('')}</nav><div class="side-note"><div class="asterisk">✳</div>留住那些<br>舍不得忘记的小事。</div><button class="profile" data-action="about"><span class="avatar">S</span><span class="profile-name">我的私人角落<small>受邀体验 · 本机保存</small></span></button></aside>`;}
+function sidebar(){return `<aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="拾页首页"><span class="brand-mark"></span><span class="brand-word">拾页<small>SHIYE</small></span></button><div class="sidebar-tagline">把日子，慢慢收好。</div><nav class="nav" aria-label="主导航">${[['shelf','book','我的书架'],['workshop','spark','贴纸工坊'],['collection','sticker','贴纸仓库'],...(adminUser?[['admin','grid','管理工具']]:[])].map(([v,i,t])=>`<button data-action="nav" data-view="${v}" class="${currentView===v||currentView==='editor'&&v==='shelf'?'active':''}">${icon(i)}<span>${t}</span></button>`).join('')}</nav><div class="side-note"><div class="asterisk">✳</div>留住那些<br>舍不得忘记的小事。</div><button class="profile" data-action="about"><span class="avatar">S</span><span class="profile-name">${adminUser?esc(adminUser):'我的私人角落'}<small>${adminUser?'管理员':'受邀体验 · 本机保存'}</small></span></button></aside>`;}
 function topbar(name){return `<header class="topbar"><div class="breadcrumb">我的空间 <span style="margin:0 11px;color:#b6b5a7">/</span> <b>${name}</b></div><div class="top-right">${statusHTML()}<button class="prototype-tag" data-action="about">交互原型</button>${ib('about','info','原型使用说明')}</div></header>`;}
 function coverHTML(book){return `<div class="cover ${book.cover}"><div class="cover-inner"><div class="cover-kicker">A PERSONAL COLLECTION</div><h3>${book.cover==='coral'&&book.sample?'Slow<br>days.':esc(book.title)}</h3><div class="cover-sub">${esc(book.subtitle||'MOMENTS TO KEEP')}</div>${book.cover==='olive'||book.cover==='blue'?`<img class="cover-photo" src="assets/${book.cover==='olive'?'lake':'forest'}.jpg" alt="风景封面"/>`:book.cover==='cream'?`<img class="cover-plant" src="${art('flower')}" alt="野花插画"/>`:'<div class="cover-star">✳</div>'}<div class="cover-foot">SHIYE &nbsp; · &nbsp; VOL. ${String(state.books.indexOf(book)+1||1).padStart(2,'0')}</div></div></div>`;}
 function footer(){return `<footer class="footer-note"><span>${icon('lock')} 只属于你的记忆，安静地保存在这里。</span><span>MADE OF LITTLE MOMENTS &nbsp; © SHIYE</span></footer>`;}
@@ -464,13 +465,31 @@ function openAccess(destination='shelf',tab='invite'){
    const session=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store',signal});if(!session.ok)throw Error('邀请验证暂不可用，请稍后重试。');
    const response=await fetch('/api/access/invite/verify',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal});
    const result=await response.json();if(!response.ok||result.authorized!==true)throw Error(result.error?.message||'邀请码未通过验证，请重试。');
+   identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
    if(attempt!==accessRequest||!$('#dialog').open)return;
    input.value='';closeDialog();await navigate(accessDestination);
   }catch(e){if(attempt===accessRequest&&$('#dialog').open){error.textContent=e.name==='AbortError'?'验证超时，请重试。':e instanceof TypeError?'暂时无法连接，请检查网络后重试。':e.message;input.focus();}}
   finally{clearTimeout(timer);if(attempt===accessRequest){accessPending=false;button.disabled=false;button.textContent='验证并进入';}}
  };
 }
-async function inviteGranted(){try{const response=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store'});return response.ok&&(await response.json()).authorized===true;}catch{return false;}}
+function applyIdentity(session){
+ adminUser=session?.authorized===true&&session.role==='admin'?session.username:null;
+ const nav=$('.sidebar .nav'),entry=nav?.querySelector('[data-view="admin"]');
+ if(!adminUser)entry?.remove();
+ else if(nav&&!entry)nav.insertAdjacentHTML('beforeend',`<button data-action="nav" data-view="admin">${icon('grid')}<span>管理工具</span></button>`);
+ const profile=$('.profile-name');if(profile)profile.innerHTML=`${adminUser?esc(adminUser):'我的私人角落'}<small>${adminUser?'管理员':'受邀体验 · 本机保存'}</small>`;
+}
+async function refreshIdentity(){
+ const version=++identityVersion;let session=null;
+ try{const response=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(3000)});if(response.ok)session=await response.json();}catch{}
+ if(version!==identityVersion)return null;
+ applyIdentity(session);return session;
+}
+async function inviteGranted(){return (await refreshIdentity())?.authorized===true;}
+identityChannel?.addEventListener('message',()=>{identityVersion++;applyIdentity(null);void refreshIdentity();});
+window.addEventListener('focus',()=>{void refreshIdentity();});
+window.addEventListener('pageshow',e=>{if(e.persisted){applyIdentity(null);void refreshIdentity();}});
+
 
 async function navigate(view,origin=null){if(view!=='home'&&currentView==='home'&&!(await inviteGranted())){openAccess(view);return;}const version=++navigationVersion;if(currentView==='editor'&&!(await saveNow()))return;if(version!==navigationVersion)return;photoTaskVersion++;stopHomeDemo();cancelEditingTurn();cancelReaderTurn();if(view==='workshop'&&currentView!=='workshop'){workshopReturn={view:currentView,bookId:activeBookId,pageId:currentPage()?.id,editing,selectedId,drawer};workshopOrigin=origin;}currentView=view;selectedId=null;drawer=null;render();window.scrollTo(0,0);}
 async function openBook(id,edit=false){cancelReaderTurn();readerCover=null;activeBookId=id;currentView='editor';editing=edit;selectedId=null;drawer=null;history=[];future=[];render();window.scrollTo(0,0);}
@@ -751,7 +770,7 @@ document.addEventListener('click',async event=>{
  if(a==='home-next'||a==='home-prev'){turnHomePage(a==='home-next'?1:-1);return;}
  if(a==='access-open'){openAccess();return;}if(a==='access-tab'){openAccess(accessDestination,v);return;}
  if(a==='home-create-sticker'){await navigate('shelf');return;}
- if(a==='nav'){event.preventDefault();if(btn.dataset.view==='admin'){location.assign('/admin');return;}await navigate(btn.dataset.view);return;}if(a==='about'){about();return;}if(a==='close-dialog'){pendingUseIds=[];closeDialog();return;}
+ if(a==='nav'){event.preventDefault();if(btn.dataset.view==='admin'){await refreshIdentity();if(adminUser)location.assign('/admin');return;}await navigate(btn.dataset.view);return;}if(a==='about'){about();return;}if(a==='close-dialog'){pendingUseIds=[];closeDialog();return;}
  if(a==='new-book'){pendingUseIds=[];newBookDialog();return;}
  if(a==='creation-new-book'){newBookDialog();return;}if(a==='choose-cover'){$$('.cover-choice').forEach(b=>{b.classList.toggle('active',b===btn);b.setAttribute('aria-pressed',b===btn);});return;}
  if(a==='create-book'){let title=$('#new-title').value.trim()||'未命名的日子';const b={id:uid(),title,cover:$('.cover-choice.active').dataset.value,subtitle:'MOMENTS TO KEEP',sample:false,updated:Date.now(),page:0,pages:[blankPage()]};state.books.push(b);closeDialog();const ids=[...pendingUseIds];pendingUseIds=[];await openBook(b.id,true);insertStickers(ids);await saveNow();toast(saveStatus==='已保存到本机'?'新的一页，留给新的回忆':'手帐仍在当前页，请重试保存');return;}
@@ -977,7 +996,7 @@ async function cropResults(){
  }
  if(!results.length)throw new Error('empty crop');return results;
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)saveNow();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state)saveNow();else if(!document.hidden)void refreshIdentity();});
 async function init(){
  $('#app').innerHTML='<div class="loading-screen">拾页 SHIYE</div>';
  try{
@@ -992,7 +1011,7 @@ async function init(){
   savedWorkspace=clone(state);
   await hydrateBlobAssets(state);
  }catch{state=seed();savedWorkspace=null;saveStatus='保存失败，请重试';}
- try{const response=await fetch('/api/admin/session',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(3000)});if(response.ok){const session=await response.json();adminUser=session.authenticated?session.username:null;}}catch{}
+ await refreshIdentity();
  render();if(!savedWorkspace)toast('浏览器存储不可用，本次改动无法持久保存。');
 }
 async function saveSegmentedAssets(results,use){

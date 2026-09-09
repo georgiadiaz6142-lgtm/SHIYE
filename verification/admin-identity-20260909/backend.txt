@@ -1,0 +1,216 @@
+
+> shiye@0.1.0 test
+> npm run build && node --test dist/server/tests/*.test.js
+
+
+> shiye@0.1.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: invite grant survives restart, hides code, rejects tampering and expires
+ok 1 - invite grant survives restart, hides code, rejects tampering and expires
+  ---
+  duration_ms: 15.370916
+  type: 'test'
+  ...
+# Subtest: disabled, bound and expired invite records revoke existing grants immediately
+ok 2 - disabled, bound and expired invite records revoke existing grants immediately
+  ---
+  duration_ms: 10.676416
+  type: 'test'
+  ...
+# Subtest: bad codes cannot pass; client and IP throttles reject repeated guesses
+ok 3 - bad codes cannot pass; client and IP throttles reject repeated guesses
+  ---
+  duration_ms: 19.918833
+  type: 'test'
+  ...
+# Subtest: missing or damaged configuration fails closed
+ok 4 - missing or damaged configuration fails closed
+  ---
+  duration_ms: 8.292167
+  type: 'test'
+  ...
+# Subtest: HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+ok 5 - HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+  ---
+  duration_ms: 71.034333
+  type: 'test'
+  ...
+# Subtest: admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+ok 6 - admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+  ---
+  duration_ms: 259.158041
+  type: 'test'
+  ...
+# Subtest: API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+ok 7 - API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+  ---
+  duration_ms: 98.862084
+  type: 'test'
+  ...
+# Subtest: HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+ok 8 - HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+  ---
+  duration_ms: 106.756708
+  type: 'test'
+  ...
+# Subtest: entering with an invitation revokes the previous administrator session instead of inheriting its role
+ok 9 - entering with an invitation revokes the previous administrator session instead of inheriting its role
+  ---
+  duration_ms: 79.447667
+  type: 'test'
+  ...
+# Subtest: persisted Chinese administrator username replaces the old login without changing the password or API credentials
+ok 10 - persisted Chinese administrator username replaces the old login without changing the password or API credentials
+  ---
+  duration_ms: 86.769958
+  type: 'test'
+  ...
+# Subtest: Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+ok 11 - Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+  ---
+  duration_ms: 54.616125
+  type: 'test'
+  ...
+# Subtest: Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+ok 12 - Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+  ---
+  duration_ms: 8.600292
+  type: 'test'
+  ...
+# Subtest: Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+ok 13 - Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+  ---
+  duration_ms: 16.0535
+  type: 'test'
+  ...
+# Subtest: Baidu timeout fails without retry and image/box validation precedes credential transmission
+ok 14 - Baidu timeout fails without retry and image/box validation precedes credential transmission
+  ---
+  duration_ms: 16.582917
+  type: 'test'
+  ...
+# Subtest: Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+ok 15 - Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+  ---
+  duration_ms: 226.181208
+  type: 'test'
+  ...
+# Subtest: Baidu cancelled late response never commits; restart never resubmits live tasks
+ok 16 - Baidu cancelled late response never commits; restart never resubmits live tasks
+  ---
+  duration_ms: 64.241583
+  type: 'test'
+  ...
+# Subtest: HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+ok 17 - HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+  ---
+  duration_ms: 102.386459
+  type: 'test'
+  ...
+# Subtest: explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+ok 18 - explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+  ---
+  duration_ms: 344.232292
+  type: 'test'
+  ...
+# Subtest: three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+ok 19 - three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+  ---
+  duration_ms: 64.628541
+  type: 'test'
+  ...
+# Subtest: a repeated operation reuses the job; conflicting content cannot reuse its ID
+ok 20 - a repeated operation reuses the job; conflicting content cannot reuse its ID
+  ---
+  duration_ms: 71.122042
+  type: 'test'
+  ...
+# Subtest: refine preserves successful candidates and rejects stale versions
+ok 21 - refine preserves successful candidates and rejects stale versions
+  ---
+  duration_ms: 129.152791
+  type: 'test'
+  ...
+# Subtest: cancelled job never commits late candidates
+ok 22 - cancelled job never commits late candidates
+  ---
+  duration_ms: 111.615416
+  type: 'test'
+  ...
+# Subtest: synthetic-only running jobs recover after restart without a second job record
+ok 23 - synthetic-only running jobs recover after restart without a second job record
+  ---
+  duration_ms: 107.701208
+  type: 'test'
+  ...
+# Subtest: expired synthetic files become inaccessible and cleanup touches only managed media
+ok 24 - expired synthetic files become inaccessible and cleanup touches only managed media
+  ---
+  duration_ms: 20.418291
+  type: 'test'
+  ...
+# Subtest: failed atomic transaction leaves both memory and disk unchanged
+ok 25 - failed atomic transaction leaves both memory and disk unchanged
+  ---
+  duration_ms: 9.048125
+  type: 'test'
+  ...
+# Subtest: malformed store fails closed instead of resetting state
+ok 26 - malformed store fails closed instead of resetting state
+  ---
+  duration_ms: 7.813583
+  type: 'test'
+  ...
+# Subtest: mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+ok 27 - mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+  ---
+  duration_ms: 18.504083
+  type: 'test'
+  ...
+# Subtest: invalid coordinates, missing foreground and unsupported prompt fields fail validation
+ok 28 - invalid coordinates, missing foreground and unsupported prompt fields fail validation
+  ---
+  duration_ms: 0.8555
+  type: 'test'
+  ...
+# Subtest: actual image decoder rejects disguised or malformed input
+ok 29 - actual image decoder rejects disguised or malformed input
+  ---
+  duration_ms: 4.64975
+  type: 'test'
+  ...
+# Subtest: HTTP limits origins, session ownership, personal uploads and static files
+ok 30 - HTTP limits origins, session ownership, personal uploads and static files
+  ---
+  duration_ms: 95.67025
+  type: 'test'
+  ...
+# Subtest: live mode cannot silently fall back to simulated output
+ok 31 - live mode cannot silently fall back to simulated output
+  ---
+  duration_ms: 1.220292
+  type: 'test'
+  ...
+# Subtest: Baidu naming uses recognition endpoint, selects confident label and does not retry
+ok 32 - Baidu naming uses recognition endpoint, selects confident label and does not retry
+  ---
+  duration_ms: 38.862416
+  type: 'test'
+  ...
+# Subtest: final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+ok 33 - final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+  ---
+  duration_ms: 237.71975
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1030.006583

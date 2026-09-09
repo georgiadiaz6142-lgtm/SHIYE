@@ -1,0 +1,26 @@
+[
+  {
+    "width": 1440,
+    "status": "PASS",
+    "checks": [
+      "ordinary browser hidden and denied",
+      "administrator name and entry",
+      "independent browser isolation",
+      "invite switch clears all open administrator pages",
+      "login/logout tab synchronization",
+      "expired session removed on focus"
+    ]
+  },
+  {
+    "width": 390,
+    "status": "PASS",
+    "checks": [
+      "ordinary browser hidden and denied",
+      "administrator name and entry",
+      "independent browser isolation",
+      "invite switch clears all open administrator pages",
+      "login/logout tab synchronization",
+      "expired session removed on focus"
+    ]
+  }
+]

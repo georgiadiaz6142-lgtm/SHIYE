@@ -51,7 +51,10 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{
     if(!options.access)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
     const grant=await options.access.verify(req.body?.code,res.locals.owner,req.socket.remoteAddress||'local');
+    const previousAdmin=adminToken(req.headers.cookie);
+    if(previousAdmin&&options.admin)await options.admin.logout(previousAdmin);
     res.cookie('shiye_invite',grant.token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:grant.maxAge});
+    res.clearCookie('shiye_admin',{path:'/api'});
     res.json({authorized:true});
   });
   app.use('/api',async(req,_res,next)=>{
