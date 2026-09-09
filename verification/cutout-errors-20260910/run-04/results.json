@@ -1,0 +1,30 @@
+[
+  {
+    "width": 1440,
+    "status": "PASS",
+    "checks": [
+      "oversize before upload",
+      "invalid image",
+      "encoded limit keeps photo",
+      "async timeout dialog",
+      "dialog fits viewport",
+      "dismiss preserves photo",
+      "query deduplication and no retry",
+      "restore failed task"
+    ]
+  },
+  {
+    "width": 390,
+    "status": "PASS",
+    "checks": [
+      "oversize before upload",
+      "invalid image",
+      "encoded limit keeps photo",
+      "async timeout dialog",
+      "dialog fits viewport",
+      "dismiss preserves photo",
+      "query deduplication and no retry",
+      "restore failed task"
+    ]
+  }
+]

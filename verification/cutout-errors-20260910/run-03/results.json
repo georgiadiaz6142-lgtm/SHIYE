@@ -1,0 +1,12 @@
+[
+  {
+    "width": 1440,
+    "status": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /超时/. Input:\n\n'等待百度图片处理响应超过 30 秒。处理和计费状态未知，不会自动重试；请联系管理员核对调用记录。 查询原任务'\n\n    at /Users/song/Documents/拾页/verification/cutout-errors-20260910/browser.cjs:22:339"
+  },
+  {
+    "width": 390,
+    "status": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /超时/. Input:\n\n'等待百度图片处理响应超过 30 秒。处理和计费状态未知，不会自动重试；请联系管理员核对调用记录。 查询原任务'\n\n    at /Users/song/Documents/拾页/verification/cutout-errors-20260910/browser.cjs:22:339"
+  }
+]

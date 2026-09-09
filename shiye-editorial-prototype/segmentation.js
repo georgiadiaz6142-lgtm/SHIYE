@@ -9,6 +9,22 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   let operations = {}, pollId = null, fileVersion=0;
   const corrections=new Map();let retouch=null;
   const nameDrafts=new Map();
+  const shownFailures=new Set();
+  const fault=(type,message)=>Object.assign(Error(message),{errorType:type});
+  function reportFailure(error,key){
+    data.error=error.message||'操作未完成，请稍后再试。';
+    if(!data.active||!bridge.visible()||document.body.classList.contains('identity-checking'))return;
+    if(key&&shownFailures.has(key))return;
+    // Keep account/import dialogs intact. The inline error remains available on return.
+    if(document.querySelector('dialog[open]:not(.seg-failure-dialog)'))return;
+    if(key)shownFailures.add(key);
+    const titles={INPUT_TOO_LARGE:'这张图片太大了',PROVIDER_IMAGE_LIMIT:'图片超出处理限制',IMAGE_PIXEL_LIMIT:'图片分辨率过高',IMAGE_TOO_SMALL:'图片尺寸太小',INVALID_IMAGE:'无法读取这张图片',PROVIDER_TIMEOUT:'百度处理超时',PROVIDER_AUTH_TIMEOUT:'连接百度超时',UPLOAD_TIMEOUT:'照片上传超时',LOCAL_CONNECTION_FAILED:'暂时无法连接服务',PROVIDER_PERMISSION_DENIED:'抠图权限未开通',PROVIDER_QUOTA_EXCEEDED:'百度调用额度不足',PROVIDER_RATE_LIMIT:'请求过于频繁'};
+    let dialog=document.querySelector('.seg-failure-dialog');
+    if(!dialog){dialog=document.createElement('dialog');dialog.className='seg-failure-dialog';document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());}
+    dialog.setAttribute('aria-labelledby','seg-failure-title');dialog.setAttribute('aria-describedby','seg-failure-message');
+    dialog.innerHTML=`<h2 id="seg-failure-title">${esc(titles[error.errorType]||'这次操作未完成')}</h2><p id="seg-failure-message">${esc(data.error)}</p><form method="dialog"><button class="button dark" autofocus>知道了</button></form>`;
+    if(!dialog.open)dialog.showModal();
+  }
   const correctionKey=c=>[c.imageSessionId,c.sourceRevision,c.candidateId,c.candidateRevision].join(':');
   const corrected=c=>{const edit=corrections.get(correctionKey(c));return edit?.expiresAt>Date.now()?edit:undefined;};
   function correctionDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('shiye-retouch-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('edits',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('无法打开本机修正记录，请重试。'));});}
@@ -38,9 +54,9 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   async function api(path, body, signal) {
     let response;
     try { response = await fetch('/api'+path, { method:body===undefined?'GET':'POST', headers:body===undefined?{}:{'Content-Type':'application/json'}, body:body===undefined?undefined:JSON.stringify(body), signal }); }
-    catch { throw Error('无法连接本机服务。请保留页面，恢复连接后查询原任务。'); }
+    catch { throw fault('LOCAL_CONNECTION_FAILED','无法连接服务。请保留页面，检查网络后查询原任务状态，避免重复提交。'); }
     let value;try {value=await response.json();}catch{throw Error('当前预览未连接任务后端。本地小剪刀仍可使用。');}
-    if(!response.ok)throw Error(value.error?.message||'操作未完成，请重试。');
+    if(!response.ok)throw fault(value.error?.errorType,value.error?.message||'操作未完成，请重试。');
     return value;
   }
   const live=()=>data.mode==='live';
@@ -119,7 +135,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       for(const c of job.candidates||[])data.selected.add(c.candidateId);
       data.session.promptRevision=Math.max(data.session.promptRevision||0,job.input.promptRevision||0);
       data.target=null;data.box=null;data.outline=[];data.positive=[];data.negative=[];
-    }else if(job.error)data.error=job.error.message;
+    }else if(job.error)reportFailure(job.error,'job:'+job.jobId);
   }
   async function poll(jobId,generation) {
     clearTimeout(pollId);
@@ -128,7 +144,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       const result=await api('/jobs/'+jobId);
       if(generation!==data.generation)return;accept(result);draw();
       if(['queued','running'].includes(result.status))pollId=setTimeout(()=>poll(jobId,generation),350);
-    }catch(e){if(generation===data.generation){data.error=e.message;draw();}}
+    }catch(e){if(generation===data.generation){reportFailure(e,'poll:'+generation+':'+jobId);draw();}}
   }
   function resetCompletedRound(){
     data.generation++;clearTimeout(pollId);clearPreview();
@@ -150,7 +166,8 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       try {const saved=JSON.parse(localStorage.getItem('shiye-seg-origin')||'null');if(saved?.imageSessionId===data.session.imageSessionId)bridge.restoreOrigin(saved.origin);}catch{}
       await loadCorrections();
       data.job=value.job||null;
-      if(value.job){if(['queued','running'].includes(value.job.status))poll(value.job.jobId,g);}
+      if(g!==data.generation)return;
+      if(value.job){if(['queued','running'].includes(value.job.status))poll(value.job.jobId,g);else if(value.job.error)reportFailure(value.job.error,'job:'+value.job.jobId);}
     }else{data.session=null;data.job=null;data.candidates=[];data.selected.clear();data.stage=1;}
     draw();
   }
@@ -163,16 +180,18 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   }
   async function uploadPhoto() {
     if(!live()||!data.health?.liveAvailable||!data.file)throw Error('请先选择照片。');
-    if(data.file.size>10*1024*1024)throw Error('图片不能超过 10 MB。');
+    if(data.file.size>10*1024*1024)throw fault('INPUT_TOO_LARGE',`这张图片为 ${(data.file.size/1024/1024).toFixed(2)} MB，超过上传上限 10 MB。请压缩图片后重新选择，照片尚未上传。`);
     const kind=data.selectionMode?'refine':'auto';
     if(kind==='refine'){
       const b=data.box,size=data.previewSize,scale=Math.min(1,2000/Math.max(size.width,size.height));
       if(!b||b.width*size.width*scale<10||b.height*size.height*scale<10)throw Error('请先在照片上框出完整的景物，选框不能太小。');
     }
     await api('/session');
-    const response=await fetch('/api/uploads/photo',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Shiye-Operation-Id':operations.upload||=makeId()},body:data.file,signal:AbortSignal.timeout(30000)});
+    let response;
+    try{response=await fetch('/api/uploads/photo',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Shiye-Operation-Id':operations.upload||=makeId()},body:data.file,signal:AbortSignal.timeout(30000)});}
+    catch(e){throw fault(e.name==='TimeoutError'?'UPLOAD_TIMEOUT':'LOCAL_CONNECTION_FAILED','照片未能在本次上传中完成确认，尚未提交百度抠图任务。请检查网络后再次上传，当前照片会保留。');}
     let value;try{value=await response.json();}catch{throw Error('上传未完成，请保留照片后重试。');}
-    if(!response.ok)throw Error(value.error?.message||'上传未完成。');
+    if(!response.ok)throw fault(value.error?.errorType,value.error?.message||'上传未完成。');
     data.session=value;data.file=null;clearPreview();delete operations.upload;data.candidates=[];data.selected.clear();data.target=null;data.stage=1;data.job=null;persistOrigin();
     await submit(kind);
   }
@@ -182,12 +201,12 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(!file){draw();return;}
     data.busy=true;draw();
     try{
-      if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('格式不支持');
-      if(file.size>10*1024*1024)throw Error('图片不能超过 10 MB。');
+      if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw fault('INVALID_IMAGE','请选择静态 JPG、PNG 或 WebP 图片。');
+      if(file.size>10*1024*1024)throw fault('INPUT_TOO_LARGE',`这张图片为 ${(file.size/1024/1024).toFixed(2)} MB，超过上传上限 10 MB。请压缩图片后重新选择，照片尚未上传。`);
       const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'}),size={width:bitmap.width,height:bitmap.height};bitmap.close();
       if(version!==fileVersion)return;
       data.file=file;data.previewSize=size;data.previewUrl=URL.createObjectURL(file);
-    }catch(e){if(version===fileVersion)data.error=e.message.includes('10 MB')?e.message:'这张图片无法读取，请选择静态 JPG、PNG 或 WebP，大小不超过 10 MB。';}
+    }catch(e){if(version===fileVersion)reportFailure(e.errorType?e:fault('INVALID_IMAGE','这张图片无法读取，请重新导出为静态 JPG、PNG 或 WebP。'));}
     finally{if(version===fileVersion){data.busy=false;draw();}}
   }
   async function submit(kind) {
@@ -291,7 +310,8 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     const action=el.dataset.action.slice(4);if(el.disabled||data.busy||retouch?.editor.drawing)return;
     const immediate=['retouch-tool','retouch-undo','retouch-redo','retouch-reset','retouch-cancel','pick-box','select','tool','target','add','clear','undo','preview','back','exit'];
     data.busy=!immediate.includes(action);draw();
-    try {await act(action,el);}catch(error){data.error=error.message;}
+    const task=act(action,el),generation=data.generation;
+    try {await task;}catch(error){if(generation===data.generation)reportFailure(error);}
     finally{data.busy=false;draw();}
   });
   document.addEventListener('input',e=>{if(e.target.id==='seg-name'){const item=data.results[data.preview];if(!item)return;item.nameEdited=true;item.name=e.target.value;nameDrafts.set(item.nameKey,{name:item.name});}});

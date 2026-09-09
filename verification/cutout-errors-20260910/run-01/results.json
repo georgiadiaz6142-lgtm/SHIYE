@@ -1,0 +1,6 @@
+[
+  {
+    "status": "FAIL",
+    "error": "Error: 缺少明确的测试上限、授权期限或本地保留期限，不启用 live 模式。\n    at createApp (file:///Users/song/Documents/%E6%8B%BE%E9%A1%B5/dist/server/app.js:19:15)\n    at /Users/song/Documents/拾页/verification/cutout-errors-20260910/browser.cjs:6:37"
+  }
+]

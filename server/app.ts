@@ -114,7 +114,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.use((error:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{
     if(res.headersSent)return;
     const parseError=error as {type?:string;status?:number};
-    const e=error instanceof Fault?error:error instanceof ZodError?new Fault(422,'INVALID_INPUT','输入内容或版本不符合要求。'):parseError?.type==='entity.too.large'?new Fault(413,'INPUT_TOO_LARGE','请求超过允许大小。'):parseError?.type==='entity.parse.failed'?new Fault(400,'INVALID_INPUT','请求不是有效 JSON。'):parseError?.status===404?new Fault(404,'NOT_FOUND','文件不存在。'):new Fault(500,'INTERNAL_ERROR','操作未完成，已有内容仍保留。');
+    const e=error instanceof Fault?error:error instanceof ZodError?new Fault(422,'INVALID_INPUT','输入内容或版本不符合要求。'):parseError?.type==='entity.too.large'?new Fault(413,'INPUT_TOO_LARGE',_req.path==='/api/uploads/photo'?'图片超过上传上限 10 MB，请压缩后重新选择。照片尚未发送至百度。':'请求超过允许大小。'):parseError?.type==='entity.parse.failed'?new Fault(400,'INVALID_INPUT','请求不是有效 JSON。'):parseError?.status===404?new Fault(404,'NOT_FOUND','文件不存在。'):new Fault(500,'INTERNAL_ERROR','操作未完成，已有内容仍保留。');
     res.status(e.status).json({requestId:res.locals.requestId,error:{errorType:e.errorType,message:e.message,retryable:e.retryable}});
   });
   return {app,store,jobs};

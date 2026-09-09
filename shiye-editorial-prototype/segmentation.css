@@ -34,3 +34,11 @@
 .seg-result-actions{display:flex;justify-content:center;gap:14px;margin:18px auto 0;max-width:540px}
 .seg-result-actions .button{flex:1;min-height:48px;white-space:nowrap;padding:12px 16px}
 @media(max-width:700px){.seg-workspace .upload-zone{padding:10px}.seg-result-actions{gap:10px}.seg-result-actions .button{font-size:12px;padding:12px 8px}.seg-workspace .seg-result-stage{padding:14px}}
+
+.seg-failure-dialog{width:min(460px,calc(100vw - 32px));box-sizing:border-box;padding:28px}
+.seg-failure-dialog h2{font-size:24px;margin:0 0 16px;line-height:1.4}
+.seg-failure-dialog p{line-height:1.8;overflow-wrap:anywhere;margin:0 0 24px}
+.seg-failure-dialog form{display:flex;justify-content:flex-end}
+.seg-failure-dialog .button{min-height:44px}
+.identity-checking .seg-failure-dialog{visibility:hidden}
+@media(max-width:560px){.seg-failure-dialog{padding:22px}.seg-failure-dialog h2{font-size:22px}}

@@ -73,7 +73,7 @@ test('Baidu timeout fails without retry and image/box validation precedes creden
   const p=new BaiduProvider(...credentials as [string,string],fakeTransport(async(_url,init)=>{
     calls++;return new Promise<Response>((_resolve,reject)=>{init.signal!.addEventListener('abort',()=>reject(Error('timeout')),{once:true});setTimeout(()=>reject(Error('timeout guard')),100);});
   }),10);
-  await assert.rejects(p.segment(await fixture()),(e:unknown)=>e instanceof Fault&&e.errorType==='PROVIDER_TIMEOUT');assert.equal(calls,1);
+  await assert.rejects(p.segment(await fixture()),(e:unknown)=>e instanceof Fault&&e.errorType==='PROVIDER_AUTH_TIMEOUT'&&e.message.includes('尚未发送'));assert.equal(calls,1);
   const small=await sharp({create:{width:64,height:64,channels:3,background:'white'}}).png().toBuffer();
   await assert.rejects(p.segment(small),/尺寸/);assert.equal(calls,1);
   assert.throws(()=>pixelBox({x:.1,y:.1,width:.001,height:.001},600,400),/10/);
@@ -136,4 +136,32 @@ test('explicit unlimited mode keeps accounting and TTL; first job can directly u
   const first=await jobs.submit(owner,refineJob.parse({...input(s),promptRevision:1,box}),'refine');await jobs.idle();assert.equal(calls,1);assert.deepEqual(boxes,[box]);assert.equal(jobs.get(owner,first.jobId).status,'succeeded');
   for(let i=0;i<10;i++){const j=await jobs.submit(owner,input(s),'auto');await jobs.idle();assert.equal(jobs.get(owner,j.jobId).status,'succeeded');}
   assert.equal(calls,11);assert.equal(store.data.jobs.filter(j=>j.providerAttemptedAt!==undefined).length,11);assert.equal(jobs.session(owner,s.imageSessionId).candidates.length,1);
+});
+
+test('Cutout diagnostics distinguish response timeout, HTTP status and safe provider rejection codes',async()=>{
+  const source=await fixture();
+  for(const [code,type] of [[6,'PROVIDER_PERMISSION_DENIED'],[18,'PROVIDER_RATE_LIMIT'],[19,'PROVIDER_QUOTA_EXCEEDED'],[216202,'PROVIDER_IMAGE_LIMIT'],[999999,'PROVIDER_REJECTED']] as const){
+    let calls=0;const provider=new BaiduProvider(...credentials as [string,string],fakeTransport(async url=>{calls++;return url.endsWith('/token')?auth():json({error_code:code,error_msg:'test-secret-key'});}));
+    await assert.rejects(provider.segment(source),(e:unknown)=>e instanceof Fault&&e.errorType===type&&e.message.includes(String(code))&&!e.message.includes('test-secret-key'));assert.equal(calls,2);
+  }
+  let attempts=0;const provider=new BaiduProvider(...credentials as [string,string],fakeTransport(async(url,init)=>{
+    if(url.endsWith('/token'))return auth();attempts++;return new Promise<Response>((_resolve,reject)=>{init.signal!.addEventListener('abort',()=>reject(Error('aborted')),{once:true});setTimeout(()=>reject(Error('guard')),100);});
+  }),10);
+  await assert.rejects(provider.segment(source),(e:unknown)=>e instanceof Fault&&e.errorType==='PROVIDER_TIMEOUT'&&e.message.includes('计费状态未知'));assert.equal(attempts,1);
+  for(const phase of ['auth','image']){
+    const p=new BaiduProvider(...credentials as [string,string],fakeTransport(async url=>phase==='image'&&url.endsWith('/token')?auth():new Response('',{status:503})));
+    await assert.rejects(p.segment(source),(e:unknown)=>e instanceof Fault&&e.message.includes('HTTP 503')&&e.errorType===(phase==='auth'?'PROVIDER_AUTH_HTTP_ERROR':'PROVIDER_HTTP_ERROR'));
+  }
+});
+
+test('Oversize original and encoded image are rejected before provider submission',async()=>{
+  await assert.rejects(normalizeBaidu(Buffer.alloc(10*1024*1024+1)),(e:unknown)=>e instanceof Fault&&e.errorType==='INPUT_TOO_LARGE');
+  // Deterministic high-detail image fits the upload limit, but its normalized PNG/base64 does not.
+  const bytes=Buffer.alloc(2000*2000*3);let seed=123456;
+  for(let i=0;i<bytes.length;i++){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;bytes[i]=seed&255;}
+  const jpeg=await sharp(bytes,{raw:{width:2000,height:2000,channels:3}}).jpeg({quality:85}).toBuffer();
+  assert.ok(jpeg.length<10*1024*1024);
+  await assert.rejects(normalizeBaidu(jpeg),(e:unknown)=>e instanceof Fault&&e.errorType==='PROVIDER_IMAGE_LIMIT'&&e.message.includes('编码后'));
+  const huge=await sharp({create:{width:6000,height:4100,channels:3,background:'white'}}).png().toBuffer();
+  await assert.rejects(normalizeBaidu(huge),(e:unknown)=>e instanceof Fault&&e.errorType==='IMAGE_PIXEL_LIMIT');
 });

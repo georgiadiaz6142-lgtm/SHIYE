@@ -20,11 +20,11 @@ export function pixelBox(box: Box, width: number, height: number) {
 export class BaiduProvider implements SegmentationProvider {
   private token?: {value:string; expiresAt:number};
   constructor(private apiKey:string, private secretKey:string, private transport:typeof fetch=fetch, private timeout=30_000) {}
-  private async json(url:string, body:string|URLSearchParams, signal:AbortSignal, limit:number) {
+  private async json(url:string, body:string|URLSearchParams, signal:AbortSignal, limit:number, phase:'auth'|'image'='image') {
     try {
       const res=await this.transport(url,{method:'POST',redirect:'error',signal,
         headers:{'Content-Type':typeof body==='string'?'application/json':'application/x-www-form-urlencoded'},body});
-      if(!res.ok){await res.body?.cancel();throw new Fault(502,'PROVIDER_HTTP_ERROR','百度请求未完成，请核对控制台记录后再试。');}
+      if(!res.ok){await res.body?.cancel();throw new Fault(502,phase==='auth'?'PROVIDER_AUTH_HTTP_ERROR':'PROVIDER_HTTP_ERROR',`百度${phase==='auth'?'鉴权':'图片处理'}服务返回 HTTP ${res.status}，${phase==='auth'?'照片尚未发送至抠图接口。':'未取得处理结果。'}请稍后再试，持续出现时请联系管理员。`);}
       if(Number(res.headers.get('content-length'))>limit){await res.body?.cancel();throw new Fault(502,'INVALID_PROVIDER_RESPONSE','百度返回内容超过限制。');}
       const chunks:Uint8Array[]=[];let length=0;
       if(!res.body)throw new Error('empty');
@@ -36,12 +36,14 @@ export class BaiduProvider implements SegmentationProvider {
       return value as Record<string,unknown>;
     }catch(e){
       if(e instanceof Fault)throw e;
-      throw new Fault(502,signal.aborted?'PROVIDER_TIMEOUT':'PROVIDER_REQUEST_FAILED',signal.aborted?'百度请求超时；处理和计费状态未知，不会自动重试。':'百度请求未完成；不会自动重试，请核对控制台记录。');
+      if(phase==='auth')throw new Fault(502,signal.aborted?'PROVIDER_AUTH_TIMEOUT':'PROVIDER_AUTH_REQUEST_FAILED',signal.aborted?'连接百度鉴权服务超时，照片尚未发送至抠图接口。请稍后再试，持续出现时请联系管理员检查网络。':'无法取得百度鉴权响应，照片尚未发送至抠图接口。请联系管理员检查网络和服务配置。');
+      if(e instanceof SyntaxError)throw new Fault(502,'INVALID_PROVIDER_RESPONSE','百度返回的数据无法解析，请联系管理员检查服务响应。');
+      throw new Fault(502,signal.aborted?'PROVIDER_TIMEOUT':'PROVIDER_REQUEST_FAILED',signal.aborted?`等待百度图片处理响应超过 ${this.timeout/1000} 秒。处理和计费状态未知，不会自动重试；请联系管理员核对调用记录。`:'与百度图片处理服务的连接中断或请求失败，未取得结果。处理和计费状态未知，不会自动重试；请联系管理员核对调用记录。');
     }
   }
   private async authorize(signal:AbortSignal) {
     if(!this.token||this.token.expiresAt<=Date.now()){
-      const auth=await this.json(AUTH,new URLSearchParams({grant_type:'client_credentials',client_id:this.apiKey,client_secret:this.secretKey}),signal,64_000);
+      const auth=await this.json(AUTH,new URLSearchParams({grant_type:'client_credentials',client_id:this.apiKey,client_secret:this.secretKey}),signal,64_000,'auth');
       if(typeof auth.access_token!=='string'||!auth.access_token||auth.access_token.length>8192||typeof auth.expires_in!=='number'||auth.expires_in<=0)
         throw new Fault(503,'PROVIDER_AUTH_FAILED','百度鉴权未通过，请在本地核对两项密钥及应用权限。');
       this.token={value:auth.access_token,expiresAt:Date.now()+Math.min(auth.expires_in,2_592_000)*1000-60_000};
@@ -65,12 +67,26 @@ export class BaiduProvider implements SegmentationProvider {
       throw new Fault(422,'PROVIDER_IMAGE_LIMIT','图片需满足百度尺寸和编码大小限制，请使用较小图片。');
     const position=box?pixelBox(box,width,height):undefined;
     if(!this.apiKey.trim()||!this.secretKey.trim())throw new Fault(503,'MODEL_NOT_CONFIGURED','百度密钥尚未配置。');
+    await this.authorize(AbortSignal.timeout(Math.min(this.timeout,10_000)));
     const signal=AbortSignal.timeout(this.timeout);
-    await this.authorize(signal);
     const result=await this.json(SEGMENT+'?access_token='+encodeURIComponent(this.token!.value),JSON.stringify({image,method:box?'control':'auto',return_form:'mask',refine_mask:'true',...(position?{position}:{})}),signal,16_000_000);
     if(result.error_code!==undefined){
       if(result.error_code===110||result.error_code===111)this.token=undefined;
-      throw new Fault(502,'PROVIDER_REJECTED','百度未返回可用结果，请核对应用权限、额度及调用记录；不会自动重试。');
+      const code=Number.isSafeInteger(result.error_code)?Number(result.error_code):null;
+      // Only expose a validated numeric code; upstream messages may contain credentials.
+      const reasons:Record<number,[string,string]>={
+        6:['PROVIDER_PERMISSION_DENIED','百度应用未开通此接口权限，请联系管理员开通智能抠图权限。'],
+        17:['PROVIDER_QUOTA_EXCEEDED','百度每日调用额度已用完，请联系管理员检查额度。'],
+        18:['PROVIDER_RATE_LIMIT','百度请求过于频繁，请稍等片刻再操作。'],
+        19:['PROVIDER_QUOTA_EXCEEDED','百度调用总额度已用完，请联系管理员检查额度。'],
+        110:['PROVIDER_AUTH_FAILED','百度登录凭证无效，请稍后再试，持续出现时请联系管理员。'],
+        111:['PROVIDER_AUTH_FAILED','百度登录凭证已过期，请稍后再试。'],
+        216201:['INVALID_IMAGE','百度无法读取图片格式，请重新导出为静态 JPG、PNG 或 WebP。'],
+        216202:['PROVIDER_IMAGE_LIMIT','百度拒绝了图片大小或尺寸，请缩小图片后重新选择。'],
+        282000:['PROVIDER_INTERNAL_ERROR','百度图片处理服务发生内部错误，请稍后再试，持续出现时请联系管理员。'],
+      };
+      const [type,message]=code!==null&&reasons[code]||['PROVIDER_REJECTED','百度未返回可用结果，请联系管理员核对调用记录。'];
+      throw new Fault(502,type,message+(code!==null?`（百度错误码：${code}）`:''));
     }
     if(typeof result.log_id!=='string'||!/^\d{1,20}$/.test(result.log_id)||typeof result.image!=='string'||!result.image.length||result.image.length%4!==0||! /^[A-Za-z0-9+/]*={0,2}$/.test(result.image))
       throw new Fault(502,'INVALID_PROVIDER_RESPONSE','百度返回的蒙版格式无效。');

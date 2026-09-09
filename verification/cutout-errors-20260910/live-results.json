@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "scope": "current local service entry and exact updated static files",
+  "limitsDisabled": true,
+  "adminAccessStillProtected": true,
+  "realBaiduCalls": 0
+}

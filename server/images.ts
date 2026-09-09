@@ -47,9 +47,11 @@ export function fixtureTarget(points: {x:number;y:number}[]) {
 export async function normalizeBaidu(bytes: Buffer) {
   if(!bytes.length||bytes.length>10*1024*1024)throw new Fault(413,'INPUT_TOO_LARGE','图片不能超过 10 MB。');
   try {
+    const input=await sharp(bytes,{limitInputPixels:false}).metadata();
+    if(input.width!*input.height!>24_000_000)throw new Fault(422,'IMAGE_PIXEL_LIMIT','图片超过 2400 万像素，请降低分辨率后重新选择。');
     const png=await normalize(bytes), meta=await sharp(png).metadata();
     if(Math.min(meta.width!,meta.height!)<128)throw new Fault(422,'IMAGE_TOO_SMALL','规范化后的图片最短边需至少 128 像素。');
-    if(4*Math.ceil(png.length/3)>10_000_000)throw new Fault(413,'PROVIDER_IMAGE_LIMIT','图片编码后超过百度限制，请换用较小图片。');
+    if(4*Math.ceil(png.length/3)>10_000_000)throw new Fault(413,'PROVIDER_IMAGE_LIMIT','图片转换并编码后超过百度 10 MB 限制；原文件小于 10 MB 也可能出现。请降低分辨率后重新选择，照片尚未发送至百度。');
     return {png,width:meta.width!,height:meta.height!};
   }catch(e){if(e instanceof Fault)throw e;throw new Fault(422,'INVALID_IMAGE','图片无法读取，请选择静态 JPG、PNG 或 WebP。');}
 }
