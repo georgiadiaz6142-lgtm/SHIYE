@@ -7,6 +7,33 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   const makeId = () => crypto.randomUUID();
   const data = { active:false, mode:'mock', health:null, file:null, consent:false, box:null, session:null, job:null, candidates:[], selected:new Set(), target:null, tool:'outline', outline:[], positive:[], negative:[], stage:1, results:[], preview:0, busy:false, error:'', generation:0, booted:false, borderVersion:0 };
   let operations = {}, pollId = null;
+  const corrections=new Map();let retouch=null;
+  const correctionKey=c=>[c.imageSessionId,c.sourceRevision,c.candidateId,c.candidateRevision].join(':');
+  const corrected=c=>{const edit=corrections.get(correctionKey(c));return edit?.expiresAt>Date.now()?edit:undefined;};
+  function correctionDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('shiye-retouch-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('edits',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('无法打开本机修正记录，请重试。'));});}
+  async function loadCorrections(){
+    for(const [key,value] of corrections)if(value.expiresAt<=Date.now()||!data.candidates.some(c=>correctionKey(c)===key)){URL.revokeObjectURL(value.url);corrections.delete(key);}
+    const db=await correctionDB();
+    try{await new Promise((resolve,reject)=>{const tx=db.transaction('edits','readwrite'),store=tx.objectStore('edits'),r=store.getAll();
+      r.onsuccess=()=>{for(const v of r.result){if(v.expiresAt<=Date.now()){store.delete(v.key);continue;}if(!data.candidates.some(c=>correctionKey(c)===v.key)||corrections.has(v.key))continue;corrections.set(v.key,{...v,url:URL.createObjectURL(v.blob)});}};
+      tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(Error('无法读取本机修正记录，请重试。'));
+    });}finally{db.close();}
+  }
+  async function storeCorrection(value){const db=await correctionDB();try{await new Promise((resolve,reject)=>{const tx=db.transaction('edits','readwrite');tx.objectStore('edits').put(value);tx.oncomplete=resolve;tx.onerror=tx.onabort=reject;});}catch{throw Error('本机保存失败，修正仍在画布上，请重试。');}finally{db.close();}}
+  async function localImage(id){const response=await fetch(media(id));if(!response.ok)throw Error('临时原图或蒙版已过期，无法继续修边。已收藏的贴纸仍可使用。');return createImageBitmap(await response.blob());}
+  async function openRetouch(c){
+    if(c.expiresAt<=Date.now())throw Error('临时原图已过期，请重新选择照片。');
+    const loaded=[];
+    try{loaded.push(await localImage(data.session.objectKey));loaded.push(await localImage(c.maskRef));const edit=corrected(c);if(edit)loaded.push(await createImageBitmap(edit.mask));
+      retouch={candidate:c,editor:createLocalMaskEditor(...loaded)};
+    }catch(e){for(const img of loaded)img.close();throw e;}
+  }
+  function leaveRetouch(){if(!retouch)return true;if(retouch.editor.changed&&!confirm('尚未应用的修边会丢失，确定返回吗？'))return false;retouch.editor.dispose();retouch=null;return true;}
+  function mountRetouch(pending){
+    if(!retouch)return;const e=retouch.editor,plane=document.querySelector('.retouch-plane');if(!plane)return;plane.append(e.canvas);e.enabled=!pending;e.canvas.style.cursor=e.tool==='pan'?'grab':'crosshair';
+    const viewport=document.querySelector('.retouch-viewport');if(e.scroll){viewport.scrollLeft=e.scroll.x;viewport.scrollTop=e.scroll.y;}
+    e.onchange=()=>{const u=document.querySelector('[data-action="seg-retouch-undo"]'),r=document.querySelector('[data-action="seg-retouch-redo"]');if(u)u.disabled=!e.canUndo;if(r)r.disabled=!e.canRedo;};e.render();
+  }
   async function api(path, body, signal) {
     let response;
     try { response = await fetch('/api'+path, { method:body===undefined?'GET':'POST', headers:body===undefined?{}:{'Content-Type':'application/json'}, body:body===undefined?undefined:JSON.stringify(body), signal }); }
@@ -25,8 +52,13 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   function draw() {
     if(!data.active||!bridge.visible())return;
     const s=data.session, pending=busy(), real=live();
+    const viewport=document.querySelector('.retouch-viewport');if(retouch&&viewport)retouch.editor.scroll={x:viewport.scrollLeft,y:viewport.scrollTop};
     let main='', aside='';
-    if(!s&&real){
+    if(retouch){
+      const e=retouch.editor;
+      main=`<div class="retouch-toolbar"><label>查看 <select id="seg-retouch-view" ${pending?'disabled':''}>${[['result','修正结果'],['source','原照片'],['initial','原抠图']].map(([v,t])=>`<option value="${v}" ${e.view===v?'selected':''}>${t}</option>`).join('')}</select></label><label>缩放 <select id="seg-retouch-zoom" ${pending?'disabled':''}>${[1,1.5,2,3,4].map(v=>`<option value="${v}" ${e.zoom===v?'selected':''}>${v*100}%</option>`).join('')}</select></label></div><div class="retouch-viewport"><div class="retouch-plane" style="width:${e.zoom*100}%"></div></div>`;
+      aside=`<div class="eyebrow">修整这一枚</div><h3>把想留下的，<br>慢慢修好。</h3><div class="retouch-tools">${[['restore','恢复'],['erase','擦除'],['pan','移动画布']].map(([v,t])=>`<button class="button outline small ${e.tool===v?'active':''}" data-action="seg-retouch-tool" data-tool="${v}" aria-pressed="${e.tool===v}" ${pending?'disabled':''}>${t}</button>`).join('')}</div><label class="field"><span>笔刷大小 <output id="seg-brush-value">${e.size}</output> px</span><input id="seg-retouch-size" type="range" min="2" max="${Math.max(80,Math.round(s.width*.2))}" value="${e.size}" ${pending?'disabled':''}></label><div class="seg-actions">${button('retouch-undo','撤销',pending||!e.canUndo)}${button('retouch-redo','重做',pending||!e.canRedo)}${button('retouch-reset','还原原抠图',pending)}</div><p>恢复原照片中被误删的部分，或擦掉多余背景。放大后可切换“移动画布”。</p><p>${e.view==='result'?'修正只在本机进行，不调用百度。':'正在对比查看，切回“修正结果”后可继续涂画。'}</p><button class="button primary" data-action="seg-retouch-apply" ${pending?'disabled':''}>应用修正</button>${button('retouch-cancel','返回候选',pending)}<p class="retouch-hint">应用后会暂存修正；未应用的笔画刷新后会丢失。确认满意后收入收藏。</p>`;
+    }else if(!s&&real){
       main=`<div class="upload-zone"><div class="upload-symbol">✂</div><h2>从照片里，留下喜欢的。</h2><p>百度自动抠图可能将多个物体合成一张前景。<br>支持静态 JPG、PNG、WebP，最大 10 MB；编码超限会提示。</p><label class="button outline">选择测试照片<input id="seg-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden ${pending?'disabled':''}></label><p>${esc(data.file?.name||'尚未选择照片')}</p><label><input id="seg-consent" type="checkbox" ${data.consent?'checked':''} ${pending?'disabled':''}> 我确认将这张照片发送至百度智能抠图处理</label><p>本机临时图片最多保留 ${Math.round((data.health?.localTtlSeconds||0)/60)} 分钟；百度端保留与删除政策仍待核准。</p><button class="button dark" data-action="seg-upload" ${pending||!data.file||!data.consent||!data.health?.liveAvailable?'disabled':''}>${pending?'正在提交…':'上传并自动抠图'}</button></div>`;
       aside='<div class="eyebrow">BAIDU CUTOUT</div><h3>先看边缘，<br>再决定留下。</h3><p>自动结果是一张前景图。漏提或混在一起的对象，可再框选交给百度处理，每次提交会新增一次请求。</p><p>多主体独立发现与点选纠错尚未通过验证。</p>';
     }else if(!s){
@@ -37,13 +69,13 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       main=`<div class="preview-stage"><img id="seg-sticker-preview" src="${esc(item.url)}" alt="${esc(item.name)}"></div><div class="preview-switch">${data.results.map((r,i)=>`<button data-action="seg-preview" data-index="${i}" class="${i===data.preview?'active':''}" aria-label="预览${real?'':'模拟'}贴纸 ${i+1}"><img src="${esc(r.url)}" alt="${esc(r.name)}"></button>`).join('')}</div>`;
       aside=`<div class="eyebrow">02 — MAKE IT YOURS</div><h3>确认后，<br>再收入收藏。</h3><label class="field"><span>贴纸名称</span><input id="seg-name" maxlength="30" value="${esc(item.name)}"></label><div class="range-label"><span>这一枚的白边</span><span>${item.border}px</span></div><input id="seg-border" type="range" min="0" max="10" value="${item.border}" aria-label="这一枚的白边"><p>白边已合成进 PNG，只改变当前贴纸，不调用模型。</p><button class="button primary" data-action="seg-save" ${pending?'disabled':''}>收藏 ${data.results.length} 枚${real?'':'模拟'}贴纸</button><button class="button outline save-use" data-action="seg-use" ${pending?'disabled':''}>收藏并用于创作</button>${button('back','返回候选',pending)}`;
     }else{
-      main=`<div class="seg-source" style="aspect-ratio:${s.width}/${s.height}"><img id="seg-source" src="${media(s.objectKey)}" alt="${real?'本张获准处理的照片':'合成测试图，三个彩色几何形状，不是照片'}"><svg id="seg-prompts" viewBox="0 0 ${s.width} ${s.height}" preserveAspectRatio="none" aria-label="小剪刀提示区域"></svg></div><div class="seg-candidates">${data.candidates.map(c=>`<article class="seg-candidate ${data.selected.has(c.candidateId)?'chosen':''}"><button class="seg-pick" data-action="seg-select" data-id="${c.candidateId}" aria-pressed="${data.selected.has(c.candidateId)}" ${pending?'disabled':''}><img src="${media(c.transparentRef)}" alt="${esc(c.name)}"><span>${esc(c.name)}</span><small>${data.selected.has(c.candidateId)?'已选中':'选择'}</small></button><button class="text-link" data-action="seg-target" data-id="${c.candidateId}" ${pending?'disabled':''}>修正这一枚</button></article>`).join('')}</div>`;
+      main=`<div class="seg-source" style="aspect-ratio:${s.width}/${s.height}"><img id="seg-source" src="${media(s.objectKey)}" alt="${real?'本张获准处理的照片':'合成测试图，三个彩色几何形状，不是照片'}"><svg id="seg-prompts" viewBox="0 0 ${s.width} ${s.height}" preserveAspectRatio="none" aria-label="小剪刀提示区域"></svg></div><div class="seg-candidates">${data.candidates.map(c=>`<article class="seg-candidate ${data.selected.has(c.candidateId)?'chosen':''}"><button class="seg-pick" data-action="seg-select" data-id="${c.candidateId}" aria-pressed="${data.selected.has(c.candidateId)}" ${pending?'disabled':''}><img src="${corrected(c)?.url||media(c.transparentRef)}" alt="${esc(c.name)}"><span>${esc(c.name)}</span><small>${data.selected.has(c.candidateId)?'已选中':'选择'}</small></button><button class="text-link" data-action="seg-target" data-id="${c.candidateId}" ${pending?'disabled':''}>重新框选</button><button class="text-link" data-action="seg-retouch-open" data-id="${c.candidateId}" ${pending?'disabled':''}>手动修边${corrected(c)?' · 已修正':''}</button></article>`).join('')}</div>`;
       if(real)aside=`<div class="eyebrow">01 — PICK YOUR MOMENTS</div><h3>${data.target?'重新框选这一枚':'框住想留下的。'}</h3><p>拖出一个框，尽量完整包住一个主体，再由百度生成贴边蒙版。框只是提示，最终边缘来自模型。</p><p>自动前景可能含多个物体，不代表已分别发现。百度暂不支持保留点、排除点或小剪刀圈线。</p><div class="seg-actions">${button('clear','清除框选',pending)}${button('refine',data.target?'提交框选重提':'框选补提一枚',pending)}${data.target?button('add','改为补提',pending):''}${button('auto','重新自动抠图',pending)}</div><p>每次提交各发起一次百度请求；不会自动重试。${data.target?'其他候选保留。':''}</p><p>已选择 ${data.selected.size} 枚</p><button class="button primary" data-action="seg-confirm" ${pending||!data.selected.size?'disabled':''}>确认透明贴纸</button>${button('new','换一张照片',pending)}`;
       else aside=`<div class="eyebrow">01 — PICK YOUR MOMENTS</div><h3>${data.target?'修正这一枚':'把遗漏的，也带上。'}</h3><p>模拟首次返回两个候选，第三个形状用于练习补提。用小剪刀圈一圈，或标记要保留的位置。</p><div class="seg-tools">${[['outline','✂ 小剪刀'],['positive','保留点'],['negative','排除点']].map(([v,t])=>`<button class="chip ${data.tool===v?'active':''}" data-action="seg-tool" data-tool="${v}" ${pending?'disabled':''}>${t}</button>`).join('')}${button('undo','撤销提示',pending)}${button('clear','清除提示',pending)}</div><p>${data.target?'正在修正选定候选；其他候选保留。':'当前为补提新对象。'}<br>测试程序只演示提示传递，点和圈线不证明真实自动贴边。</p><div class="seg-actions">${button('refine',data.target?'提交模拟修正':'补提模拟对象',pending)}${data.target?button('add','改为补提',pending):''}${button('auto','重新模拟发现',pending)}</div><p>已选择 ${data.selected.size} 枚</p><button class="button primary" data-action="seg-confirm" ${pending||!data.selected.size?'disabled':''}>确认透明贴纸</button>${button('new','换一张测试图',pending)}`;
     }
     const stateText=data.job?({queued:'等待处理',running:real?'百度正在处理':'正在处理模拟任务',succeeded:real?'百度结果已返回，请检查边缘':'模拟任务完成',failed:'任务未完成',cancelled:'任务已取消',expired:'临时结果已过期'}[data.job.status]):'';
     bridge.shell(`<div class="page-heading"><div><h1>贴纸工坊<span style="color:var(--accent)">.</span></h1><p>从一张照片，到一枚舍不得丢的小收藏。</p></div></div><div class="seg-notice" role="note"><b>${real?'百度智能抠图 · 能力试验':'模拟流程测试 · 非 AI 分割'}</b><span>${real?'一张自动前景；框选可补提。真实效果待验收。':'仅本机合成图，未上传照片、未调用模型。'}</span></div><div class="seg-status" role="status">${esc(stateText)} ${['queued','running'].includes(data.job?.status)?button('cancel','取消任务'):''}</div>${data.error?`<div class="seg-error" role="alert">${esc(data.error)} ${button('restore','查询原任务')}</div>`:''}<div class="workshop-layout"><div>${main}</div><aside class="workshop-aside">${aside}<div class="note-rule"></div>${button('exit','返回本地小剪刀',pending)}</aside></div>`,'贴纸工坊');
-    bindPrompts();
+    bindPrompts();mountRetouch(pending);
   }
   function paint() {
     const svg=document.querySelector('#seg-prompts');if(!svg||!data.session)return;
@@ -100,6 +132,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(value.session){
       data.session=value.session;data.candidates=value.session.candidates;data.selected=new Set(data.candidates.map(c=>c.candidateId));
       try {const saved=JSON.parse(localStorage.getItem('shiye-seg-origin')||'null');if(saved?.imageSessionId===data.session.imageSessionId)bridge.restoreOrigin(saved.origin);}catch{}
+      await loadCorrections();
       data.job=value.job||null;
       if(value.job){if(['queued','running'].includes(value.job.status))poll(value.job.jobId,g);}
     }else{data.session=null;data.job=null;data.candidates=[];data.selected.clear();data.stage=1;}
@@ -158,15 +191,29 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   async function makeResults() {
     const results=[];
     for(const c of data.candidates.filter(c=>data.selected.has(c.candidateId))){
-      const response=await fetch(media(c.transparentRef));if(!response.ok)throw Error('临时结果已不可用，请重新处理。');
-      const base=await response.blob(),out=await bordered(base,4);
-      results.push({id:makeId(),name:c.name+(c.mock?'（模拟）':''),category:'照片',base,blob:out.blob,url:URL.createObjectURL(out.blob),border:4,width:out.width,height:out.height,provenance:{mock:c.mock,provider:c.mock?'mock':'baidu',providerRequestId:c.providerRequestId,imageSessionId:c.imageSessionId,sourceRevision:c.sourceRevision,candidateId:c.candidateId,candidateRevision:c.candidateRevision}});
+      const edit=corrected(c);let base=edit?.blob;
+      if(!base){const response=await fetch(media(c.transparentRef));if(!response.ok)throw Error('临时结果已不可用，请重新处理。');base=await response.blob();}
+      const out=await bordered(base,4);
+      results.push({id:makeId(),name:c.name+(c.mock?'（模拟）':''),category:'照片',base,blob:out.blob,url:URL.createObjectURL(out.blob),border:4,width:out.width,height:out.height,provenance:{mock:c.mock,provider:c.mock?'mock':'baidu',providerRequestId:c.providerRequestId,imageSessionId:c.imageSessionId,sourceRevision:c.sourceRevision,candidateId:c.candidateId,candidateRevision:c.candidateRevision,...(edit?{localRetouch:{version:1,editedAt:edit.editedAt}}:{})}});
     }
     for(const r of data.results)URL.revokeObjectURL(r.url);
     data.results=results;data.preview=0;data.stage=2;
   }
   async function act(action,element) {
     data.error='';
+    if(action==='retouch-open'){const c=data.candidates.find(c=>c.candidateId===element.dataset.id);if(c)await openRetouch(c);return;}
+    if(action==='retouch-tool'){if(retouch&&!retouch.editor.drawing)retouch.editor.tool=element.dataset.tool;return;}
+    if(action==='retouch-undo'){retouch?.editor.undo();return;}
+    if(action==='retouch-redo'){retouch?.editor.redo();return;}
+    if(action==='retouch-reset'){retouch?.editor.reset();return;}
+    if(action==='retouch-cancel'){leaveRetouch();return;}
+    if(action==='retouch-apply'){
+      if(!retouch)return;const {candidate:c,editor}=retouch,out=await editor.export(),key=correctionKey(c);
+      if(c.expiresAt<=Date.now())throw Error('临时修正记录已到期，请重新选择照片。');
+      const value={key,...out,expiresAt:c.expiresAt,editedAt:Date.now()};await storeCorrection(value);
+      const old=corrections.get(key);if(old)URL.revokeObjectURL(old.url);corrections.set(key,{...value,url:URL.createObjectURL(value.blob)});
+      data.selected.add(c.candidateId);editor.dispose();retouch=null;return;
+    }
     if(action==='open'){data.active=true;draw();data.booted=true;await restore();return;}
     if(action==='select'){const id=element.dataset.id;data.selected.has(id)?data.selected.delete(id):data.selected.add(id);return;}
     if(action==='tool'){data.tool=element.dataset.tool;return;}
@@ -176,7 +223,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(action==='undo'){const a=data.tool==='outline'?data.outline:data[data.tool];a.pop();return;}
     if(action==='preview'){data.preview=Number(element.dataset.index);return;}
     if(action==='back'){data.stage=1;return;}
-    if(action==='exit'){data.active=false;data.generation++;clearTimeout(pollId);bridge.renderLegacy();return;}
+    if(action==='exit'){if(!leaveRetouch())return;data.active=false;data.generation++;clearTimeout(pollId);bridge.renderLegacy();return;}
     if(action==='cancel'){data.generation++;clearTimeout(pollId);data.job=await api('/jobs/'+data.job.jobId+'/cancel',{operationId:makeId()});return;}
     if(action==='restore'){await restore();return;}
     if(action==='upload'){data.generation++;await uploadPhoto();return;}
@@ -191,18 +238,21 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   }
   document.addEventListener('click',async e=>{
     const el=e.target.closest('[data-action^="seg-"]');if(!el)return;
-    const action=el.dataset.action.slice(4);if(el.disabled||data.busy)return;
-    const immediate=['select','tool','target','add','clear','undo','preview','back','exit'];
+    const action=el.dataset.action.slice(4);if(el.disabled||data.busy||retouch?.editor.drawing)return;
+    const immediate=['retouch-tool','retouch-undo','retouch-redo','retouch-reset','retouch-cancel','select','tool','target','add','clear','undo','preview','back','exit'];
     data.busy=!immediate.includes(action);draw();
     try {await act(action,el);}catch(error){data.error=error.message;}
     finally{data.busy=false;draw();}
   });
   document.addEventListener('change',e=>{if(e.target.id==='seg-name')data.results[data.preview].name=e.target.value.trim()||(live()?'照片贴纸':'模拟贴纸');});
   document.addEventListener('change',e=>{
+    if(e.target.id==='seg-retouch-view'&&retouch){retouch.editor.view=e.target.value;draw();}
+    if(e.target.id==='seg-retouch-zoom'&&retouch){retouch.editor.zoom=Number(e.target.value);draw();}
     if(e.target.id==='seg-photo'){data.file=e.target.files?.[0]||null;data.consent=false;delete operations.upload;draw();}
     if(e.target.id==='seg-consent'){data.consent=e.target.checked;draw();}
   });
   document.addEventListener('input',async e=>{
+    if(e.target.id==='seg-retouch-size'&&retouch){retouch.editor.size=Number(e.target.value);document.querySelector('#seg-brush-value').textContent=e.target.value;return;}
     if(e.target.id!=='seg-border')return;
     const index=data.preview,item=data.results[index],version=++data.borderVersion;
     data.busy=true;
@@ -214,9 +264,59 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   });
   return { get active(){return data.active;},get busy(){return data.busy;},render:draw,
     back(){
-      if(data.busy)return;
+      if(data.busy||retouch?.editor.drawing)return;
+      if(retouch){leaveRetouch();draw();return;}
       if(data.stage===2){data.stage=1;draw();return;}
       data.active=false;data.generation++;clearTimeout(pollId);bridge.renderLegacy();
     }
   };
 };
+
+// Local alpha editing: original RGB stays intact; no provider requests are made here.
+function createLocalMaskEditor(source, providerMask, savedMask) {
+  const width=source.width,height=source.height;
+  if(providerMask.width!==width||providerMask.height!==height||savedMask&&(savedMask.width!==width||savedMask.height!==height))throw Error('图片与修正范围不一致，请返回重新选择。');
+  const canvas=document.createElement('canvas'),mask=document.createElement('canvas'),initial=document.createElement('canvas');
+  for(const c of [canvas,mask,initial]){c.width=width;c.height=height;}
+  canvas.id='seg-retouch-canvas';canvas.tabIndex=0;canvas.setAttribute('aria-label','手动修边画布，拖动恢复或擦除，支持撤销');
+  const ctx=canvas.getContext('2d'),m=mask.getContext('2d',{willReadFrequently:true}),ic=initial.getContext('2d');
+  ic.drawImage(providerMask,0,0);const pixels=ic.getImageData(0,0,width,height);
+  for(let i=0;i<pixels.data.length;i+=4){const a=pixels.data[i];pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=255;pixels.data[i+3]=a;}
+  ic.putImageData(pixels,0,0);m.drawImage(savedMask||initial,0,0);
+  const undo=[],redo=[];let active=null,last=null,tiles=null,historyBytes=0,frame=0;
+  const editor={canvas,enabled:true,tool:'restore',size:Math.max(10,Math.round(width*.025)),zoom:1,view:'result',changed:false,onchange:()=>{},get drawing(){return active!==null;},get canUndo(){return undo.length>0;},get canRedo(){return redo.length>0;}};
+  function paint(){frame=0;ctx.clearRect(0,0,width,height);ctx.globalCompositeOperation='source-over';ctx.drawImage(source,0,0);if(editor.view!=='source'){ctx.globalCompositeOperation='destination-in';ctx.drawImage(editor.view==='initial'?initial:mask,0,0);ctx.globalCompositeOperation='source-over';}}
+  function render(){if(!frame)frame=requestAnimationFrame(paint);}
+  const alpha=(image)=>{const a=new Uint8ClampedArray(image.data.length/4);for(let i=0;i<a.length;i++)a[i]=image.data[i*4+3];return a;};
+  function put(t,bytes){const image=m.createImageData(t.w,t.h);for(let i=0;i<bytes.length;i++){image.data[i*4]=image.data[i*4+1]=image.data[i*4+2]=255;image.data[i*4+3]=bytes[i];}m.putImageData(image,t.x,t.y);}
+  function remember(a,b){const radius=editor.size/2+2,x0=Math.max(0,Math.floor((Math.min(a.x,b.x)-radius)/128)),y0=Math.max(0,Math.floor((Math.min(a.y,b.y)-radius)/128));
+    const x1=Math.min(Math.ceil(width/128)-1,Math.floor((Math.max(a.x,b.x)+radius)/128)),y1=Math.min(Math.ceil(height/128)-1,Math.floor((Math.max(a.y,b.y)+radius)/128));
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const key=x+','+y;if(tiles.has(key))continue;const t={x:x*128,y:y*128,w:Math.min(128,width-x*128),h:Math.min(128,height-y*128)};t.before=alpha(m.getImageData(t.x,t.y,t.w,t.h));tiles.set(key,t);}
+  }
+  function stroke(a,b){remember(a,b);m.globalCompositeOperation=editor.tool==='erase'?'destination-out':'source-over';m.fillStyle=m.strokeStyle='#fff';m.lineWidth=editor.size;m.lineCap=m.lineJoin='round';m.beginPath();m.moveTo(a.x,a.y);m.lineTo(b.x,b.y);m.stroke();m.beginPath();m.arc(b.x,b.y,editor.size/2,0,Math.PI*2);m.fill();m.globalCompositeOperation='source-over';render();}
+  const point=e=>{const r=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(width,(e.clientX-r.left)*width/r.width)),y:Math.max(0,Math.min(height,(e.clientY-r.top)*height/r.height))};};
+  function finish(cancel=false){if(active===null)return;active=null;if(tiles){if(cancel){for(const t of tiles.values())put(t,t.before);}else{
+    const entry=[];for(const t of tiles.values()){t.after=alpha(m.getImageData(t.x,t.y,t.w,t.h));if(t.before.some((v,i)=>v!==t.after[i]))entry.push(t);}
+    if(entry.length){for(const e of redo)historyBytes-=e.bytes;redo.length=0;entry.bytes=entry.reduce((s,t)=>s+t.before.length+t.after.length,0);undo.push(entry);historyBytes+=entry.bytes;while(undo.length>1&&(undo.length>30||historyBytes>16*1024*1024))historyBytes-=undo.shift().bytes;editor.changed=true;}
+  }}tiles=null;render();editor.onchange();}
+  canvas.onpointerdown=e=>{if(!editor.enabled||active!==null||e.button!==0||editor.view!=='result'&&editor.tool!=='pan')return;active=e.pointerId;canvas.setPointerCapture(active);canvas.focus({preventScroll:true});if(editor.tool==='pan'){last={x:e.clientX,y:e.clientY};return;}tiles=new Map();last=point(e);stroke(last,last);e.preventDefault();};
+  canvas.onpointermove=e=>{if(e.pointerId!==active)return;if(editor.tool==='pan'){canvas.parentElement.parentElement.scrollBy(last.x-e.clientX,last.y-e.clientY);last={x:e.clientX,y:e.clientY};return;}const p=point(e);stroke(last,p);last=p;e.preventDefault();};
+  canvas.onpointerup=e=>{if(e.pointerId!==active)return;canvas.onpointermove(e);finish();};canvas.onpointercancel=e=>{if(e.pointerId===active)finish(true);};canvas.onlostpointercapture=e=>{if(e.pointerId===active)finish(true);};
+  editor.undo=()=>{if(active!==null)return;const e=undo.pop();if(e){for(const t of e)put(t,t.before);redo.push(e);render();editor.onchange();}};
+  editor.redo=()=>{if(active!==null)return;const e=redo.pop();if(e){for(const t of e)put(t,t.after);undo.push(e);render();editor.onchange();}};
+  canvas.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.stopPropagation();e.shiftKey?editor.redo():editor.undo();}};
+  editor.reset=()=>{if(active!==null)return;active=-1;tiles=new Map();remember({x:0,y:0},{x:width,y:height});m.clearRect(0,0,width,height);m.drawImage(initial,0,0);finish();};
+  editor.render=render;
+  editor.export=async()=>{
+    if(active!==null)throw Error('请先结束当前笔画。');
+    const result=document.createElement('canvas');result.width=width;result.height=height;const r=result.getContext('2d');r.drawImage(source,0,0);r.globalCompositeOperation='destination-in';r.drawImage(mask,0,0);
+    const rgba=r.getImageData(0,0,width,height).data;let left=width,top=height,right=-1,bottom=-1;
+    for(let i=3;i<rgba.length;i+=4)if(rgba[i]){const p=(i-3)/4,x=p%width,y=Math.floor(p/width);left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+    if(right<left)throw Error('已经全部擦除了，请恢复一些内容后再应用。');
+    const crop=document.createElement('canvas');crop.width=right-left+1;crop.height=bottom-top+1;crop.getContext('2d').drawImage(result,left,top,crop.width,crop.height,0,0,crop.width,crop.height);
+    const blob=c=>new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('无法保存修正，请重试。')),'image/png'));
+    return {blob:await blob(crop),mask:await blob(mask),width:crop.width,height:crop.height};
+  };
+  editor.dispose=()=>{cancelAnimationFrame(frame);source.close();providerMask.close();savedMask?.close();undo.length=redo.length=0;canvas.width=mask.width=initial.width=1;};
+  paint();return editor;
+}

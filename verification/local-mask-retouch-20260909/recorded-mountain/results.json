@@ -1,0 +1,16 @@
+{
+  "mode": "offline replay of already-returned mountain mask, no Baidu request",
+  "external": [],
+  "errors": [],
+  "restored": {
+    "x": 1407,
+    "y": 756,
+    "width": 2000,
+    "height": 1511,
+    "alphaBefore": 0,
+    "alphaAfter": 255
+  },
+  "status": "PASS",
+  "recordedMaskReplays": 1,
+  "realBaiduRequests": 0
+}
