@@ -39,6 +39,24 @@ export class BaiduProvider implements SegmentationProvider {
       throw new Fault(502,signal.aborted?'PROVIDER_TIMEOUT':'PROVIDER_REQUEST_FAILED',signal.aborted?'百度请求超时；处理和计费状态未知，不会自动重试。':'百度请求未完成；不会自动重试，请核对控制台记录。');
     }
   }
+  private async authorize(signal:AbortSignal) {
+    if(!this.token||this.token.expiresAt<=Date.now()){
+      const auth=await this.json(AUTH,new URLSearchParams({grant_type:'client_credentials',client_id:this.apiKey,client_secret:this.secretKey}),signal,64_000);
+      if(typeof auth.access_token!=='string'||!auth.access_token||auth.access_token.length>8192||typeof auth.expires_in!=='number'||auth.expires_in<=0)
+        throw new Fault(503,'PROVIDER_AUTH_FAILED','百度鉴权未通过，请在本地核对两项密钥及应用权限。');
+      this.token={value:auth.access_token,expiresAt:Date.now()+Math.min(auth.expires_in,2_592_000)*1000-60_000};
+    }
+  }
+  async name(source:Buffer):Promise<{name:string;requestId:string}> {
+    const signal=AbortSignal.timeout(Math.min(this.timeout,10_000));
+    await this.authorize(signal);
+    const result=await this.json('https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general?access_token='+encodeURIComponent(this.token!.value),new URLSearchParams({image:source.toString('base64')}),signal,128_000);
+    if(result.error_code!==undefined){if(result.error_code===110||result.error_code===111)this.token=undefined;throw new Fault(502,'NAMING_REJECTED','百度名称识别未通过，错误码：'+(Number.isInteger(result.error_code)?result.error_code:'unknown')+'。');}
+    const labels=Array.isArray(result.result)?result.result:[];
+    const valid=labels.filter((v):v is {keyword:string;score:number}=>!!v&&typeof v==='object'&&typeof v.keyword==='string'&&typeof v.score==='number'&&Number.isFinite(v.score)&&v.score>=.5&&v.score<=1&&v.keyword.trim().length>0&&v.keyword.trim().length<=30&&!/[<>\r\n\x00-\x1f]/.test(v.keyword));
+    valid.sort((a,b)=>b.score-a.score);
+    return {name:valid[0]?.keyword.trim()||'照片贴纸',requestId:typeof result.log_id==='string'?result.log_id:''};
+  }
   async segment(source:Buffer, box?:Box) {
     const meta=await sharp(source,{limitInputPixels:24_000_000}).metadata();
     const width=meta.width!,height=meta.height!,image=source.toString('base64');
@@ -47,13 +65,8 @@ export class BaiduProvider implements SegmentationProvider {
     const position=box?pixelBox(box,width,height):undefined;
     if(!this.apiKey.trim()||!this.secretKey.trim())throw new Fault(503,'MODEL_NOT_CONFIGURED','百度密钥尚未配置。');
     const signal=AbortSignal.timeout(this.timeout);
-    if(!this.token||this.token.expiresAt<=Date.now()){
-      const auth=await this.json(AUTH,new URLSearchParams({grant_type:'client_credentials',client_id:this.apiKey,client_secret:this.secretKey}),signal,64_000);
-      if(typeof auth.access_token!=='string'||!auth.access_token||auth.access_token.length>8192||typeof auth.expires_in!=='number'||auth.expires_in<=0)
-        throw new Fault(503,'PROVIDER_AUTH_FAILED','百度鉴权未通过，请在本地核对两项密钥及应用权限。');
-      this.token={value:auth.access_token,expiresAt:Date.now()+Math.min(auth.expires_in,2_592_000)*1000-60_000};
-    }
-    const result=await this.json(SEGMENT+'?access_token='+encodeURIComponent(this.token.value),JSON.stringify({image,method:box?'control':'auto',return_form:'mask',refine_mask:'true',...(position?{position}:{})}),signal,16_000_000);
+    await this.authorize(signal);
+    const result=await this.json(SEGMENT+'?access_token='+encodeURIComponent(this.token!.value),JSON.stringify({image,method:box?'control':'auto',return_form:'mask',refine_mask:'true',...(position?{position}:{})}),signal,16_000_000);
     if(result.error_code!==undefined){
       if(result.error_code===110||result.error_code===111)this.token=undefined;
       throw new Fault(502,'PROVIDER_REJECTED','百度未返回可用结果，请核对应用权限、额度及调用记录；不会自动重试。');

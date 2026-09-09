@@ -30,7 +30,7 @@ async function lock() {
 }
 await lock();
 try {
-  const {app,jobs}=await createApp({runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live});
+  const {app,jobs}=await createApp({runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live,naming:process.env.SHIYE_BAIDU_NAMING_ENABLED==='true'?live?.provider:undefined});
   const server=app.listen(port,host,()=>console.log(`拾页本机服务 http://${host}:${port}；${mode==='live'?'百度抠图，仅处理主动点击上传的照片。':'模拟模式，无外部模型调用。'}`));
   server.on('error',async e=>{console.error(e instanceof Error?e.message:'服务启动失败');await unlink(lockPath);process.exitCode=1;});
   const timer=setInterval(()=>jobs.expire().catch(()=>console.error('临时测试数据清理失败。')),60_000);timer.unref();

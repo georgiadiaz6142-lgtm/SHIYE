@@ -8,6 +8,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   const data = { active:false, mode:'mock', health:null, file:null, previewUrl:null, previewSize:null, selectionMode:false, box:null, session:null, job:null, candidates:[], selected:new Set(), target:null, tool:'outline', outline:[], positive:[], negative:[], stage:1, results:[], preview:0, busy:false, error:'', generation:0, booted:false, borderVersion:0 };
   let operations = {}, pollId = null, fileVersion=0;
   const corrections=new Map();let retouch=null;
+  const nameDrafts=new Map();
   const correctionKey=c=>[c.imageSessionId,c.sourceRevision,c.candidateId,c.candidateRevision].join(':');
   const corrected=c=>{const edit=corrections.get(correctionKey(c));return edit?.expiresAt>Date.now()?edit:undefined;};
   function correctionDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open('shiye-retouch-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('edits',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('无法打开本机修正记录，请重试。'));});}
@@ -133,7 +134,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     data.generation++;clearTimeout(pollId);clearPreview();
     for(const r of data.results)URL.revokeObjectURL(r.url);
     for(const c of corrections.values())URL.revokeObjectURL(c.url);
-    corrections.clear();operations={};
+    corrections.clear();nameDrafts.clear();operations={};
     Object.assign(data,{session:null,job:null,file:null,selectionMode:false,box:null,candidates:[],selected:new Set(),target:null,outline:[],positive:[],negative:[],stage:1,results:[],preview:0,error:''});
   }
   async function restore() {
@@ -228,10 +229,24 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       const edit=corrected(c);let base=edit?.blob;
       if(!base){const response=await fetch(media(c.transparentRef));if(!response.ok)throw Error('临时结果已不可用，请重新处理。');base=await response.blob();}
       const out=await bordered(base,4);
-      results.push({id:makeId(),name:c.name+(c.mock?'（模拟）':''),category:'照片',base,blob:out.blob,url:URL.createObjectURL(out.blob),border:4,width:out.width,height:out.height,provenance:{mock:c.mock,provider:c.mock?'mock':'baidu',providerRequestId:c.providerRequestId,imageSessionId:c.imageSessionId,sourceRevision:c.sourceRevision,candidateId:c.candidateId,candidateRevision:c.candidateRevision,...(edit?{localRetouch:{version:1,editedAt:edit.editedAt}}:{})}});
+      const draft=nameDrafts.get(correctionKey(c));
+      results.push({id:makeId(),nameKey:correctionKey(c),nameEdited:!!draft,name:draft?.name??(c.mock?c.name+'（模拟）':'照片贴纸'),category:'照片',base,blob:out.blob,url:URL.createObjectURL(out.blob),border:4,width:out.width,height:out.height,provenance:{mock:c.mock,provider:c.mock?'mock':'baidu',providerRequestId:c.providerRequestId,imageSessionId:c.imageSessionId,sourceRevision:c.sourceRevision,candidateId:c.candidateId,candidateRevision:c.candidateRevision,...(edit?{localRetouch:{version:1,editedAt:edit.editedAt}}:{})}});
     }
     for(const r of data.results)URL.revokeObjectURL(r.url);
     data.results=results;data.preview=0;data.stage=2;
+    for(const item of results)if(!item.nameEdited&&!item.provenance.mock&&data.health?.namingAvailable)void autoName(item);
+  }
+  async function autoName(item){
+    try{
+      const bitmap=await createImageBitmap(item.base),canvas=document.createElement('canvas');canvas.width=canvas.height=640;
+      const ctx=canvas.getContext('2d'),scale=Math.min(600/bitmap.width,600/bitmap.height);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,640,640);ctx.drawImage(bitmap,(640-bitmap.width*scale)/2,(640-bitmap.height*scale)/2,bitmap.width*scale,bitmap.height*scale);bitmap.close();
+      const body=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.85));if(!body||!data.results.includes(item)||item.nameEdited)return;
+      const p=item.provenance,response=await fetch(`/api/stickers/name/${p.imageSessionId}/${p.candidateId}/${p.candidateRevision}`,{method:'POST',headers:{'Content-Type':'image/jpeg'},body,signal:AbortSignal.timeout(12_000)});
+      if(!response.ok)return;const value=await response.json();
+      if(!data.results.includes(item)||item.nameEdited||typeof value.name!=='string'||!value.name.trim())return;
+      item.name=value.name.trim().slice(0,30);
+      const input=document.querySelector('#seg-name');if(data.stage===2&&data.results[data.preview]===item&&input)input.value=item.name;
+    }catch{/* Naming must not interrupt sticker editing or saving. */}
   }
   async function act(action,element) {
     data.error='';
@@ -279,7 +294,8 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     try {await act(action,el);}catch(error){data.error=error.message;}
     finally{data.busy=false;draw();}
   });
-  document.addEventListener('change',e=>{if(e.target.id==='seg-name')data.results[data.preview].name=e.target.value.trim()||(live()?'照片贴纸':'模拟贴纸');});
+  document.addEventListener('input',e=>{if(e.target.id==='seg-name'){const item=data.results[data.preview];if(!item)return;item.nameEdited=true;item.name=e.target.value;nameDrafts.set(item.nameKey,{name:item.name});}});
+  document.addEventListener('change',e=>{if(e.target.id==='seg-name'){const item=data.results[data.preview];item.name=e.target.value.trim()||(live()?'照片贴纸':'模拟贴纸');if(item.nameEdited)nameDrafts.set(item.nameKey,{name:item.name});}});
   document.addEventListener('change',e=>{
     if(e.target.id==='seg-retouch-view'&&retouch){retouch.editor.view=e.target.value;draw();}
     if(e.target.id==='seg-retouch-zoom'&&retouch){retouch.editor.zoom=Number(e.target.value);draw();}

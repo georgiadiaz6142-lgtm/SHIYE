@@ -49,7 +49,8 @@ export type Job = {
   error?: ApiError; mock: boolean; cost: { currency: 'USD'; amount: 0; simulated: true } | { currency: 'CNY'; amount: null; simulated: false };
 };
 export type Media = { mediaId: string; owner: string; imageSessionId: string; expiresAt: number };
-export type StoreData = { schemaVersion: 1; sessions: Session[]; jobs: Job[]; media: Media[] };
+export type NamingRecord = { key:string; owner:string; imageSessionId:string; expiresAt:number; attemptedAt:number; status:'attempted'|'succeeded'|'failed'; name?:string; providerRequestId?:string };
+export type StoreData = { schemaVersion: 1; sessions: Session[]; jobs: Job[]; media: Media[]; naming?:NamingRecord[] };
 
 const timestamp = z.number().int().nonnegative();
 const candidateSchema = z.object({
@@ -72,4 +73,5 @@ const jobSchema = z.object({
 export const storeSchema = z.object({
   schemaVersion:z.literal(1),sessions:z.array(sessionSchema),jobs:z.array(jobSchema),
   media:z.array(z.object({mediaId:id,owner:z.string().min(1),imageSessionId:id,expiresAt:timestamp}).strict()),
+  naming:z.array(z.object({key:z.string().regex(/^[a-f0-9]{64}$/),owner:z.string().min(1),imageSessionId:id,expiresAt:timestamp,attemptedAt:timestamp,status:z.enum(['attempted','succeeded','failed']),name:z.string().max(30).optional(),providerRequestId:z.string().optional()}).strict()).optional(),
 }).strict();

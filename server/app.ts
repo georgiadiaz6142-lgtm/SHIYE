@@ -6,8 +6,9 @@ import { Fault, initUpload, startJob, refineJob, id } from '../shared/contracts.
 import { Store } from './store.js';
 import { type LiveOptions } from './baidu.js';
 import { Jobs } from './jobs.js';
+import { Naming, type NamingProvider } from './naming.js';
 
-export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions}) {
+export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
   if(runtime===staticRoot||!relative(staticRoot,runtime).startsWith('..'+sep))
     throw new Error('运行目录必须位于静态目录之外。');
@@ -17,6 +18,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   if(!live&&options.live)throw new Error('模拟模式不能装载真实供应商。');
   const store=new Store(runtime);await store.init();
   const jobs=new Jobs(store,options.ttl??3_600_000,options.latency,options.live);await jobs.recover();
+  const naming=new Naming(jobs,live?options.naming:undefined);
   const app=express();app.disable('x-powered-by');
   app.use((req,res,next)=>{
     const origin=`http://127.0.0.1:${req.socket.localPort}`;
@@ -31,7 +33,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     }
     next();
   });
-  app.get('/api/health',(_req,res)=>res.json({status:'ok',limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
+  app.get('/api/health',(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming,limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
@@ -47,6 +49,12 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     if(!Buffer.isBuffer(req.body))throw new Fault(422,'INVALID_IMAGE','请上传图片文件字节。');
     const s=await jobs.uploadPhoto(res.locals.owner,id.parse(req.headers['x-shiye-operation-id']),req.body);
     res.status(201).json({...s,owner:undefined,operationId:undefined,sourceHash:undefined,mock:false});
+  });
+  app.post('/api/stickers/name/:sessionId/:candidateId/:revision',express.raw({type:'image/jpeg',limit:'2mb',inflate:false}),async(req,res)=>{
+    if(!Buffer.isBuffer(req.body))throw new Fault(422,'INVALID_IMAGE','名称识别需要贴纸缩略图。');
+    const revision=Number(req.params.revision);if(!Number.isInteger(revision)||revision<0)throw new Fault(422,'INVALID_INPUT','贴纸版本无效。');
+    const name=await naming.suggest(res.locals.owner,id.parse(req.params.sessionId),id.parse(req.params.candidateId),revision,req.body);
+    res.json({name});
   });
   app.use('/api',express.json({limit:'128kb',strict:true}));
   app.get('/api/session',(_req,res)=>{

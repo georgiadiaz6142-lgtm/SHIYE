@@ -88,6 +88,7 @@ export class Jobs {
       const ids=d.media.filter(m=>m.expiresAt<=now).map(m=>m.mediaId);
       d.media=d.media.filter(m=>m.expiresAt>now);
       for(const s of d.sessions)if(s.expiresAt<=now)s.candidates=[];
+      for(const n of d.naming||[])if(n.expiresAt<=now)delete n.name;
       return ids;
     });
     // Only newly managed media files under the configured local TTL are removed. No user assets or archives.
