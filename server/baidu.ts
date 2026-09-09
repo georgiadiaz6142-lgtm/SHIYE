@@ -47,6 +47,7 @@ export class BaiduProvider implements SegmentationProvider {
       this.token={value:auth.access_token,expiresAt:Date.now()+Math.min(auth.expires_in,2_592_000)*1000-60_000};
     }
   }
+  async checkConnection(){await this.authorize(AbortSignal.timeout(10_000));return {message:'鉴权通过；具体功能权限以实际调用结果为准。'};}
   async name(source:Buffer):Promise<{name:string;requestId:string}> {
     const signal=AbortSignal.timeout(Math.min(this.timeout,10_000));
     await this.authorize(signal);

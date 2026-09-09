@@ -1,9 +1,10 @@
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
+import { editJson } from './local-json.js';
 import { Fault } from '../shared/contracts.js';
 
-const configSchema=z.object({version:z.literal(1),secret:z.string().regex(/^[a-f0-9]{64}$/),invites:z.array(z.object({id:z.string().uuid(),hash:z.string().regex(/^[a-f0-9]{64}$/),status:z.enum(['unbound','bound','disabled']),expiresAt:z.number().int().positive().nullable()}))});
+export const configSchema=z.object({version:z.literal(1),secret:z.string().regex(/^[a-f0-9]{64}$/),invites:z.array(z.object({id:z.string().uuid(),hash:z.string().regex(/^[a-f0-9]{64}$/),status:z.enum(['unbound','bound','disabled']),expiresAt:z.number().int().positive().nullable(),grantVersion:z.number().int().nonnegative().optional(),createdAt:z.number().nullable().optional(),batch:z.string().optional(),note:z.string().optional(),cipher:z.string().optional(),useCount:z.number().optional(),firstUsedAt:z.number().optional(),lastUsedAt:z.number().optional(),trackingSince:z.number().optional()})),audit:z.array(z.object({id:z.string(),at:z.number(),actor:z.string(),action:z.string(),target:z.string()})).optional()});
 export type InviteConfig=z.infer<typeof configSchema>;
 export const inviteHash=(code:string)=>createHash('sha256').update(code.trim().toUpperCase().replace(/[-\s]/g,'')).digest('hex');
 export function generateInvites(count:number){
@@ -19,6 +20,8 @@ export class InviteAccess {
     try{return configSchema.parse(JSON.parse(await readFile(this.file,'utf8')));}
     catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw new Fault(503,'ACCESS_UNAVAILABLE','邀请验证暂不可用，请稍后重试。');}
   }
+  async snapshot(){return this.config();}
+  async update<T>(change:(data:InviteConfig)=>T|Promise<T>){return editJson(this.file,v=>configSchema.parse(v),change);}
   private valid(record:InviteConfig['invites'][number]){return record.status==='unbound'&&(record.expiresAt===null||record.expiresAt>this.now());}
   async status(token?:string){
     const config=await this.config();if(!config)return {available:false,authorized:false};
@@ -28,7 +31,7 @@ export class InviteAccess {
     const expected=createHmac('sha256',config.secret).update(payload).digest();
     if(!timingSafeEqual(expected,Buffer.from(signature,'hex')))return {available:true,authorized:false};
     try{const data=JSON.parse(Buffer.from(payload,'base64url').toString());const record=config.invites.find(i=>i.id===data.inviteId);
-      return {available:true,authorized:!!record&&this.valid(record)&&data.scope==='invite-guest'&&Number.isSafeInteger(data.expiresAt)&&data.expiresAt>this.now()&&data.expiresAt<=this.now()+duration};
+      return {available:true,authorized:!!record&&this.valid(record)&&data.scope==='invite-guest'&&(data.grantVersion||0)===(record.grantVersion||0)&&Number.isSafeInteger(data.expiresAt)&&data.expiresAt>this.now()&&data.expiresAt<=this.now()+duration};
     }catch{return {available:true,authorized:false};}
   }
   async verify(code:unknown,client:string,ip:string){
@@ -42,8 +45,9 @@ export class InviteAccess {
     if(typeof code!=='string'||code.length>128||!code.trim())throw new Fault(422,'INVALID_INVITE','请输入有效的邀请码。');
     const hash=inviteHash(code),record=config.invites.find(i=>timingSafeEqual(Buffer.from(i.hash,'hex'),Buffer.from(hash,'hex')));
     if(!record||!this.valid(record))throw new Fault(403,'INVALID_INVITE','邀请码无效或已失效，请检查后重试。');
+    await this.update(data=>{const row=data.invites.find(i=>i.id===record.id);if(!row||!this.valid(row))throw new Fault(403,'INVALID_INVITE','邀请码无效或已失效。');row.useCount=(row.useCount||0)+1;row.firstUsedAt??=this.now();row.lastUsedAt=this.now();row.trackingSince??=this.now();});
     const expiresAt=Math.min(this.now()+duration,record.expiresAt??Infinity);
-    const payload=Buffer.from(JSON.stringify({scope:'invite-guest',inviteId:record.id,expiresAt,nonce:randomBytes(16).toString('hex')})).toString('base64url');
+    const payload=Buffer.from(JSON.stringify({scope:'invite-guest',inviteId:record.id,grantVersion:record.grantVersion||0,expiresAt,nonce:randomBytes(16).toString('hex')})).toString('base64url');
     return {token:`${payload}.${createHmac('sha256',config.secret).update(payload).digest('hex')}`,maxAge:expiresAt-this.now()};
   }
 }

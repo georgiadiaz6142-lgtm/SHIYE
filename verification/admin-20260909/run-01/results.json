@@ -1,0 +1,12 @@
+[
+  {
+    "width": 1440,
+    "status": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1\n\n    at /Users/song/Documents/拾页/verification/admin-20260909/browser.cjs:7:816"
+  },
+  {
+    "width": 390,
+    "status": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1\n\n    at /Users/song/Documents/拾页/verification/admin-20260909/browser.cjs:7:816"
+  }
+]

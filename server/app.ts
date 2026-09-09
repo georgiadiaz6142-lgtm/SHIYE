@@ -8,8 +8,10 @@ import { type LiveOptions } from './baidu.js';
 import { Jobs } from './jobs.js';
 import { Naming, type NamingProvider } from './naming.js';
 import { type InviteAccess } from './access.js';
+import { type Admin } from './admin.js';
+import { adminRoutes,adminToken } from './admin-routes.js';
 
-export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess}) {
+export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
   if(runtime===staticRoot||!relative(staticRoot,runtime).startsWith('..'+sep))
     throw new Error('运行目录必须位于静态目录之外。');
@@ -34,7 +36,8 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     }
     next();
   });
-  app.get('/api/health',(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming,limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
+  app.get('/api/health',async(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming&&(!options.admin||await options.admin.apiEnabled('naming')),limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:(!options.admin||await options.admin.apiEnabled('cutout'))&&live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
+  if(options.admin)app.use('/api/admin',express.json({limit:'128kb',strict:true}),adminRoutes(options.admin));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
@@ -44,7 +47,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     res.locals.owner=createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
   const accessToken=(req:express.Request)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_invite='))?.slice(13);
-  app.get('/api/access/session',async(req,res)=>res.json(options.access?await options.access.status(accessToken(req)):{available:false,authorized:false}));
+  app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:'admin',username:admin.username}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
   app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{
     if(!options.access)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
     const grant=await options.access.verify(req.body?.code,res.locals.owner,req.socket.remoteAddress||'local');
@@ -52,7 +55,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     res.json({authorized:true});
   });
   app.use('/api',async(req,_res,next)=>{
-    if(options.access&&!(await options.access.status(accessToken(req))).authorized)throw new Fault(401,'INVITE_REQUIRED','请先输入邀请码进入。');
+    if(options.access&&!options.admin?.session(adminToken(req.headers.cookie))&&!(await options.access.status(accessToken(req))).authorized)throw new Fault(401,'INVITE_REQUIRED','请先输入邀请码进入。');
     next();
   });
   // The explicit upload button submits the chosen file; same-origin and session gates precede parsing.
@@ -92,7 +95,8 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   });
   app.use('/api',(_req,_res,next)=>next(new Fault(404,'NOT_FOUND','接口不存在。')));
   // Explicit public-file allowlist: archives, documents, runtime and secrets are never served.
-  const entries=new Set(['/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
+  app.get('/admin',(_req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'");res.sendFile(resolve(staticRoot,'admin.html'));});
+  const entries=new Set(['/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
     '/edgecut.js','/edgecut.css','/edgecut-core.js','/edgecut-worker.js',
     '/vendor/opencv-4.13.0/opencv.js','/vendor/opencv-4.13.0/LICENSE']);
   app.use((req,res,next)=>{
