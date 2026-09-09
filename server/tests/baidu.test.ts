@@ -105,7 +105,7 @@ test('Baidu cancelled late response never commits; restart never resubmits live 
   await store.transaction(d=>{d.jobs[0].status='running';});await jobs.recover();await jobs.idle();assert.equal(calls(),1);assert.equal(jobs.get(owner,j.jobId).error?.errorType,'RECOVERY_REQUIRES_REVIEW');
 });
 
-test('HTTP live photo gate, consent, ownership, result PNG, session recovery and default mock denial',async t=>{
+test('HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial',async t=>{
   let calls=0;
   const provider=new BaiduProvider(...credentials as [string,string],fakeTransport(async url=>{calls++;return url.endsWith('/token')?auth():successful();}));
   const runtime=join(await mkdtemp(join(tmpdir(),'shiye-baidu-http-')),'.private');
@@ -115,8 +115,8 @@ test('HTTP live photo gate, consent, ownership, result PNG, session recovery and
   const health=await (await fetch(base+'/api/health')).json() as {liveAvailable:boolean};assert.equal(health.liveAvailable,true);assert.equal(calls,0);
   const response=await fetch(base+'/api/session'),cookie=response.headers.get('set-cookie')!.split(';')[0];
   const headers={Origin:base,Cookie:cookie,'Content-Type':'application/octet-stream','X-Shiye-Operation-Id':randomUUID()},source=await fixture();
-  assert.equal((await fetch(base+'/api/uploads/photo',{method:'POST',headers,body:new Uint8Array(source)})).status,403);assert.equal(calls,0);
-  const uploaded=await fetch(base+'/api/uploads/photo',{method:'POST',headers:{...headers,'X-Shiye-Baidu-Consent':'true'},body:new Uint8Array(source)});assert.equal(uploaded.status,201);
+  assert.equal((await fetch(base+'/api/uploads/photo',{method:'POST',headers:{...headers,Origin:'http://example.invalid'},body:new Uint8Array(source)})).status,403);assert.equal(calls,0);
+  const uploaded=await fetch(base+'/api/uploads/photo',{method:'POST',headers,body:new Uint8Array(source)});assert.equal(uploaded.status,201);
   const session=await uploaded.json() as {imageSessionId:string;objectKey:string;sourceRevision:number};assert.equal(calls,0);
   const job=await (await fetch(base+'/api/segmentation/jobs',{method:'POST',headers:{Origin:base,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify(input(session))})).json() as {jobId:string};await jobs.idle();assert.equal(calls,2);
   const result=jobs.get((await import('node:crypto')).createHash('sha256').update(cookie.split('=')[1]).digest('hex'),job.jobId);assert.equal(result.status,'succeeded');
@@ -125,4 +125,15 @@ test('HTTP live photo gate, consent, ownership, result PNG, session recovery and
   const restored=await (await fetch(base+'/api/session',{headers:{Cookie:cookie}})).json() as {session:{candidates:unknown[]}};assert.equal(restored.session.candidates.length,1);
   const disk=await readFile(join(runtime,'state.json'),'utf8');for(const secret of [...credentials,'test-token'])assert.ok(!disk.includes(secret));
   await assert.rejects(createApp({runtime:runtime+'-blocked',staticRoot:resolve('shiye-editorial-prototype'),mode:'live'}),/不启用 live/);
+});
+
+
+test('explicit unlimited mode keeps accounting and TTL; first job can directly use a box',async()=>{
+  let calls=0;const boxes:unknown[]=[];
+  const {jobs,store}=await createApp({runtime:await mkdtemp(join(tmpdir(),'shiye-unlimited-')),staticRoot:resolve('shiye-editorial-prototype'),mode:'live',ttl:60000,live:{maxCalls:null,approvedUntil:null,provider:{segment:async(_source,box)=>{calls++;boxes.push(box);return {mask:await mask(0),requestId:String(calls)};}}}});
+  const s=await jobs.uploadPhoto(owner,randomUUID(),await fixture());assert.ok(s.expiresAt>Date.now()&&s.expiresAt<=Date.now()+60000);
+  const box={x:.1,y:.1,width:.5,height:.7};
+  const first=await jobs.submit(owner,refineJob.parse({...input(s),promptRevision:1,box}),'refine');await jobs.idle();assert.equal(calls,1);assert.deepEqual(boxes,[box]);assert.equal(jobs.get(owner,first.jobId).status,'succeeded');
+  for(let i=0;i<10;i++){const j=await jobs.submit(owner,input(s),'auto');await jobs.idle();assert.equal(jobs.get(owner,j.jobId).status,'succeeded');}
+  assert.equal(calls,11);assert.equal(store.data.jobs.filter(j=>j.providerAttemptedAt!==undefined).length,11);assert.equal(jobs.session(owner,s.imageSessionId).candidates.length,1);
 });

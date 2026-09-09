@@ -7,6 +7,8 @@ export interface SegmentationProvider {
   segment(source: Buffer, box?: Box): Promise<{mask: Buffer; requestId: string}>;
 }
 
+export type LiveOptions = {provider:SegmentationProvider;maxCalls:number|null;approvedUntil:number|null};
+
 export function pixelBox(box: Box, width: number, height: number) {
   const x1=Math.max(1,Math.round(box.x*width)), y1=Math.max(1,Math.round(box.y*height));
   const x2=Math.min(width-1,Math.round((box.x+box.width)*width)), y2=Math.min(height-1,Math.round((box.y+box.height)*height));

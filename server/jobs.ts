@@ -1,16 +1,16 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { writeFile, readFile, unlink } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
-import { pixelBox, type SegmentationProvider } from './baidu.js';
+import { pixelBox, type LiveOptions } from './baidu.js';
 import { Store } from './store.js';
 import { fixture, mask, compose, fixtureTarget, WIDTH, HEIGHT, normalizeBaidu } from './images.js';
 import { Fault, type Session, type StartInput, type RefineInput, type Job, type Candidate, type StoreData } from '../shared/contracts.js';
 
 export class Jobs {
   private tail: Promise<unknown> = Promise.resolve();
-  constructor(readonly store: Store, readonly ttl: number, readonly latency = 350, readonly live?: {provider:SegmentationProvider;maxCalls:number;approvedUntil:number}) {}
+  constructor(readonly store: Store, readonly ttl: number, readonly latency = 350, readonly live?: LiveOptions) {}
   assertLive() {
-    if(!this.live||this.live.approvedUntil<=Date.now())throw new Fault(403,'LIVE_NOT_APPROVED','百度测试尚未启用或授权已到期，请先确认额度和测试照片。');
+    if(!this.live||(this.live.approvedUntil!==null&&this.live.approvedUntil<=Date.now()))throw new Fault(403,'LIVE_NOT_APPROVED','百度测试尚未启用或授权已到期，请先确认额度和测试照片。');
   }
   async uploadPhoto(owner:string, operationId:string, bytes:Buffer) {
     this.assertLive();
@@ -19,7 +19,7 @@ export class Jobs {
       this.assertLive();
       const old=d.sessions.find(s=>s.owner===owner&&s.operationId===operationId);
       if(old){if(old.sourceHash!==sourceHash)throw new Fault(409,'OPERATION_CONFLICT','同一次上传不能更换图片。');return this.session(owner,old.imageSessionId,d);}
-      const objectKey=randomUUID(),imageSessionId=randomUUID(),expiresAt=Math.min(Date.now()+this.ttl,this.live!.approvedUntil);
+      const objectKey=randomUUID(),imageSessionId=randomUUID(),expiresAt=Math.min(Date.now()+this.ttl,this.live!.approvedUntil??Infinity);
       await writeFile(this.store.mediaPath(objectKey),image.png,{flag:'wx',mode:0o600});
       const session:Session={imageSessionId,owner,operationId,objectKey,sourceHash,sourceRevision:1,width:image.width,height:image.height,expiresAt,candidates:[],promptRevision:0,fixture:false};
       d.sessions.push(session);d.media.push({mediaId:objectKey,owner,imageSessionId,expiresAt});return session;
@@ -116,7 +116,7 @@ export class Jobs {
       const j=d.jobs.find(j=>j.jobId===job.jobId)!;
       if(j.status!=='running'||this.session(j.owner,j.input.imageSessionId,d).latestJobId!==j.jobId)return false;
       this.assertLive();
-      if(d.jobs.filter(j=>j.provider==='baidu'&&j.providerAttemptedAt!==undefined).length>=this.live!.maxCalls)throw new Fault(429,'TEST_CALL_LIMIT','本轮测试调用上限已到，需核对额度后再继续。');
+      if(this.live!.maxCalls!==null&&d.jobs.filter(j=>j.provider==='baidu'&&j.providerAttemptedAt!==undefined).length>=this.live!.maxCalls)throw new Fault(429,'TEST_CALL_LIMIT','本轮测试调用上限已到，需核对额度后再继续。');
       j.providerAttemptedAt=Date.now();return true;
     });
     if(!dispatch)return;

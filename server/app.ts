@@ -4,16 +4,16 @@ import { resolve, relative, sep } from 'node:path';
 import { ZodError } from 'zod';
 import { Fault, initUpload, startJob, refineJob, id } from '../shared/contracts.js';
 import { Store } from './store.js';
-import { type SegmentationProvider } from './baidu.js';
+import { type LiveOptions } from './baidu.js';
 import { Jobs } from './jobs.js';
 
-export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:{provider:SegmentationProvider;maxCalls:number;approvedUntil:number}}) {
+export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
   if(runtime===staticRoot||!relative(staticRoot,runtime).startsWith('..'+sep))
     throw new Error('运行目录必须位于静态目录之外。');
   const live=options.mode==='live';
   if(options.mode&&!['mock','live'].includes(options.mode))throw new Error('未知运行模式。');
-  if(live&&(!options.live||!Number.isInteger(options.live.maxCalls)||options.live.maxCalls<1||options.live.maxCalls>100||!Number.isFinite(options.live.approvedUntil)||options.live.approvedUntil<=Date.now()||!options.ttl))throw new Error('缺少明确的测试上限、授权期限或本地保留期限，不启用 live 模式。');
+  if(live&&(!options.live||options.live.maxCalls!==null&&(!Number.isInteger(options.live.maxCalls)||options.live.maxCalls<1||options.live.maxCalls>100)||options.live.approvedUntil!==null&&(!Number.isFinite(options.live.approvedUntil)||options.live.approvedUntil<=Date.now())||!options.ttl))throw new Error('缺少明确的测试上限、授权期限或本地保留期限，不启用 live 模式。');
   if(!live&&options.live)throw new Error('模拟模式不能装载真实供应商。');
   const store=new Store(runtime);await store.init();
   const jobs=new Jobs(store,options.ttl??3_600_000,options.latency,options.live);await jobs.recover();
@@ -31,7 +31,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     }
     next();
   });
-  app.get('/api/health',(_req,res)=>res.json({status:'ok',mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&options.live!.approvedUntil>Date.now(),photosAccepted:live&&options.live!.approvedUntil>Date.now(),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
+  app.get('/api/health',(_req,res)=>res.json({status:'ok',limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
@@ -40,9 +40,9 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     }
     res.locals.owner=createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
-  // Gate before parsing bytes. Consent applies only to the file explicitly chosen in the workshop.
+  // The explicit upload button submits the chosen file; same-origin and session gates precede parsing.
   app.post('/api/uploads/photo',(req,_res,next)=>{
-    try{jobs.assertLive();if(req.headers['x-shiye-baidu-consent']!=='true')throw new Fault(403,'PHOTO_CONSENT_REQUIRED','请先确认将本张照片交给百度处理。');next();}catch(e){next(e);}
+    try{jobs.assertLive();next();}catch(e){next(e);}
   },express.raw({type:'application/octet-stream',limit:'10mb',inflate:false}),async(req,res)=>{
     if(!Buffer.isBuffer(req.body))throw new Fault(422,'INVALID_IMAGE','请上传图片文件字节。');
     const s=await jobs.uploadPhoto(res.locals.owner,id.parse(req.headers['x-shiye-operation-id']),req.body);

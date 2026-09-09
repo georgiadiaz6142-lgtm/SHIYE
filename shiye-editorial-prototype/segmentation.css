@@ -17,3 +17,7 @@
 .retouch-plane{position:relative;line-height:0}.retouch-plane canvas{display:block;width:100%;height:auto;touch-action:none}.retouch-plane canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .retouch-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}.retouch-tools .active{background:#e5eadb;border-color:#60744f;color:#435331}.retouch-hint{font-size:11px!important}.seg-candidate>.text-link+.text-link{margin-left:12px}
 @media(max-width:700px){.retouch-viewport{max-height:50vh}.seg-candidate>.text-link+.text-link{margin-left:0;display:block}.retouch-tools .button{min-height:44px}}
+
+.upload-zone.has-photo{display:block;padding:18px;text-align:center}.seg-upload-preview{margin:0 auto 18px}.seg-upload-preview>img{max-height:none;margin:0}
+.seg-upload-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin:20px 0 6px}.seg-upload-actions .button{min-width:190px}.seg-upload-actions [aria-pressed="true"]{border-color:#60744f;color:#435331;background:#e5eadb}
+@media(max-width:700px){.upload-zone.has-photo{padding:10px}.seg-upload-actions .button{width:100%;min-height:44px}}

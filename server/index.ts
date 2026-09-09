@@ -10,7 +10,8 @@ if(!Number.isInteger(port)||port<1||port>65535||!Number.isInteger(ttl)||ttl<60||
 const mode=process.env.SHIYE_SEGMENTATION_MODE||'mock';
 let live;
 if(mode==='live'){
-  const maxCalls=Number(process.env.SHIYE_BAIDU_MAX_CALLS),approvedUntil=Date.parse(process.env.SHIYE_BAIDU_APPROVED_UNTIL||'');
+  const limitsDisabled=process.env.SHIYE_BAIDU_LIMITS_DISABLED==='true';
+  const maxCalls=limitsDisabled?null:Number(process.env.SHIYE_BAIDU_MAX_CALLS),approvedUntil=limitsDisabled?null:Date.parse(process.env.SHIYE_BAIDU_APPROVED_UNTIL||'');
   if(process.env.SHIYE_BAIDU_APPROVED!=='true'||!process.env.SHIYE_TEMP_TTL_SECONDS||!process.env.BAIDU_API_KEY?.trim()||!process.env.BAIDU_SECRET_KEY?.trim())throw new Error('真实测试尚未获准或配置不完整；保持模拟模式直到额度、照片和保留期限确认。');
   live={provider:new BaiduProvider(process.env.BAIDU_API_KEY,process.env.BAIDU_SECRET_KEY),maxCalls,approvedUntil};
 }
@@ -30,7 +31,7 @@ async function lock() {
 await lock();
 try {
   const {app,jobs}=await createApp({runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live});
-  const server=app.listen(port,host,()=>console.log(`拾页本机服务 http://${host}:${port}；${mode==='live'?'百度测试模式，仅处理主动提交并确认的照片。':'模拟模式，无外部模型调用。'}`));
+  const server=app.listen(port,host,()=>console.log(`拾页本机服务 http://${host}:${port}；${mode==='live'?'百度抠图，仅处理主动点击上传的照片。':'模拟模式，无外部模型调用。'}`));
   server.on('error',async e=>{console.error(e instanceof Error?e.message:'服务启动失败');await unlink(lockPath);process.exitCode=1;});
   const timer=setInterval(()=>jobs.expire().catch(()=>console.error('临时测试数据清理失败。')),60_000);timer.unref();
   let closing=false;

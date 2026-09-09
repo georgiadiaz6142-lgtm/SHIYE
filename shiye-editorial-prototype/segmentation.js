@@ -1,12 +1,12 @@
 'use strict';
 
-// One workshop, explicit mock/live provenance; live upload requires both server approval and file consent.
+// One workshop, explicit mock/live provenance; upload is only triggered by the explicit submit button.
 window.ShiyeSegmentation = function createWorkshop(bridge) {
   const esc = bridge.esc;
   const media = id => '/api/media/' + encodeURIComponent(id);
   const makeId = () => crypto.randomUUID();
-  const data = { active:false, mode:'mock', health:null, file:null, consent:false, box:null, session:null, job:null, candidates:[], selected:new Set(), target:null, tool:'outline', outline:[], positive:[], negative:[], stage:1, results:[], preview:0, busy:false, error:'', generation:0, booted:false, borderVersion:0 };
-  let operations = {}, pollId = null;
+  const data = { active:false, mode:'mock', health:null, file:null, previewUrl:null, previewSize:null, selectionMode:false, box:null, session:null, job:null, candidates:[], selected:new Set(), target:null, tool:'outline', outline:[], positive:[], negative:[], stage:1, results:[], preview:0, busy:false, error:'', generation:0, booted:false, borderVersion:0 };
+  let operations = {}, pollId = null, fileVersion=0;
   const corrections=new Map();let retouch=null;
   const correctionKey=c=>[c.imageSessionId,c.sourceRevision,c.candidateId,c.candidateRevision].join(':');
   const corrected=c=>{const edit=corrections.get(correctionKey(c));return edit?.expiresAt>Date.now()?edit:undefined;};
@@ -59,8 +59,10 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       main=`<div class="retouch-toolbar"><label>查看 <select id="seg-retouch-view" ${pending?'disabled':''}>${[['result','修正结果'],['source','原照片'],['initial','原抠图']].map(([v,t])=>`<option value="${v}" ${e.view===v?'selected':''}>${t}</option>`).join('')}</select></label><label>缩放 <select id="seg-retouch-zoom" ${pending?'disabled':''}>${[1,1.5,2,3,4].map(v=>`<option value="${v}" ${e.zoom===v?'selected':''}>${v*100}%</option>`).join('')}</select></label></div><div class="retouch-viewport"><div class="retouch-plane" style="width:${e.zoom*100}%"></div></div>`;
       aside=`<div class="eyebrow">修整这一枚</div><h3>把想留下的，<br>慢慢修好。</h3><div class="retouch-tools">${[['restore','恢复'],['erase','擦除'],['pan','移动画布']].map(([v,t])=>`<button class="button outline small ${e.tool===v?'active':''}" data-action="seg-retouch-tool" data-tool="${v}" aria-pressed="${e.tool===v}" ${pending?'disabled':''}>${t}</button>`).join('')}</div><label class="field"><span>笔刷大小 <output id="seg-brush-value">${e.size}</output> px</span><input id="seg-retouch-size" type="range" min="2" max="${Math.max(80,Math.round(s.width*.2))}" value="${e.size}" ${pending?'disabled':''}></label><div class="seg-actions">${button('retouch-undo','撤销',pending||!e.canUndo)}${button('retouch-redo','重做',pending||!e.canRedo)}${button('retouch-reset','还原原抠图',pending)}</div><p>恢复原照片中被误删的部分，或擦掉多余背景。放大后可切换“移动画布”。</p><p>${e.view==='result'?'修正只在本机进行，不调用百度。':'正在对比查看，切回“修正结果”后可继续涂画。'}</p><button class="button primary" data-action="seg-retouch-apply" ${pending?'disabled':''}>应用修正</button>${button('retouch-cancel','返回候选',pending)}<p class="retouch-hint">应用后会暂存修正；未应用的笔画刷新后会丢失。确认满意后收入收藏。</p>`;
     }else if(!s&&real){
-      main=`<div class="upload-zone"><div class="upload-symbol">✂</div><h2>从照片里，留下喜欢的。</h2><p>百度自动抠图可能将多个物体合成一张前景。<br>支持静态 JPG、PNG、WebP，最大 10 MB；编码超限会提示。</p><label class="button outline">选择测试照片<input id="seg-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden ${pending?'disabled':''}></label><p>${esc(data.file?.name||'尚未选择照片')}</p><label><input id="seg-consent" type="checkbox" ${data.consent?'checked':''} ${pending?'disabled':''}> 我确认将这张照片发送至百度智能抠图处理</label><p>本机临时图片最多保留 ${Math.round((data.health?.localTtlSeconds||0)/60)} 分钟；百度端保留与删除政策仍待核准。</p><button class="button dark" data-action="seg-upload" ${pending||!data.file||!data.consent||!data.health?.liveAvailable?'disabled':''}>${pending?'正在提交…':'上传并自动抠图'}</button></div>`;
-      aside='<div class="eyebrow">BAIDU CUTOUT</div><h3>先看边缘，<br>再决定留下。</h3><p>自动结果是一张前景图。漏提或混在一起的对象，可再框选交给百度处理，每次提交会新增一次请求。</p><p>多主体独立发现与点选纠错尚未通过验证。</p>';
+      const preview=data.previewUrl&&data.previewSize;
+      const picture=preview?`<div class="seg-source seg-upload-preview" style="aspect-ratio:${data.previewSize.width}/${data.previewSize.height}"><img id="seg-source" src="${esc(data.previewUrl)}" alt="${esc(data.file.name)}">${data.selectionMode?`<svg id="seg-prompts" viewBox="0 0 ${data.previewSize.width} ${data.previewSize.height}" preserveAspectRatio="none" aria-label="上传前框选景物"></svg>`:''}</div>`:'<div class="upload-symbol">✂</div><h2>从照片里，留下喜欢的。</h2>';
+      main=`<div class="upload-zone ${preview?'has-photo':''}">${picture}<p>${preview?(data.selectionMode?'在照片上拖出一个框，完整包住想留下的景物。':'整张自动抠图，或先框选想留下的景物。'):'选择一张照片，先看看想留下什么。'}<br>支持静态 JPG、PNG、WebP，最大 10 MB。</p><label class="button outline">${preview?'更换照片':'选择照片'}<input id="seg-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden ${pending?'disabled':''}></label><p>${esc(data.file?.name||'尚未选择照片')}</p><div class="seg-upload-actions"><button class="button outline" data-action="seg-pick-box" aria-pressed="${data.selectionMode}" ${pending||!preview?'disabled':''}>${data.selectionMode?'取消框选':'框选具体景物'}</button><button class="button dark" data-action="seg-upload" ${pending||!data.file||!data.health?.liveAvailable?'disabled':''}>${pending?'正在提交…':data.selectionMode?'上传并框选抠图':'上传并自动抠图'}</button></div></div>`;
+      aside='<div class="eyebrow">BAIDU CUTOUT</div><h3>先选景物，<br>再留下喜欢。</h3><p>自动抠图会生成一张前景贴纸。想单独留下某个景物，可以先在照片上框选。</p><p>结果返回后，可用手动修边补回误删的部分，或擦掉多余背景。</p>';
     }else if(!s){
       main=`<div class="upload-zone"><div class="upload-symbol">✂</div><h2>先把流程走一遍</h2><p>用三个合成形状验证候选、修正和收藏。<br>不使用个人照片，不验证 AI 提取效果。</p><button class="button dark" data-action="seg-start" ${pending?'disabled':''}>${pending?'正在准备…':'开始模拟流程'}</button></div>`;
       aside='<div class="eyebrow">WORKSHOP TEST</div><h3>每一步，<br>都能看清楚。</h3><p>百度真实测试尚未启用。当前测试图和蒙版由本机程序制作，没有识别照片。</p><p>真实自动发现和自动贴边仍待模型验收。</p>';
@@ -69,17 +71,17 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       main=`<div class="preview-stage"><img id="seg-sticker-preview" src="${esc(item.url)}" alt="${esc(item.name)}"></div><div class="preview-switch">${data.results.map((r,i)=>`<button data-action="seg-preview" data-index="${i}" class="${i===data.preview?'active':''}" aria-label="预览${real?'':'模拟'}贴纸 ${i+1}"><img src="${esc(r.url)}" alt="${esc(r.name)}"></button>`).join('')}</div>`;
       aside=`<div class="eyebrow">02 — MAKE IT YOURS</div><h3>确认后，<br>再收入收藏。</h3><label class="field"><span>贴纸名称</span><input id="seg-name" maxlength="30" value="${esc(item.name)}"></label><div class="range-label"><span>这一枚的白边</span><span>${item.border}px</span></div><input id="seg-border" type="range" min="0" max="10" value="${item.border}" aria-label="这一枚的白边"><p>白边已合成进 PNG，只改变当前贴纸，不调用模型。</p><button class="button primary" data-action="seg-save" ${pending?'disabled':''}>收藏 ${data.results.length} 枚${real?'':'模拟'}贴纸</button><button class="button outline save-use" data-action="seg-use" ${pending?'disabled':''}>收藏并用于创作</button>${button('back','返回候选',pending)}`;
     }else{
-      main=`<div class="seg-source" style="aspect-ratio:${s.width}/${s.height}"><img id="seg-source" src="${media(s.objectKey)}" alt="${real?'本张获准处理的照片':'合成测试图，三个彩色几何形状，不是照片'}"><svg id="seg-prompts" viewBox="0 0 ${s.width} ${s.height}" preserveAspectRatio="none" aria-label="小剪刀提示区域"></svg></div><div class="seg-candidates">${data.candidates.map(c=>`<article class="seg-candidate ${data.selected.has(c.candidateId)?'chosen':''}"><button class="seg-pick" data-action="seg-select" data-id="${c.candidateId}" aria-pressed="${data.selected.has(c.candidateId)}" ${pending?'disabled':''}><img src="${corrected(c)?.url||media(c.transparentRef)}" alt="${esc(c.name)}"><span>${esc(c.name)}</span><small>${data.selected.has(c.candidateId)?'已选中':'选择'}</small></button><button class="text-link" data-action="seg-target" data-id="${c.candidateId}" ${pending?'disabled':''}>重新框选</button><button class="text-link" data-action="seg-retouch-open" data-id="${c.candidateId}" ${pending?'disabled':''}>手动修边${corrected(c)?' · 已修正':''}</button></article>`).join('')}</div>`;
-      if(real)aside=`<div class="eyebrow">01 — PICK YOUR MOMENTS</div><h3>${data.target?'重新框选这一枚':'框住想留下的。'}</h3><p>拖出一个框，尽量完整包住一个主体，再由百度生成贴边蒙版。框只是提示，最终边缘来自模型。</p><p>自动前景可能含多个物体，不代表已分别发现。百度暂不支持保留点、排除点或小剪刀圈线。</p><div class="seg-actions">${button('clear','清除框选',pending)}${button('refine',data.target?'提交框选重提':'框选补提一枚',pending)}${data.target?button('add','改为补提',pending):''}${button('auto','重新自动抠图',pending)}</div><p>每次提交各发起一次百度请求；不会自动重试。${data.target?'其他候选保留。':''}</p><p>已选择 ${data.selected.size} 枚</p><button class="button primary" data-action="seg-confirm" ${pending||!data.selected.size?'disabled':''}>确认透明贴纸</button>${button('new','换一张照片',pending)}`;
+      main=`<div class="seg-source" style="aspect-ratio:${s.width}/${s.height}"><img id="seg-source" src="${media(s.objectKey)}" alt="${real?'本张获准处理的照片':'合成测试图，三个彩色几何形状，不是照片'}">${real?'':`<svg id="seg-prompts" viewBox="0 0 ${s.width} ${s.height}" preserveAspectRatio="none" aria-label="小剪刀提示区域"></svg>`}</div><div class="seg-candidates">${data.candidates.map(c=>`<article class="seg-candidate ${data.selected.has(c.candidateId)?'chosen':''}"><button class="seg-pick" data-action="seg-select" data-id="${c.candidateId}" aria-pressed="${data.selected.has(c.candidateId)}" ${pending?'disabled':''}><img src="${corrected(c)?.url||media(c.transparentRef)}" alt="${esc(c.name)}"><span>${esc(c.name)}</span><small>${data.selected.has(c.candidateId)?'已选中':'选择'}</small></button>${real?'':`<button class="text-link" data-action="seg-target" data-id="${c.candidateId}" ${pending?'disabled':''}>修正这一枚</button>`}<button class="text-link" data-action="seg-retouch-open" data-id="${c.candidateId}" ${pending?'disabled':''}>手动修边${corrected(c)?' · 已修正':''}</button></article>`).join('')}</div>`;
+      if(real)aside=`<div class="eyebrow">01 — PICK YOUR MOMENTS</div><h3>看看这一枚，<br>是否合心意。</h3><p>需要补回或擦除内容，可点击贴纸旁的“手动修边”。</p><p>已选择 ${data.selected.size} 枚</p><button class="button primary" data-action="seg-confirm" ${pending||!data.selected.size?'disabled':''}>确认透明贴纸</button>${button('new','选择照片',pending)}`;
       else aside=`<div class="eyebrow">01 — PICK YOUR MOMENTS</div><h3>${data.target?'修正这一枚':'把遗漏的，也带上。'}</h3><p>模拟首次返回两个候选，第三个形状用于练习补提。用小剪刀圈一圈，或标记要保留的位置。</p><div class="seg-tools">${[['outline','✂ 小剪刀'],['positive','保留点'],['negative','排除点']].map(([v,t])=>`<button class="chip ${data.tool===v?'active':''}" data-action="seg-tool" data-tool="${v}" ${pending?'disabled':''}>${t}</button>`).join('')}${button('undo','撤销提示',pending)}${button('clear','清除提示',pending)}</div><p>${data.target?'正在修正选定候选；其他候选保留。':'当前为补提新对象。'}<br>测试程序只演示提示传递，点和圈线不证明真实自动贴边。</p><div class="seg-actions">${button('refine',data.target?'提交模拟修正':'补提模拟对象',pending)}${data.target?button('add','改为补提',pending):''}${button('auto','重新模拟发现',pending)}</div><p>已选择 ${data.selected.size} 枚</p><button class="button primary" data-action="seg-confirm" ${pending||!data.selected.size?'disabled':''}>确认透明贴纸</button>${button('new','换一张测试图',pending)}`;
     }
     const stateText=data.job?({queued:'等待处理',running:real?'百度正在处理':'正在处理模拟任务',succeeded:real?'百度结果已返回，请检查边缘':'模拟任务完成',failed:'任务未完成',cancelled:'任务已取消',expired:'临时结果已过期'}[data.job.status]):'';
-    bridge.shell(`<div class="page-heading"><div><h1>贴纸工坊<span style="color:var(--accent)">.</span></h1><p>从一张照片，到一枚舍不得丢的小收藏。</p></div></div><div class="seg-notice" role="note"><b>${real?'百度智能抠图 · 能力试验':'模拟流程测试 · 非 AI 分割'}</b><span>${real?'一张自动前景；框选可补提。真实效果待验收。':'仅本机合成图，未上传照片、未调用模型。'}</span></div><div class="seg-status" role="status">${esc(stateText)} ${['queued','running'].includes(data.job?.status)?button('cancel','取消任务'):''}</div>${data.error?`<div class="seg-error" role="alert">${esc(data.error)} ${button('restore','查询原任务')}</div>`:''}<div class="workshop-layout"><div>${main}</div><aside class="workshop-aside">${aside}<div class="note-rule"></div>${button('exit','返回本地小剪刀',pending)}</aside></div>`,'贴纸工坊');
+    bridge.shell(`<div class="page-heading"><div><h1>贴纸工坊<span style="color:var(--accent)">.</span></h1><p>从一张照片，到一枚舍不得丢的小收藏。</p></div></div><div class="seg-notice" role="note"><b>${real?'百度智能抠图 · 能力试验':'模拟流程测试 · 非 AI 分割'}</b><span>${real?'先预览和框选，再制作贴纸。':'仅本机合成图，未上传照片、未调用模型。'}</span></div><div class="seg-status" role="status">${esc(stateText)} ${['queued','running'].includes(data.job?.status)?button('cancel','取消任务'):''}</div>${data.error?`<div class="seg-error" role="alert">${esc(data.error)} ${s?button('restore','查询原任务'):''}</div>`:''}<div class="workshop-layout"><div>${main}</div><aside class="workshop-aside">${aside}<div class="note-rule"></div>${button('exit','返回本地小剪刀',pending)}</aside></div>`,'贴纸工坊');
     bindPrompts();mountRetouch(pending);
   }
   function paint() {
-    const svg=document.querySelector('#seg-prompts');if(!svg||!data.session)return;
-    const {width:w,height:h}=data.session;
+    const svg=document.querySelector('#seg-prompts'),size=data.session||data.previewSize;if(!svg||!size)return;
+    const {width:w,height:h}=size;
     if(live()){
       const b=data.box;svg.innerHTML=b?`<rect x="${b.x*w}" y="${b.y*h}" width="${b.width*w}" height="${b.height*h}" fill="#44674118" stroke="#446741" stroke-width="2"/>`:'';return;
     }
@@ -92,7 +94,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       let anchor=null,previous=null;
       svg.onpointerdown=e=>{if(busy()||e.button!==0||active!==null)return;active=e.pointerId;svg.setPointerCapture(active);anchor=point(e);previous=data.box;data.box=null;paint();e.preventDefault();};
       svg.onpointermove=e=>{if(e.pointerId!==active)return;const p=point(e);data.box={x:Math.min(anchor.x,p.x),y:Math.min(anchor.y,p.y),width:Math.abs(p.x-anchor.x),height:Math.abs(p.y-anchor.y)};paint();};
-      svg.onpointerup=e=>{if(e.pointerId!==active)return;svg.onpointermove(e);active=null;paint();};
+      svg.onpointerup=e=>{if(e.pointerId!==active)return;svg.onpointermove(e);active=null;paint();if(data.error&&!data.session){data.error='';draw();}};
       svg.onpointercancel=()=>{active=null;data.box=previous;paint();};return;
     }
     svg.onpointerdown=e=>{
@@ -146,14 +148,32 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     await submit('auto');
   }
   async function uploadPhoto() {
-    if(!live()||!data.health?.liveAvailable||!data.file||!data.consent)throw Error('请先选择并确认测试照片。');
+    if(!live()||!data.health?.liveAvailable||!data.file)throw Error('请先选择照片。');
     if(data.file.size>10*1024*1024)throw Error('图片不能超过 10 MB。');
+    const kind=data.selectionMode?'refine':'auto';
+    if(kind==='refine'){
+      const b=data.box,size=data.previewSize,scale=Math.min(1,2000/Math.max(size.width,size.height));
+      if(!b||b.width*size.width*scale<10||b.height*size.height*scale<10)throw Error('请先在照片上框出完整的景物，选框不能太小。');
+    }
     await api('/session');
-    const response=await fetch('/api/uploads/photo',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Shiye-Operation-Id':operations.upload||=makeId(),'X-Shiye-Baidu-Consent':'true'},body:data.file,signal:AbortSignal.timeout(30000)});
+    const response=await fetch('/api/uploads/photo',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Shiye-Operation-Id':operations.upload||=makeId()},body:data.file,signal:AbortSignal.timeout(30000)});
     let value;try{value=await response.json();}catch{throw Error('上传未完成，请保留照片后重试。');}
     if(!response.ok)throw Error(value.error?.message||'上传未完成。');
-    data.session=value;data.file=null;data.consent=false;delete operations.upload;data.candidates=[];data.selected.clear();data.stage=1;data.job=null;persistOrigin();
-    await submit('auto');
+    data.session=value;data.file=null;clearPreview();delete operations.upload;data.candidates=[];data.selected.clear();data.target=null;data.stage=1;data.job=null;persistOrigin();
+    await submit(kind);
+  }
+  function clearPreview(){if(data.previewUrl)URL.revokeObjectURL(data.previewUrl);data.previewUrl=null;data.previewSize=null;}
+  async function choosePhoto(file){
+    const version=++fileVersion;clearPreview();data.file=null;data.box=null;data.selectionMode=false;data.error='';delete operations.upload;
+    if(!file){draw();return;}
+    data.busy=true;draw();
+    try{
+      if(file.size>10*1024*1024)throw Error('图片不能超过 10 MB。');
+      const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'}),size={width:bitmap.width,height:bitmap.height};bitmap.close();
+      if(version!==fileVersion)return;
+      data.file=file;data.previewSize=size;data.previewUrl=URL.createObjectURL(file);
+    }catch(e){if(version===fileVersion)data.error=e.message.includes('10 MB')?e.message:'这张图片无法预览，请选择可读取的 JPG、PNG 或 WebP。';}
+    finally{if(version===fileVersion){data.busy=false;draw();}}
   }
   async function submit(kind) {
     if(!data.session)return;
@@ -226,8 +246,9 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(action==='exit'){if(!leaveRetouch())return;data.active=false;data.generation++;clearTimeout(pollId);bridge.renderLegacy();return;}
     if(action==='cancel'){data.generation++;clearTimeout(pollId);data.job=await api('/jobs/'+data.job.jobId+'/cancel',{operationId:makeId()});return;}
     if(action==='restore'){await restore();return;}
+    if(action==='pick-box'){data.selectionMode=!data.selectionMode;data.box=null;return;}
     if(action==='upload'){data.generation++;await uploadPhoto();return;}
-    if(action==='new'&&live()){data.generation++;clearTimeout(pollId);data.session=null;data.job=null;data.box=null;data.file=null;data.consent=false;delete operations.upload;return;}
+    if(action==='new'&&live()){data.generation++;clearTimeout(pollId);data.session=null;data.job=null;data.box=null;data.file=null;data.selectionMode=false;clearPreview();delete operations.upload;return;}
     if(action==='start'||action==='new'){data.generation++;clearTimeout(pollId);await start();return;}
     if(action==='auto'||action==='refine'){await submit(action);return;}
     if(action==='confirm'){await makeResults();return;}
@@ -239,7 +260,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   document.addEventListener('click',async e=>{
     const el=e.target.closest('[data-action^="seg-"]');if(!el)return;
     const action=el.dataset.action.slice(4);if(el.disabled||data.busy||retouch?.editor.drawing)return;
-    const immediate=['retouch-tool','retouch-undo','retouch-redo','retouch-reset','retouch-cancel','select','tool','target','add','clear','undo','preview','back','exit'];
+    const immediate=['retouch-tool','retouch-undo','retouch-redo','retouch-reset','retouch-cancel','pick-box','select','tool','target','add','clear','undo','preview','back','exit'];
     data.busy=!immediate.includes(action);draw();
     try {await act(action,el);}catch(error){data.error=error.message;}
     finally{data.busy=false;draw();}
@@ -248,8 +269,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
   document.addEventListener('change',e=>{
     if(e.target.id==='seg-retouch-view'&&retouch){retouch.editor.view=e.target.value;draw();}
     if(e.target.id==='seg-retouch-zoom'&&retouch){retouch.editor.zoom=Number(e.target.value);draw();}
-    if(e.target.id==='seg-photo'){data.file=e.target.files?.[0]||null;data.consent=false;delete operations.upload;draw();}
-    if(e.target.id==='seg-consent'){data.consent=e.target.checked;draw();}
+    if(e.target.id==='seg-photo')void choosePhoto(e.target.files?.[0]||null);
   });
   document.addEventListener('input',async e=>{
     if(e.target.id==='seg-retouch-size'&&retouch){retouch.editor.size=Number(e.target.value);document.querySelector('#seg-brush-value').textContent=e.target.value;return;}
