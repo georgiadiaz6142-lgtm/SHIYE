@@ -1,0 +1,5 @@
+{
+  "checks": [],
+  "errors": [],
+  "failure": "locator.dblclick: Error: strict mode violation: locator('[data-element=\"478015b0-2100-4af0-acb1-1275920aa3f2\"] .text-content') resolved to 2 elements:\n    1) <span class=\"text-content\">今天的光，↵刚刚好</span> aka getByRole('button', { name: '今天的光， 刚刚好' })\n    2) <span class=\"text-content\">今天的光，↵刚刚好</span> aka getByRole('button', { name: '第1页' })\n\nCall log:\n\u001b[2m  - waiting for locator('[data-element=\"478015b0-2100-4af0-acb1-1275920aa3f2\"] .text-content')\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/inline-text-20260909/browser.cjs:5:305"
+}

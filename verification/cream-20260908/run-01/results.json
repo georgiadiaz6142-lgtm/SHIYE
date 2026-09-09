@@ -1,0 +1,213 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "identity": "米白底左文右书首页；非木桌版",
+  "started": "2026-09-07T16:58:05.113Z",
+  "scriptHash": "106d610a443f5005e839d3bc7c3c9730f6e69bc01500cb22522e203c1d74966e",
+  "hashes": {
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/app.js": "876cb34d2ca4d6704346263f974e8a0268e5bb226bae3de539065a4388c9ee19",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/styles.css": "df4413b0eda1511c073ae0170544738a61b4af3d89ba75722339d22b42e2d329",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/lake.jpg": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/forest.jpg": "ac1cfbb41a4039c378b9a92ec04de28bb0b287c91855ba201715ea39f2c82202",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/coffee.jpg": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/home-landscape-sticker.png": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636",
+    "/Users/song/Documents/拾页/拾页-PRD.md": "f64b68957a2eb3345948678511e870b382f76e6388c4266b301687ca3f19a0eb",
+    "/Users/song/Documents/拾页/拾页-产品设计文档.md": "4ada21add49458e79fefe87402670044cb1cfe76b1ba8a3674a49886676ec862",
+    "/Users/song/Documents/拾页/拾页-AI与后端技术方案.md": "05a64acfbda3a45924404b4edc39a69736575ad81926108e7bc863c17a6fcbbd"
+  },
+  "http": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2"
+    },
+    {
+      "file": "app.js",
+      "status": 200,
+      "sha256": "876cb34d2ca4d6704346263f974e8a0268e5bb226bae3de539065a4388c9ee19"
+    },
+    {
+      "file": "styles.css",
+      "status": 200,
+      "sha256": "df4413b0eda1511c073ae0170544738a61b4af3d89ba75722339d22b42e2d329"
+    },
+    {
+      "file": "assets/lake.jpg",
+      "status": 200,
+      "sha256": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75"
+    },
+    {
+      "file": "assets/forest.jpg",
+      "status": 200,
+      "sha256": "ac1cfbb41a4039c378b9a92ec04de28bb0b287c91855ba201715ea39f2c82202"
+    },
+    {
+      "file": "assets/coffee.jpg",
+      "status": 200,
+      "sha256": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892"
+    },
+    {
+      "file": "assets/home-landscape-sticker.png",
+      "status": 200,
+      "sha256": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636"
+    }
+  ],
+  "checks": [
+    {
+      "flow": "home",
+      "id": "HOME-01",
+      "status": "PASS",
+      "evidence": {
+        "openNextKeyboardClose": true,
+        "demoDoesNotWrite": true,
+        "workshopEntry": true
+      }
+    },
+    {
+      "flow": "corner-motion",
+      "id": "HOME-02",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "sample-multiselect",
+      "id": "DEMO-01",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "file-errors",
+      "id": "PHOTO-01",
+      "status": "PASS",
+      "evidence": {
+        "invalidType": true,
+        "oversize": true,
+        "corruptImage": true
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-01",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "page-management",
+      "id": "PAGE-01",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "two-tabs",
+      "id": "DATA-01",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "late-photo-response",
+      "id": "ASYNC-01",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "mobile-390",
+      "id": "MOBILE-390",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "flow": "mobile-320",
+      "id": "MOBILE-320",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    }
+  ],
+  "flows": [
+    {
+      "name": "home",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "corner-motion",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "sample-multiselect",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "file-errors",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "photo-to-book",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "page-management",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "text-doubleclick",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "save-failure-and-retry",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "failed-read-switch",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "two-tabs",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "late-photo-response",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "mobile-390",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    },
+    {
+      "name": "mobile-320",
+      "status": "STOPPED_AT_FIRST_FAILURE",
+      "error": "page.waitForFunction: Timeout 5000ms exceeded."
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "cream-demo-open.png",
+    "cream-corner-turn.png",
+    "corner-motion-failure.png",
+    "sample-multiselect-failure.png",
+    "photo-to-book-failure.png",
+    "page-management-failure.png",
+    "text-doubleclick-failure.png",
+    "save-failure-and-retry-failure.png",
+    "failed-read-switch-failure.png",
+    "two-tabs-failure.png",
+    "late-photo-response-failure.png",
+    "home-mobile-390.png",
+    "mobile-390-failure.png",
+    "home-mobile-320.png",
+    "mobile-320-failure.png"
+  ],
+  "browser": "152.0.7977.77",
+  "unchanged": true,
+  "finished": "2026-09-07T16:59:14.625Z"
+}

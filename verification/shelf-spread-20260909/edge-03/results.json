@@ -1,0 +1,9 @@
+{
+  "checks": [
+    {
+      "status": "PASS",
+      "checks": "rotated projection alignment; drag right fragment; scope bounds; paper-mode undo; live editing/reader turns; mobile left/right clips; insertion fixed IDs; unpin/list; delete cancel/failure/retry/persistence/assets preserved"
+    }
+  ],
+  "errors": []
+}

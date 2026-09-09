@@ -1,0 +1,96 @@
+
+> shiye@0.1.0 test
+> npm run build && node --test dist/server/tests/*.test.js
+
+
+> shiye@0.1.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+ok 1 - three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+  ---
+  duration_ms: 43.475541
+  type: 'test'
+  ...
+# Subtest: a repeated operation reuses the job; conflicting content cannot reuse its ID
+ok 2 - a repeated operation reuses the job; conflicting content cannot reuse its ID
+  ---
+  duration_ms: 35.7995
+  type: 'test'
+  ...
+# Subtest: refine preserves successful candidates and rejects stale versions
+ok 3 - refine preserves successful candidates and rejects stale versions
+  ---
+  duration_ms: 52.53875
+  type: 'test'
+  ...
+# Subtest: cancelled job never commits late candidates
+ok 4 - cancelled job never commits late candidates
+  ---
+  duration_ms: 102.402042
+  type: 'test'
+  ...
+# Subtest: synthetic-only running jobs recover after restart without a second job record
+ok 5 - synthetic-only running jobs recover after restart without a second job record
+  ---
+  duration_ms: 75.977416
+  type: 'test'
+  ...
+# Subtest: expired synthetic files become inaccessible and cleanup touches only managed media
+ok 6 - expired synthetic files become inaccessible and cleanup touches only managed media
+  ---
+  duration_ms: 15.433
+  type: 'test'
+  ...
+# Subtest: failed atomic transaction leaves both memory and disk unchanged
+ok 7 - failed atomic transaction leaves both memory and disk unchanged
+  ---
+  duration_ms: 6.663416
+  type: 'test'
+  ...
+# Subtest: malformed store fails closed instead of resetting state
+ok 8 - malformed store fails closed instead of resetting state
+  ---
+  duration_ms: 0.990041
+  type: 'test'
+  ...
+# Subtest: mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+ok 9 - mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+  ---
+  duration_ms: 14.248459
+  type: 'test'
+  ...
+# Subtest: invalid coordinates, missing foreground and unsupported prompt fields fail validation
+ok 10 - invalid coordinates, missing foreground and unsupported prompt fields fail validation
+  ---
+  duration_ms: 0.724291
+  type: 'test'
+  ...
+# Subtest: actual image decoder rejects disguised or malformed input
+ok 11 - actual image decoder rejects disguised or malformed input
+  ---
+  duration_ms: 4.953042
+  type: 'test'
+  ...
+# Subtest: HTTP limits origins, session ownership, personal uploads and static files
+ok 12 - HTTP limits origins, session ownership, personal uploads and static files
+  ---
+  duration_ms: 79.408959
+  type: 'test'
+  ...
+# Subtest: live mode cannot silently fall back to simulated output
+ok 13 - live mode cannot silently fall back to simulated output
+  ---
+  duration_ms: 1.027
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 551.812667

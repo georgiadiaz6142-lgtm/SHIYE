@@ -1,0 +1,16 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "checks": "category filtering, empty favorites, independent management, pin/unpin ordering, apply/undo/redo, failed preference write, reload, cross-tab updates, fixed categories and overflow"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "checks": "category filtering, empty favorites, independent management, pin/unpin ordering, apply/undo/redo, failed preference write, reload, cross-tab updates, fixed categories and overflow"
+    }
+  ],
+  "errors": [],
+  "blocked": []
+}

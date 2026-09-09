@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "checks": "hidden by default; title trigger; viewport bounds; outside/Escape dismiss; pin/unpin; rename; deletion confirmation/cancel; cover opens reader"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "checks": "hidden by default; title trigger; viewport bounds; outside/Escape dismiss; pin/unpin; rename; deletion confirmation/cancel; cover opens reader"
+    },
+    {
+      "width": 320,
+      "status": "PASS",
+      "checks": "hidden by default; title trigger; viewport bounds; outside/Escape dismiss; pin/unpin; rename; deletion confirmation/cancel; cover opens reader"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,151 @@
+{
+  "checkedAt": "2026-09-09T09:50:26.214Z",
+  "conclusion": "transport-and-persistence-pass; complex-scenery-quality-fail; high-resolution-input-blocked",
+  "samples": [
+    {
+      "id": "night",
+      "name": "IMG_2377.jpeg",
+      "bytes": 2477042,
+      "width": 4032,
+      "height": 3024,
+      "pixels": 12192768,
+      "sha256": "0e4cca0c12847b268d75ec9f4ec45b60254236ab8c830f5a87f2dee76f419a1f"
+    },
+    {
+      "id": "mountain",
+      "name": "山脉.jpg",
+      "bytes": 857804,
+      "width": 4342,
+      "height": 3280,
+      "pixels": 14241760,
+      "sha256": "d346002174766308c470a7a1e9331842bf731c059b5fe803247f88205d0f3b71"
+    },
+    {
+      "id": "apartments",
+      "name": "IMG_1776.jpeg",
+      "bytes": 4444803,
+      "width": 5712,
+      "height": 4284,
+      "pixels": 24470208,
+      "sha256": "a079b35088d11392c6b3326e445e86e2ed09ed5775e2588e03ad7cdf30fdc858"
+    }
+  ],
+  "attempts": {
+    "before": 5,
+    "new": 4,
+    "after": 9,
+    "remaining": 1,
+    "inflight": 0,
+    "max": 10,
+    "approvedUntil": "2026-09-09T20:10:11+08:00",
+    "actualBilling": "not verified"
+  },
+  "jobs": [
+    {
+      "sample": "night",
+      "kind": "auto",
+      "status": "succeeded",
+      "elapsedMs": 7699,
+      "providerRequestId": "2097620524892793246"
+    },
+    {
+      "sample": "night",
+      "kind": "refine",
+      "status": "succeeded",
+      "elapsedMs": 6142,
+      "providerRequestId": "2097620799706173408"
+    },
+    {
+      "sample": "mountain",
+      "kind": "auto",
+      "status": "succeeded",
+      "elapsedMs": 4909,
+      "providerRequestId": "2097621563404175510"
+    },
+    {
+      "sample": "mountain",
+      "kind": "refine",
+      "status": "succeeded",
+      "elapsedMs": 6909,
+      "providerRequestId": "2097622060539434116"
+    }
+  ],
+  "boxes": {
+    "night": {
+      "x": 0.005,
+      "y": 0.31,
+      "width": 0.785,
+      "height": 0.455
+    },
+    "mountain": {
+      "x": 0.002,
+      "y": 0.32,
+      "width": 0.996,
+      "height": 0.678
+    }
+  },
+  "apartmentRejection": {
+    "httpStatus": 422,
+    "pixels": 24470208,
+    "limitPixels": 24000000,
+    "localReproduction": "Input image exceeds pixel limit",
+    "displayed": "图片无法读取，请选择静态 JPG、PNG 或 WebP。",
+    "providerAttempts": 0
+  },
+  "workflow": {
+    "evidence": "Playwright UI and read-only IndexedDB/DOM checks in live session; screenshots in this directory",
+    "assetCountAfterReload": 1,
+    "provider": "baidu",
+    "mock": false,
+    "borderBaked": true,
+    "borderPx": 8,
+    "decodedDimensionsAfterReload": [
+      1592,
+      615
+    ],
+    "testBook": {
+      "id": "08fd2dce-287e-4ec7-8eae-706d66351906",
+      "pages": 1,
+      "elements": 1,
+      "assetId": "88952ea4-79c6-47ec-aebf-847004afc68b"
+    },
+    "pageErrors": [],
+    "externalBrowserOrigins": [],
+    "contextClosed": true,
+    "productionWorkspaceTouched": false
+  },
+  "outputs": [
+    {
+      "file": "night-auto-0.png",
+      "width": 2000,
+      "height": 1035,
+      "transparent": 201982,
+      "nearOpaqueAlpha250to255": 1787315,
+      "intermediateAlpha1to249": 80703
+    },
+    {
+      "file": "night-building-box-0.png",
+      "width": 1576,
+      "height": 599,
+      "transparent": 283077,
+      "nearOpaqueAlpha250to255": 644209,
+      "intermediateAlpha1to249": 16738
+    },
+    {
+      "file": "mountain-auto-0.png",
+      "width": 2000,
+      "height": 1511,
+      "transparent": 501748,
+      "nearOpaqueAlpha250to255": 1826650,
+      "intermediateAlpha1to249": 693602
+    },
+    {
+      "file": "mountain-ridge-box-0.png",
+      "width": 2000,
+      "height": 967,
+      "transparent": 318995,
+      "nearOpaqueAlpha250to255": 1567267,
+      "intermediateAlpha1to249": 47738
+    }
+  ]
+}

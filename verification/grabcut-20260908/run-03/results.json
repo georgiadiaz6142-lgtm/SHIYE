@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "name": "real-worker-corrections-save-and-reload",
+      "status": "PASS"
+    },
+    {
+      "name": "multiple-regions-and-stale-result-protection",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-points-and-layout",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": [],
+  "network": [
+    "/",
+    "/styles.css",
+    "/segmentation.css",
+    "/edgecut.css",
+    "/selection.js",
+    "/segmentation.js",
+    "/edgecut.js",
+    "/app.js",
+    "/assets/home-landscape-sticker.png",
+    "/assets/forest.jpg",
+    "/assets/coffee.jpg",
+    "/assets/lake.jpg",
+    "/edgecut-worker.js",
+    "/edgecut-core.js",
+    "/vendor/opencv-4.13.0/opencv.js"
+  ],
+  "pixels": {
+    "clear": 10961,
+    "solid": 22414,
+    "provenance": {
+      "kind": "classical-segmentation",
+      "algorithm": "opencv-grabcut-4.13.0",
+      "analysisSize": {
+        "width": 720,
+        "height": 480
+      }
+    }
+  }
+}

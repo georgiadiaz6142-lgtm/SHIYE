@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "name": "freehand-stays-editable-until-confirmed",
+      "status": "PASS"
+    },
+    {
+      "name": "point-selection-clear-undo-keyboard-resize",
+      "status": "PASS"
+    },
+    {
+      "name": "confirmation-save-to-original-page-and-reload",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-taps-adjust-and-explicit-confirm",
+      "status": "FAIL",
+      "error": "locator.click: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"finish-scissors\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled class=\"chip\" data-action=\"finish-scissors\">完成圈选</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    13 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at flow.viewport.width (/Users/song/Documents/拾页/verification/stage1-20260908/scissors-confirm.cjs:44:32)\n    at async flow (/Users/song/Documents/拾页/verification/stage1-20260908/scissors-confirm.cjs:14:51)\n    at async main (/Users/song/Documents/拾页/verification/stage1-20260908/scissors-confirm.cjs:42:2)"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "screenshots": [
+    "01-stays-on-photo.png",
+    "02-explicit-preview.png",
+    "03-adjusted-window.png",
+    "mobile-taps-adjust-and-explicit-confirm-failure.png"
+  ],
+  "hashes": {
+    "app.js": "f14db92105d7025caa668d8ebf8aacdecc7e4f5aab6724de55caef036d511253",
+    "index.html": "8a294936a1031da8610f9acb8ab7d4376d09cd4a27cab9873621ab7c279cf7a6",
+    "styles.css": "cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3",
+    "selection.js": "62036889b7907fcbdbb0029799c1b751ef60ffaec4d4f74354dd43de1d7712f9",
+    "segmentation.css": "61c227e626f7845783a5f591bb5560c81862080f31b6f4c1575e0cef8c5c9199"
+  }
+}

@@ -1,0 +1,357 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "identity": "米白底左文右书首页；非木桌版",
+  "started": "2026-09-07T17:50:48.542Z",
+  "scriptHash": "4910892ead7d2b490dfe7e72724ac269a28d2d4e0729c37721ca1f2714bfc885",
+  "hashes": {
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/app.js": "e61813d46491db30091647fbce2fbf03b67589dfa6072e5654762c0dbdf0c4c2",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/styles.css": "80546285a358030170145803c9f69033f2d2909b718a853a46f82491813a8bcc",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/lake.jpg": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/forest.jpg": "ac1cfbb41a4039c378b9a92ec04de28bb0b287c91855ba201715ea39f2c82202",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/coffee.jpg": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892",
+    "/Users/song/Documents/拾页/shiye-editorial-prototype/assets/home-landscape-sticker.png": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636",
+    "/Users/song/Documents/拾页/拾页-PRD.md": "e87ebda7f25d04c5fd49267d3d8722dd75f233f4c9fa957b3ddb7fdd500e57d2",
+    "/Users/song/Documents/拾页/拾页-产品设计文档.md": "9299a107e1cac800f45215c2dd28e71e16ba3d9d44442fab48001080db54a99d",
+    "/Users/song/Documents/拾页/拾页-AI与后端技术方案.md": "0bcc3b0bfd5d6d3d04b627fa26d7ec7201842b5398ee63927daaff3cf58b64d7"
+  },
+  "http": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2"
+    },
+    {
+      "file": "app.js",
+      "status": 200,
+      "sha256": "e61813d46491db30091647fbce2fbf03b67589dfa6072e5654762c0dbdf0c4c2"
+    },
+    {
+      "file": "styles.css",
+      "status": 200,
+      "sha256": "80546285a358030170145803c9f69033f2d2909b718a853a46f82491813a8bcc"
+    },
+    {
+      "file": "assets/lake.jpg",
+      "status": 200,
+      "sha256": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75"
+    },
+    {
+      "file": "assets/forest.jpg",
+      "status": 200,
+      "sha256": "ac1cfbb41a4039c378b9a92ec04de28bb0b287c91855ba201715ea39f2c82202"
+    },
+    {
+      "file": "assets/coffee.jpg",
+      "status": 200,
+      "sha256": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892"
+    },
+    {
+      "file": "assets/home-landscape-sticker.png",
+      "status": 200,
+      "sha256": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636"
+    }
+  ],
+  "checks": [
+    {
+      "flow": "home",
+      "id": "HOME-01",
+      "status": "PASS",
+      "evidence": {
+        "openNextKeyboardClose": true,
+        "demoDoesNotWrite": true,
+        "workshopEntry": true
+      }
+    },
+    {
+      "flow": "corner-motion",
+      "id": "HOME-02",
+      "status": "PASS",
+      "evidence": {
+        "cornerDragCommitted": true,
+        "reducedMotion": false
+      }
+    },
+    {
+      "flow": "sample-multiselect",
+      "id": "DEMO-01",
+      "status": "PASS",
+      "evidence": {
+        "selected": 3,
+        "stored": 3,
+        "kind": "prebuilt SVG demonstration, not real segmentation"
+      }
+    },
+    {
+      "flow": "file-errors",
+      "id": "PHOTO-01",
+      "status": "PASS",
+      "evidence": {
+        "invalidType": true,
+        "oversize": true,
+        "corruptImage": true
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-01",
+      "status": "PASS",
+      "evidence": {
+        "count": 2,
+        "assetId": "9bb33c66-8be8-403b-9dbd-3fda6b63ba2e",
+        "alpha": {
+          "width": 352,
+          "height": 233,
+          "transparentPixels": 0,
+          "pixels": 82016
+        },
+        "mode": "rectangular crop, NOT AI cutout"
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-02",
+      "status": "PASS",
+      "evidence": {
+        "createdOnePage": true,
+        "generatedAssetInserted": true,
+        "dragScaleRotateFlipCopyLayerUndoRedoDelete": true
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-03",
+      "status": "PASS",
+      "evidence": {
+        "createText": true,
+        "editViaToolbar": true
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-04",
+      "status": "PASS",
+      "evidence": {
+        "pagePaperIndependent": true,
+        "papers": [
+          "plain",
+          "grid"
+        ]
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-05",
+      "status": "PASS",
+      "evidence": {
+        "dataAndReferencesRestored": true,
+        "readModeProtected": true,
+        "explicitEdit": true
+      }
+    },
+    {
+      "flow": "photo-to-book",
+      "id": "CHAIN-06",
+      "status": "PASS",
+      "evidence": {
+        "removedFromCollection": true,
+        "usedAssetPreservedAcrossReload": true
+      }
+    },
+    {
+      "flow": "page-management",
+      "id": "PAGE-01",
+      "status": "PASS",
+      "evidence": {
+        "lastPageProtected": true,
+        "copyIdsUnique": true,
+        "reorder": true,
+        "deleteConfirmed": true,
+        "undoDelete": true
+      }
+    },
+    {
+      "flow": "text-doubleclick",
+      "id": "TEXT-01",
+      "status": "PASS",
+      "evidence": {
+        "opened": true
+      }
+    },
+    {
+      "flow": "save-failure-and-retry",
+      "id": "SAVE-01",
+      "status": "PASS",
+      "evidence": {
+        "shelveBlocked": true,
+        "failureVisible": true,
+        "storedUnchanged": true,
+        "unsavedContentRetained": true
+      }
+    },
+    {
+      "flow": "save-failure-and-retry",
+      "id": "SAVE-02",
+      "status": "PASS",
+      "evidence": {
+        "retryViaShelveCommitted": true
+      }
+    },
+    {
+      "flow": "failed-read-switch",
+      "id": "SAVE-03",
+      "status": "PASS",
+      "evidence": {
+        "staysEditing": true
+      }
+    },
+    {
+      "flow": "two-tabs",
+      "id": "DATA-01",
+      "status": "PASS",
+      "evidence": {
+        "found": [
+          "标签页A创建",
+          "标签页B创建"
+        ]
+      }
+    },
+    {
+      "flow": "same-book-conflict",
+      "id": "DATA-02",
+      "status": "PASS",
+      "evidence": {
+        "bothContentsPreserved": true,
+        "activeBookIsCopy": true,
+        "noDuplicateOnRetry": true
+      }
+    },
+    {
+      "flow": "old-photo-vs-new-choice",
+      "id": "ASYNC-02",
+      "status": "PASS",
+      "evidence": {
+        "newChoicePreserved": true
+      }
+    },
+    {
+      "flow": "late-photo-response",
+      "id": "ASYNC-01",
+      "status": "PASS",
+      "evidence": {
+        "shelfPreserved": true
+      }
+    },
+    {
+      "flow": "mobile-390",
+      "id": "MOBILE-390",
+      "status": "PASS",
+      "evidence": {
+        "dimensions": {
+          "width": 390,
+          "scroll": 390,
+          "canvas": 352
+        },
+        "touchSelectScaleRotate": true,
+        "physicalDevice": false
+      }
+    },
+    {
+      "flow": "mobile-320",
+      "id": "MOBILE-320",
+      "status": "PASS",
+      "evidence": {
+        "dimensions": {
+          "width": 320,
+          "scroll": 320,
+          "canvas": 282
+        },
+        "touchSelectScaleRotate": true,
+        "physicalDevice": false
+      }
+    }
+  ],
+  "flows": [
+    {
+      "name": "home",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "corner-motion",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "sample-multiselect",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "file-errors",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "photo-to-book",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "page-management",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "text-doubleclick",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "save-failure-and-retry",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "failed-read-switch",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "two-tabs",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "same-book-conflict",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "old-photo-vs-new-choice",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "late-photo-response",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "mobile-390",
+      "status": "COMPLETED"
+    },
+    {
+      "name": "mobile-320",
+      "status": "COMPLETED"
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "cream-demo-open.png",
+    "cream-corner-turn.png",
+    "cream-editor.png",
+    "text-doubleclick.png",
+    "quota-failure-editor.png",
+    "failed-read-switch.png",
+    "two-tabs-final.png",
+    "conflict-copy.png",
+    "late-photo-response.png",
+    "home-mobile-390.png",
+    "editor-mobile-390.png",
+    "home-mobile-320.png",
+    "editor-mobile-320.png"
+  ],
+  "browser": "152.0.7977.77",
+  "unchanged": true,
+  "finished": "2026-09-07T17:51:26.679Z"
+}

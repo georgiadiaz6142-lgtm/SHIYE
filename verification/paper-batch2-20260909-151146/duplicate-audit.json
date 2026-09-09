@@ -1,0 +1,329 @@
+{
+  "entries": [
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0297_m.jpeg",
+      "kind": "existing",
+      "bytes": 246719,
+      "width": 640,
+      "height": 881,
+      "sha256": "00467ea538bdcc1b323a8911e644a69c317ff898edac9884ac6a74c03e7a89e6",
+      "pixelHash": "1382e435d31144c12c96a3d05c285a425d393847460fc7037656cbb87bc0e682"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0302_m.jpeg",
+      "kind": "existing",
+      "bytes": 355232,
+      "width": 640,
+      "height": 881,
+      "sha256": "f24329fd45fcec394fd9fd19aabde5794234f33b7be94c4c228b498fee2e9fcd",
+      "pixelHash": "4ebe2b417ab995276ee89b4175af737989fc0c657deff2cb68153be61c3bae89"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0427_m.jpeg",
+      "kind": "existing",
+      "bytes": 696613,
+      "width": 640,
+      "height": 881,
+      "sha256": "82883ee04e96ed47bd08bd0c40d801335f6d6c4311ecf8c54f7a1bc45075cbe1",
+      "pixelHash": "1008de71366646737bf728f036af62f67aca40c3b7ee41c76005b9c519437ac5"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0431_m.jpeg",
+      "kind": "existing",
+      "bytes": 920281,
+      "width": 640,
+      "height": 881,
+      "sha256": "1ca25db76608b1adf6a84d65e1fc847a749c8f9c117595fa731b787d6279a141",
+      "pixelHash": "2917f22d5e313b3994ca4f0b296ebd54d5e3b3894caacb1728b21bd573e9e742"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0444_m.jpeg",
+      "kind": "existing",
+      "bytes": 482702,
+      "width": 640,
+      "height": 881,
+      "sha256": "008f2964ecd63b2ec339e9b0df5521ce0ebfc61c391124a9e6a2424ee74297bc",
+      "pixelHash": "f498a5c41e3cb7d121b31567ff080cc5dc01d441210ef1130d0e94ac707cc8eb"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0445_m.jpeg",
+      "kind": "existing",
+      "bytes": 567805,
+      "width": 640,
+      "height": 881,
+      "sha256": "53a16c1b1f656d89a458e62b48f7b7fb767f084b7166a948ecb7566062d85e5c",
+      "pixelHash": "0e11649a61c25c327c99195f4f8461e51a43558fe30c6b33a5715a1b581b612c"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0452_m.jpeg",
+      "kind": "existing",
+      "bytes": 783179,
+      "width": 640,
+      "height": 881,
+      "sha256": "db894884e9daad07252a24f97c54f2611b0052f509a84949deed804a53a38013",
+      "pixelHash": "295a2c3765c3d6758d3ab950fcb69dfe0de917564306d3fa1f8e45e13967f35e"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0454_m.jpeg",
+      "kind": "existing",
+      "bytes": 494263,
+      "width": 640,
+      "height": 881,
+      "sha256": "93088b3b507df220dded93429830e3cfa3b8512f4a9a454b4ea77d887a7a9163",
+      "pixelHash": "26c337e4c6b3d775012d80767d1c41ef84fe26e0cffd8343187ddd1670d0c204"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0518_m.jpeg",
+      "kind": "existing",
+      "bytes": 556868,
+      "width": 640,
+      "height": 929,
+      "sha256": "1442e6cfc4a8b9e935f5d7f958db325d02919f84e78c42e8ab7999e57f013d36",
+      "pixelHash": "73ee6b8269048e2604ef62da6734b1a705e5aa9e9abf1ad236adf960cabe4a14"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0521_m.jpeg",
+      "kind": "existing",
+      "bytes": 669643,
+      "width": 640,
+      "height": 929,
+      "sha256": "ab2b27671c362f056e4509b31de2a3a5e6fc1386b841a3c193611d4e63c00c41",
+      "pixelHash": "6331d22681ca432848270dbe33ad02c3a631f098266b44dfba297fcc07b2625f"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0526_m.jpeg",
+      "kind": "existing",
+      "bytes": 503965,
+      "width": 640,
+      "height": 929,
+      "sha256": "8e4bb09410c36d9901ad03d3ace871dcd1c1efda4620310916839ac32d180542",
+      "pixelHash": "478d8ba7bc0429caff4106c16608e7beb94c3b476651c1313105e9321bd42f56"
+    },
+    {
+      "file": "shiye-editorial-prototype/assets/paper-p0527_m.jpeg",
+      "kind": "existing",
+      "bytes": 376023,
+      "width": 640,
+      "height": 929,
+      "sha256": "1a45404eb9007987319eb85e3d9e581bc29bc7af2b523a9ef4e894f901e4eb8b",
+      "pixelHash": "f1a1c69a0268660e59238c66d0ba3d4fa8fb7461f0215710557ba8230d729c26"
+    },
+    {
+      "file": "/Users/song/Downloads/p0259_m.jpeg",
+      "kind": "new",
+      "bytes": 134337,
+      "width": 640,
+      "height": 881,
+      "sha256": "4218f37cb2eec3d242898d08c59335279d0ffc53281a27ab38424462c4712565",
+      "pixelHash": "597aaa932436dacda7ea54651000cd354ef560b96d07b932a7f069d9a43312a9"
+    },
+    {
+      "file": "/Users/song/Downloads/p0290_m.jpeg",
+      "kind": "new",
+      "bytes": 154636,
+      "width": 640,
+      "height": 881,
+      "sha256": "5a45022624f695e1c5a432ba37b15298df5c3d279dae125f8e33c95128917985",
+      "pixelHash": "5049726a7989bb3f837957485dc57624bdf3c525a1540468b649a64295e36629"
+    },
+    {
+      "file": "/Users/song/Downloads/p0292_m.jpeg",
+      "kind": "new",
+      "bytes": 317961,
+      "width": 640,
+      "height": 881,
+      "sha256": "ba5cf24db93702ec4b79a616424e165c647298e0c364816487986e09be30aad6",
+      "pixelHash": "4d3ae8f51b1fe6a455e0daf5c27d474a93851ae17b382728ab30967a6cd115b3"
+    },
+    {
+      "file": "/Users/song/Downloads/p0303_m.jpeg",
+      "kind": "new",
+      "bytes": 283604,
+      "width": 640,
+      "height": 881,
+      "sha256": "66c392cf48c33d8cf56608899da69b26e9725692901235d29ad67cb6d2d219ff",
+      "pixelHash": "0b14553994db74c55087644ce49b6bb2798515531e39409adbb7479051abb63a"
+    },
+    {
+      "file": "/Users/song/Downloads/p0321_m.jpeg",
+      "kind": "new",
+      "bytes": 510193,
+      "width": 640,
+      "height": 881,
+      "sha256": "5324cb2ce42193a93e5a35a0491534cdfc894e2f91bcc2c7dbb7a78539344a55",
+      "pixelHash": "4caf487584ee7d3425076b381c8576678221c4fc137b75ec74a2ff293fa283ee"
+    },
+    {
+      "file": "/Users/song/Downloads/p0330_m.jpeg",
+      "kind": "new",
+      "bytes": 596409,
+      "width": 640,
+      "height": 881,
+      "sha256": "d4cc268e5c1b7bf468f9a4ad89c32c42d6db21804b01dc0aef60b159260c7cf9",
+      "pixelHash": "997bff6b094111a35edb052ed566d8109d145b51dfa20e6e5b0158ba7fac276c"
+    },
+    {
+      "file": "/Users/song/Downloads/p0336_m.jpeg",
+      "kind": "new",
+      "bytes": 801005,
+      "width": 640,
+      "height": 881,
+      "sha256": "ef3686a6184b6a8c5e1d14b52e36ba92bff2c60f83478e135db828583942a13d",
+      "pixelHash": "0c2ca681a9959e733a528297556f5fe76ac92d3cf2021190a25a3466548570f8"
+    },
+    {
+      "file": "/Users/song/Downloads/p0339_m.jpeg",
+      "kind": "new",
+      "bytes": 890289,
+      "width": 640,
+      "height": 881,
+      "sha256": "d61b1a693e7e63bb1e1a8f07a8199329a31499f31840c7633f8b18b61748f67b",
+      "pixelHash": "126ca7978b20aace3ed4fa6a547b3c2b34b48e61d14de6c738894288d31b5593"
+    },
+    {
+      "file": "/Users/song/Downloads/p0344_m.jpeg",
+      "kind": "new",
+      "bytes": 741258,
+      "width": 640,
+      "height": 881,
+      "sha256": "5a5f08fbb16b2cccfcb59e7e7f58065707941f75c0c2eeef3a6f9c756ae36c85",
+      "pixelHash": "285104aaaaed76f0cc5a7e31ebcdd2eae3ced79d580026d4168ab2bd95612ea5"
+    },
+    {
+      "file": "/Users/song/Downloads/p0362_m.jpeg",
+      "kind": "new",
+      "bytes": 599988,
+      "width": 640,
+      "height": 881,
+      "sha256": "7ff9bb3d60334ba2aa233ddb0e983bcdb873c87f7910a408c3fe26ca926aba25",
+      "pixelHash": "a0f520eaacd5861fba46981a897b73ac458da47cfbb9670ce56c1481e6ad68b0"
+    },
+    {
+      "file": "/Users/song/Downloads/p0366_m.jpeg",
+      "kind": "new",
+      "bytes": 644637,
+      "width": 640,
+      "height": 881,
+      "sha256": "4d692d8e8cb0fe4027349039a2129923519aedb254889119129ac9d8314017d2",
+      "pixelHash": "887552b4a8e7db9f953be82a1c9e04e37223cef1284ff9d495cedbd84d0b1597"
+    },
+    {
+      "file": "/Users/song/Downloads/p0369_m.jpeg",
+      "kind": "new",
+      "bytes": 695301,
+      "width": 640,
+      "height": 881,
+      "sha256": "c6be31b9e761031c175a13a47a595b785bd9609a5ddc1faf57525195d9c21849",
+      "pixelHash": "0ec34a004c7dd8623c082345b89fa2290d3dd79a52130bd4ae9827cffa1c996d"
+    },
+    {
+      "file": "/Users/song/Downloads/p0375_m.jpeg",
+      "kind": "new",
+      "bytes": 932807,
+      "width": 640,
+      "height": 881,
+      "sha256": "e0037e10bc51d1157da9e7a26e664306b4e451a766a5ea9141b8821a3e46b31f",
+      "pixelHash": "95a09e678633ebe8e2f513cdf23a064acc3655d46480b850f8c9ec93e81b38f9"
+    },
+    {
+      "file": "/Users/song/Downloads/p0377_m.jpeg",
+      "kind": "new",
+      "bytes": 951854,
+      "width": 640,
+      "height": 881,
+      "sha256": "596a40ca1d2dd6e366ff7f09ed10b8d8c0fa7afbd49e593795953cce82dd5db3",
+      "pixelHash": "3139756180db346d4bf303a18b42d8e8fa4f02d3a52589f2f43c164da3438d39"
+    },
+    {
+      "file": "/Users/song/Downloads/p0381_m.jpeg",
+      "kind": "new",
+      "bytes": 755039,
+      "width": 640,
+      "height": 941,
+      "sha256": "92a69328a704f6b9d547b87ac91e7c9c2ae0b0683d385be63684a882b0652e91",
+      "pixelHash": "a86f3f7f2046c6da77669bb7bf0a378acd401a53add495e8319c7025bde3323c"
+    },
+    {
+      "file": "/Users/song/Downloads/p0401_m.jpeg",
+      "kind": "new",
+      "bytes": 355799,
+      "width": 640,
+      "height": 881,
+      "sha256": "748d7825c51b3854fca52533ec43d293360ee6e8723dce21cde74272c502cda9",
+      "pixelHash": "60043574799e67f82f25d65297a54364008cd93c4b492bfd1000ff4357e724bb"
+    },
+    {
+      "file": "/Users/song/Downloads/p0402_m.jpeg",
+      "kind": "new",
+      "bytes": 563629,
+      "width": 640,
+      "height": 881,
+      "sha256": "d340ddd115f883723f9e770058de8031997e55b7766d7cc0be6d8e79c3afcf48",
+      "pixelHash": "10cded1384d112c431bd1942a6b79410fbd5011524015dff2a6d9669a78f4d85"
+    },
+    {
+      "file": "/Users/song/Downloads/p0405_m.jpeg",
+      "kind": "new",
+      "bytes": 608081,
+      "width": 640,
+      "height": 881,
+      "sha256": "b190c78b9d86d403af3bd679fe25dc8755dd49880fcb4c1efa87520494ac8ca3",
+      "pixelHash": "0156c6e1902ee9038afa474996543de94c0cf966417f04b46201f4c8a72ef2e5"
+    },
+    {
+      "file": "/Users/song/Downloads/p0406_m.jpeg",
+      "kind": "new",
+      "bytes": 599915,
+      "width": 640,
+      "height": 881,
+      "sha256": "ac5e3f5e7c826477386d95d1b5aed6385afd9deae61ddfdeffd694fe42302184",
+      "pixelHash": "7657b46e5570af02b6e916952a09fb866344d47fdfbcf12bac8e946005078e36"
+    },
+    {
+      "file": "/Users/song/Downloads/p0411_m.jpeg",
+      "kind": "new",
+      "bytes": 562859,
+      "width": 640,
+      "height": 881,
+      "sha256": "2242e3ecbc24e9c112229f191f8e73fd6401bf1fa0cfd24cfe578f62f34d5d6c",
+      "pixelHash": "2a00dc4e632f3c31beac54dc2719b674c3db3bccb444e9b84feac41fb647c785"
+    },
+    {
+      "file": "/Users/song/Downloads/p0420_m.jpeg",
+      "kind": "new",
+      "bytes": 547451,
+      "width": 640,
+      "height": 881,
+      "sha256": "bd7f579138fee9a244d28da2aad2296ca6736c8792819fda85a5c1225873dd92",
+      "pixelHash": "de581c21a7b54d2837066070aa02c9c2f5e259500341c88c1f6b3518d313a707"
+    },
+    {
+      "file": "/Users/song/Downloads/p0428_m.jpeg",
+      "kind": "new",
+      "bytes": 317029,
+      "width": 640,
+      "height": 881,
+      "sha256": "520751c5e3ca8209f093cecd573dbae608652454ab1d0e422ef6a192cc712214",
+      "pixelHash": "42e15c143ad4b91ae55c771280ca80fe4f93be0c2c2e67aedaa096f22b76f0d8"
+    },
+    {
+      "file": "/Users/song/Downloads/p0429_m.jpeg",
+      "kind": "new",
+      "bytes": 451067,
+      "width": 640,
+      "height": 881,
+      "sha256": "5cba18225e4be002c8a4ee44224c2130eaea4eeb0186bce625cc3da846e6903b",
+      "pixelHash": "bca476b359d179bf3f3b7a965d928007c33e6dbc52892538569b4f48d0c2407e"
+    },
+    {
+      "file": "/Users/song/Downloads/p0433_m.jpeg",
+      "kind": "new",
+      "bytes": 970778,
+      "width": 640,
+      "height": 881,
+      "sha256": "633dd7bdbbddddc74c491b1ca478089ad43f61879513b1fc567937b718048f14",
+      "pixelHash": "1b435d201ad235f84523cdc29252ee24e62f388b715af1769363c59f62fd5fe6"
+    }
+  ],
+  "duplicates": []
+}

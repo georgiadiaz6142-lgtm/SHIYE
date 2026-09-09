@@ -1,0 +1,8 @@
+{
+  "mode": "live",
+  "maxAttempts": 10,
+  "localTtlSeconds": 3600,
+  "approvedUntil": "2026-09-09T12:10:11+00:00",
+  "runtime": ".local/baidu-live-trial-20260908",
+  "consent": "Song approved up to 10 real calls for personally selected and confirmed non-sensitive photos; nominal maximum CNY 0.30."
+}

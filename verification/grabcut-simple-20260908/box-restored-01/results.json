@@ -1,0 +1,23 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "alpha": {
+        "clear": 8509,
+        "solid": 22410
+      }
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "alpha": {
+        "clear": 8509,
+        "solid": 22410
+      }
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": []
+}

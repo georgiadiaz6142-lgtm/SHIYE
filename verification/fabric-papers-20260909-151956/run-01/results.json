@@ -1,0 +1,38 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "newPapers": 7,
+      "total": 55,
+      "counts": [
+        4,
+        4,
+        5,
+        11,
+        13,
+        11,
+        7
+      ],
+      "checks": "HTTP bytes and image decode; category filtering; apply and content preservation; label full frame; undo/redo; favorites and pin persistence; reload; fixed categories; page turn faces"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "newPapers": 7,
+      "total": 55,
+      "counts": [
+        4,
+        4,
+        5,
+        11,
+        13,
+        11,
+        7
+      ],
+      "checks": "HTTP bytes and image decode; category filtering; apply and content preservation; label full frame; undo/redo; favorites and pin persistence; reload; fixed categories; page turn faces"
+    }
+  ],
+  "errors": [],
+  "blocked": []
+}

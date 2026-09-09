@@ -1,0 +1,15 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "checks": "tap/click positioning; multiline; Backspace; IME events; grouped undo/redo; inline re-edit; text drag; blank drag; empty input; save failure/retry; readonly; reload; toolbar and page switch"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "checks": "tap/click positioning; multiline; Backspace; IME events; grouped undo/redo; inline re-edit; text drag; blank drag; empty input; save failure/retry; readonly; reload; toolbar and page switch"
+    }
+  ],
+  "errors": []
+}

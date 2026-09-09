@@ -1,0 +1,5 @@
+{
+  "checks": [],
+  "errors": [],
+  "failure": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"edit-text\"]').first()\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/font-choices-20260909/browser.cjs:21:24"
+}

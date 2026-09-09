@@ -1,0 +1,27 @@
+{
+  "layer": "frontend API mocks only; not backend or model validation",
+  "checks": [
+    {
+      "name": "home-and-mock-refine-blob-save-reload",
+      "status": "FAIL",
+      "error": "locator.click: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"nav\"][data-view=\"collection\"]')\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/stage1-20260908/browser.cjs:53:108\n    at async flow (/Users/song/Documents/拾页/verification/stage1-20260908/browser.cjs:38:51)\n    at async main (/Users/song/Documents/拾页/verification/stage1-20260908/browser.cjs:42:2)"
+    },
+    {
+      "name": "source-page-save-failure-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-candidate-prompts-layout",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "screenshots": [
+    "home.png",
+    "candidates.png",
+    "transparent-preview.png",
+    "home-and-mock-refine-blob-save-reload-failure.png",
+    "mobile-candidates.png"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Song 授权修复米白版四项问题后的代码基线；HTML 和 CSS 与米白恢复节点一致。",
+  "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+  "app.js": "3f3cc6dfd77e3ab7731f17cde149814d66ab56b60e346362e65c126d1e4b140e",
+  "styles.css": "df4413b0eda1511c073ae0170544738a61b4af3d89ba75722339d22b42e2d329"
+}

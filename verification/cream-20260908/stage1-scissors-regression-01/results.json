@@ -1,0 +1,100 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "checks": [
+    {
+      "name": "home-side-drag",
+      "status": "PASS",
+      "result": {
+        "middleEdgeWorks": true,
+        "verticalStrips": 40,
+        "forwardAndBack": true
+      }
+    },
+    {
+      "name": "book-side-cancel-and-back",
+      "status": "PASS",
+      "result": {
+        "cancelPreservesPage": true,
+        "differentBackFace": true,
+        "sideDragCommits": true
+      }
+    },
+    {
+      "name": "editing-side-turn",
+      "status": "PASS",
+      "result": {
+        "savedBeforeTurn": true,
+        "pageContentUnchanged": true,
+        "editableAfterTurn": true
+      }
+    },
+    {
+      "name": "scissors-freehand-auto-preview",
+      "status": "PASS",
+      "result": {
+        "autoPreview": true,
+        "alpha": {
+          "clear": 77276,
+          "solid": 187927
+        },
+        "localOnly": true
+      }
+    },
+    {
+      "name": "scissors-point-by-point",
+      "status": "PASS",
+      "result": {
+        "clickPoints": true,
+        "undoLastPoint": true,
+        "explicitCut": true
+      }
+    },
+    {
+      "name": "rectangle-and-stale-photo",
+      "status": "PASS",
+      "result": {
+        "rectangleStillAvailable": true
+      }
+    },
+    {
+      "name": "mobile-soft-edge-drag",
+      "status": "PASS",
+      "result": {
+        "actualSimulatedTouchDrag": true,
+        "softStrips": 40,
+        "frontBack": true,
+        "pageContentUnchanged": true,
+        "physicalDevice": false
+      }
+    },
+    {
+      "name": "mobile-scissors-and-side",
+      "status": "PASS",
+      "result": {
+        "touchPointCut": true,
+        "mobileSinglePage": true,
+        "noHorizontalOverflow": true,
+        "physicalDevice": false
+      }
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "home-unchanged.png",
+    "home-side-midturn.png",
+    "book-side-backface.png",
+    "editing-side-turn.png",
+    "scissors-loupe.png",
+    "scissors-result.png",
+    "scissors-click-outline.png",
+    "mobile-soft-middle.png",
+    "mobile-side-result.png"
+  ],
+  "hashes": {
+    "index.html": "ce22411734dc1504d8f4aa13f68f8d0ea50e60685ae8000faa381a0bd545a719",
+    "app.js": "5e09ac81973c0a05b1c32111ba2dfe670776d137f43a7d07579bbef5dd332543",
+    "styles.css": "cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3"
+  },
+  "browser": "152.0.7977.77"
+}

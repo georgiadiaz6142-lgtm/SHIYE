@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "name": "all-12-content-undo-persistence",
+      "status": "PASS"
+    },
+    {
+      "name": "turn-front-back-and-read-only",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-paper-selection",
+      "status": "PASS"
+    },
+    {
+      "name": "save-failure-and-retry",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "hashes": {
+    "app.js": "5e09ac81973c0a05b1c32111ba2dfe670776d137f43a7d07579bbef5dd332543",
+    "styles.css": "cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3",
+    "index.html": "ce22411734dc1504d8f4aa13f68f8d0ea50e60685ae8000faa381a0bd545a719"
+  },
+  "screenshots": [
+    "01-paper-panel.png",
+    "paper-plain.png",
+    "paper-dots.png",
+    "paper-grid.png",
+    "paper-lines.png",
+    "paper-cotton.png",
+    "paper-watercolor.png",
+    "paper-kraft.png",
+    "paper-letter.png",
+    "paper-botanical.png",
+    "paper-postmark.png",
+    "paper-collage.png",
+    "paper-album.png",
+    "02-decorative-panel.png",
+    "03-two-papers-turn.png",
+    "04-mobile-panel.png",
+    "05-mobile-album.png"
+  ],
+  "external": []
+}

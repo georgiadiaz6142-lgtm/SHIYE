@@ -1,0 +1,23 @@
+{
+  "name": "shiye",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.22.0 <23" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node --env-file-if-exists=.env.local dist/server/index.js",
+    "test": "npm run build && node --test dist/server/tests/*.test.js",
+    "check:prototype": "node --check shiye-editorial-prototype/app.js && node verification/cream-20260908/merge-unit.cjs"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "sharp": "0.34.5",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "22.19.15",
+    "typescript": "5.9.3"
+  }
+}

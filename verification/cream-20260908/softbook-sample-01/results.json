@@ -1,0 +1,7 @@
+{
+  "checks": [],
+  "errors": [],
+  "screenshots": [],
+  "hashes": {},
+  "fatal": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:14976:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (/Users/song/Documents/拾页/verification/cream-20260908/softbook-sample.cjs:18:111)"
+}

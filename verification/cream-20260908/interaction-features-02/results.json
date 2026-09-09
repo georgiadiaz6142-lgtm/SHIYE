@@ -1,0 +1,111 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "checks": [
+    {
+      "name": "return-to-original-page",
+      "status": "PASS",
+      "result": {
+        "pageId": "1b00a6d2-e5fb-4aef-a722-241c412190a9",
+        "stickers": 2,
+        "assets": 2
+      }
+    },
+    {
+      "name": "warehouse-creation-picker",
+      "status": "PASS",
+      "result": {
+        "savedBeforePicker": true,
+        "newBookContainsAll": true,
+        "directWarehouseEntry": true
+      }
+    },
+    {
+      "name": "desktop-transform-text-drag",
+      "status": "PASS",
+      "result": {
+        "dragFromWarehouse": true,
+        "resizeUndo": true,
+        "rotateHandle": true,
+        "verticalPersisted": true,
+        "doubleClick": true
+      }
+    },
+    {
+      "name": "real-book-front-back",
+      "status": "PASS",
+      "result": {
+        "fourFacesDistinct": true,
+        "insideCovers": true,
+        "frontBackCovers": true,
+        "noPageContentMutation": true,
+        "singlePageEditing": true
+      }
+    },
+    {
+      "name": "reader-corner-commit-cancel",
+      "status": "PASS",
+      "result": {
+        "smallDragRollsBack": true,
+        "cornerHasDifferentBackContent": true,
+        "commit": true
+      }
+    },
+    {
+      "name": "local-outline-boundary",
+      "status": "PASS",
+      "result": {
+        "transparent": 112770,
+        "opaque": 188267,
+        "actualAI": false,
+        "localOnly": true
+      }
+    },
+    {
+      "name": "mobile-pinch-rotate",
+      "status": "PASS",
+      "result": {
+        "before": {
+          "x": 24,
+          "y": 22,
+          "w": 32,
+          "rotation": "rotate(0deg)"
+        },
+        "after": {
+          "x": 12.4073,
+          "y": 12.0674,
+          "w": 55.1854,
+          "rotation": "rotate(18deg)"
+        },
+        "undoOneGesture": true,
+        "physicalDevice": false,
+        "chromeTouchInput": true
+      }
+    },
+    {
+      "name": "mobile-longpress-drag",
+      "status": "PASS",
+      "result": {
+        "longPressDrag": true,
+        "noDuplicateInsertion": true,
+        "physicalDevice": false
+      }
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "save-use-original-page.png",
+    "vertical-text-and-handles.png",
+    "real-book-spread.png",
+    "real-book-corner-fold.png",
+    "local-outline-not-ai.png",
+    "mobile-reading.png",
+    "mobile-longpress-result.png"
+  ],
+  "hashes": {
+    "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+    "app.js": "e61813d46491db30091647fbce2fbf03b67589dfa6072e5654762c0dbdf0c4c2",
+    "styles.css": "80546285a358030170145803c9f69033f2d2909b718a853a46f82491813a8bcc"
+  },
+  "browser": "152.0.7977.77"
+}

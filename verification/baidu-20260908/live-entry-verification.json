@@ -1,0 +1,26 @@
+{
+  "purpose": "Read-only live entry verification; no image selected or uploaded",
+  "checks": [
+    "live health confirmed",
+    "Baidu upload entry visible",
+    "consent unchecked; upload disabled until user chooses and confirms",
+    "mock start button absent"
+  ],
+  "external": [],
+  "mutations": [],
+  "errors": [],
+  "health": {
+    "status": "ok",
+    "mode": "live",
+    "provider": "baidu",
+    "liveAvailable": true,
+    "photosAccepted": true,
+    "mock": false,
+    "capabilities": {
+      "automaticSeparateObjects": false,
+      "box": true,
+      "points": false
+    },
+    "localTtlSeconds": 3600
+  }
+}

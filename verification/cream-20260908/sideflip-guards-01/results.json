@@ -1,0 +1,27 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "checks": [
+    {
+      "name": "editing-turn-resize-cancel",
+      "status": "PASS",
+      "result": {
+        "canceledWithoutPageChange": true,
+        "unlocked": true
+      }
+    },
+    {
+      "name": "editing-turn-save-failure",
+      "status": "PASS",
+      "result": {
+        "failedSaveBlocksTurn": true
+      }
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "screenshots": [],
+  "hashes": {
+    "app.js": "b912360af6fa67dcdb59cb24b9b69cb2c10630cf6762541c87f994553e6be3ad",
+    "styles.css": "2f69c2f5b067e33163dd3d35b764c984bb710b4ed4581d63e0851a711d9cf7de"
+  }
+}

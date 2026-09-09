@@ -1,0 +1,92 @@
+{
+  "target": "http://127.0.0.1:4176",
+  "checks": [
+    {
+      "name": "home-side-drag",
+      "status": "PASS",
+      "result": {
+        "middleEdgeWorks": true,
+        "verticalStrips": 40,
+        "forwardAndBack": true
+      }
+    },
+    {
+      "name": "book-side-cancel-and-back",
+      "status": "PASS",
+      "result": {
+        "cancelPreservesPage": true,
+        "differentBackFace": true,
+        "sideDragCommits": true
+      }
+    },
+    {
+      "name": "editing-side-turn",
+      "status": "PASS",
+      "result": {
+        "savedBeforeTurn": true,
+        "pageContentUnchanged": true,
+        "editableAfterTurn": true
+      }
+    },
+    {
+      "name": "scissors-freehand-auto-preview",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\n0 !== 1\n"
+    },
+    {
+      "name": "scissors-point-by-point",
+      "status": "PASS",
+      "result": {
+        "clickPoints": true,
+        "undoLastPoint": true,
+        "explicitCut": true
+      }
+    },
+    {
+      "name": "rectangle-and-stale-photo",
+      "status": "PASS",
+      "result": {
+        "rectangleStillAvailable": true
+      }
+    },
+    {
+      "name": "mobile-soft-edge-drag",
+      "status": "PASS",
+      "result": {
+        "actualSimulatedTouchDrag": true,
+        "softStrips": 40,
+        "frontBack": true,
+        "pageContentUnchanged": true,
+        "physicalDevice": false
+      }
+    },
+    {
+      "name": "mobile-scissors-and-side",
+      "status": "PASS",
+      "result": {
+        "touchPointCut": true,
+        "mobileSinglePage": true,
+        "noHorizontalOverflow": true,
+        "physicalDevice": false
+      }
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "home-unchanged.png",
+    "home-side-midturn.png",
+    "book-side-backface.png",
+    "editing-side-turn.png",
+    "scissors-freehand-auto-preview-failure.png",
+    "scissors-click-outline.png",
+    "mobile-soft-middle.png",
+    "mobile-side-result.png"
+  ],
+  "hashes": {
+    "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+    "app.js": "91516895d5c00f02e50cdb89b759009cf3187d2f19c16ad6f53988d4b2857ef2",
+    "styles.css": "1ae4e10f14e6953a898d7879998745350ec4f53acb7bb632f4a90dfe826d36c8"
+  },
+  "browser": "152.0.7977.77"
+}

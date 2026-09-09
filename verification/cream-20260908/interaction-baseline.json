@@ -1,0 +1,6 @@
+{
+  "description": "2026-09-08 交互升级最终候选；奶油首页不变，真实 AI 未接入。",
+  "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2",
+  "app.js": "54096a82a2a069de1c31ffef9b47ad57724236292eeb398d5f25640c88009d34",
+  "styles.css": "88f8948e08c4cab2ea6bd259e02897919d93173fa12e092a5ef196afc44647d7"
+}

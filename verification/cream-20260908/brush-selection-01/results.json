@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "star-add-erase-undo-confirm-save",
+      "status": "PASS"
+    },
+    {
+      "name": "clear-full-empty-and-resize",
+      "status": "PASS"
+    },
+    {
+      "name": "cancel-stroke-and-switch-rectangle",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-touch-star-and-brush-size",
+      "status": "PASS"
+    },
+    {
+      "name": "new-photo-resets-mask-and-demo-stays",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "hashes": {
+    "app.js": "c78b205ba19cf33a74c803e9feaf222a4a150e30eb26675430b23b5749e09192",
+    "styles.css": "d938298b0e20937d0abab8384dc580dcc29d22d28528eb9d352f2177380ccbb7",
+    "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2"
+  },
+  "screenshots": [
+    "01-brush-workshop.png",
+    "02-star-selection.png",
+    "03-erase-detail.png",
+    "04-transparent-result.png",
+    "05-magnifier.png",
+    "06-mobile-star.png"
+  ],
+  "external": [],
+  "browser": "152.0.7977.77"
+}

@@ -1,0 +1,312 @@
+{
+  "startedAt": "2026-09-09T09:37:36.494Z",
+  "requests": [
+    {
+      "at": "2026-09-09T09:37:53.730Z",
+      "sample": "night",
+      "path": "/api/uploads/photo",
+      "status": 201
+    },
+    {
+      "at": "2026-09-09T09:37:53.746Z",
+      "sample": "night",
+      "path": "/api/segmentation/jobs",
+      "status": 202
+    },
+    {
+      "at": "2026-09-09T09:39:00.214Z",
+      "sample": "night",
+      "path": "/api/segmentation/refine",
+      "status": 202
+    },
+    {
+      "at": "2026-09-09T09:42:04.145Z",
+      "sample": "mountain",
+      "path": "/api/uploads/photo",
+      "status": 201
+    },
+    {
+      "at": "2026-09-09T09:42:04.153Z",
+      "sample": "mountain",
+      "path": "/api/segmentation/jobs",
+      "status": 202
+    },
+    {
+      "at": "2026-09-09T09:44:01.481Z",
+      "sample": "mountain",
+      "path": "/api/segmentation/refine",
+      "status": 202
+    },
+    {
+      "at": "2026-09-09T09:45:10.882Z",
+      "sample": "apartments",
+      "path": "/api/uploads/photo",
+      "status": 422
+    }
+  ],
+  "jobs": [
+    {
+      "sample": "night",
+      "jobId": "335b9b42-bb0d-45a0-bf9b-4ace007c157a",
+      "kind": "auto",
+      "status": "succeeded",
+      "createdAt": 1788946673741,
+      "updatedAt": 1788946681440,
+      "providerAttemptedAt": 1788946673751,
+      "providerRequestId": "2097620524892793246",
+      "candidates": [
+        {
+          "candidateId": "26f2f68f-ea0f-4c1d-bbec-a41bd16ab47a",
+          "candidateRevision": 1,
+          "imageSessionId": "a2f3de12-2602-4d87-b11b-677730eaedf8",
+          "sourceRevision": 1,
+          "maskRef": "52d88497-6cc2-4182-9ca1-60f7711d84b8",
+          "transparentRef": "a225c3a7-8c53-4b63-bb15-c5197e69d355",
+          "boundingBox": {
+            "x": 0,
+            "y": 465,
+            "width": 2000,
+            "height": 1035
+          },
+          "expiresAt": 1788950273719,
+          "name": "自动前景（可能含多个物体）",
+          "mock": false,
+          "providerRequestId": "2097620524892793246"
+        }
+      ]
+    },
+    {
+      "sample": "night",
+      "jobId": "6aaed13e-cc50-4146-aaca-32636e1a5684",
+      "kind": "refine",
+      "status": "succeeded",
+      "createdAt": 1788946740203,
+      "updatedAt": 1788946746345,
+      "providerAttemptedAt": 1788946740220,
+      "providerRequestId": "2097620799706173408",
+      "candidates": [
+        {
+          "candidateId": "26f2f68f-ea0f-4c1d-bbec-a41bd16ab47a",
+          "candidateRevision": 2,
+          "imageSessionId": "a2f3de12-2602-4d87-b11b-677730eaedf8",
+          "sourceRevision": 1,
+          "maskRef": "40f9a3b7-b0aa-4903-9e12-83f384cc9acf",
+          "transparentRef": "97d9de2e-4242-4279-b2e5-e8fb6edacd83",
+          "boundingBox": {
+            "x": 0,
+            "y": 528,
+            "width": 1576,
+            "height": 599
+          },
+          "expiresAt": 1788950273719,
+          "name": "框选抠图",
+          "mock": false,
+          "providerRequestId": "2097620799706173408"
+        }
+      ]
+    },
+    {
+      "sample": "mountain",
+      "jobId": "7ec0d4c7-0cae-4578-a52a-b33c8924529d",
+      "kind": "auto",
+      "status": "succeeded",
+      "createdAt": 1788946924148,
+      "updatedAt": 1788946929057,
+      "providerAttemptedAt": 1788946924160,
+      "providerRequestId": "2097621563404175510",
+      "candidates": [
+        {
+          "candidateId": "7be970e8-96aa-444c-8462-463cc50ff934",
+          "candidateRevision": 1,
+          "imageSessionId": "9e027093-d67c-43ee-84e7-62b317c77a19",
+          "sourceRevision": 1,
+          "maskRef": "338fb5c9-e93f-41b7-9814-ade4ee2c76b4",
+          "transparentRef": "fd93cbe0-8251-4776-8a85-c4b061f396a9",
+          "boundingBox": {
+            "x": 0,
+            "y": 0,
+            "width": 2000,
+            "height": 1511
+          },
+          "expiresAt": 1788950524133,
+          "name": "自动前景（可能含多个物体）",
+          "mock": false,
+          "providerRequestId": "2097621563404175510"
+        }
+      ]
+    },
+    {
+      "sample": "mountain",
+      "jobId": "4223ba1e-123c-480f-9c62-da4e955128f5",
+      "kind": "refine",
+      "status": "succeeded",
+      "createdAt": 1788947041473,
+      "updatedAt": 1788947048382,
+      "providerAttemptedAt": 1788947041487,
+      "providerRequestId": "2097622060539434116",
+      "candidates": [
+        {
+          "candidateId": "7be970e8-96aa-444c-8462-463cc50ff934",
+          "candidateRevision": 2,
+          "imageSessionId": "9e027093-d67c-43ee-84e7-62b317c77a19",
+          "sourceRevision": 1,
+          "maskRef": "bced54c3-f00f-4f21-9558-e3900cd43d22",
+          "transparentRef": "67c270d8-585d-44bd-9919-db4c3073c0f2",
+          "boundingBox": {
+            "x": 0,
+            "y": 544,
+            "width": 2000,
+            "height": 967
+          },
+          "expiresAt": 1788950524133,
+          "name": "框选抠图",
+          "mock": false,
+          "providerRequestId": "2097622060539434116"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "label": "night-auto",
+      "status": "百度结果已返回，请检查边缘",
+      "error": [],
+      "outputs": [
+        {
+          "file": "night-auto-0.png",
+          "width": 2000,
+          "height": 1035,
+          "alpha": {
+            "zero": 201982,
+            "partial": 1868017,
+            "opaque": 1
+          }
+        }
+      ],
+      "audit": {
+        "attempted": 6,
+        "inflight": 0
+      }
+    },
+    {
+      "label": "night-building-box",
+      "status": "百度结果已返回，请检查边缘",
+      "error": [],
+      "outputs": [
+        {
+          "file": "night-building-box-0.png",
+          "width": 1576,
+          "height": 599,
+          "alpha": {
+            "zero": 283077,
+            "partial": 35456,
+            "opaque": 625491
+          }
+        }
+      ],
+      "audit": {
+        "attempted": 7,
+        "inflight": 0
+      }
+    },
+    {
+      "action": "preview-white-border",
+      "audit": {
+        "attempted": 7,
+        "inflight": 0
+      }
+    },
+    {
+      "label": "mountain-auto",
+      "status": "百度结果已返回，请检查边缘",
+      "error": [],
+      "outputs": [
+        {
+          "file": "mountain-auto-0.png",
+          "width": 2000,
+          "height": 1511,
+          "alpha": {
+            "zero": 501748,
+            "partial": 2520250,
+            "opaque": 2
+          }
+        }
+      ],
+      "audit": {
+        "attempted": 8,
+        "inflight": 0
+      }
+    },
+    {
+      "action": "preview-white-border",
+      "audit": {
+        "attempted": 8,
+        "inflight": 0
+      }
+    },
+    {
+      "label": "mountain-ridge-box",
+      "status": "百度结果已返回，请检查边缘",
+      "error": [],
+      "outputs": [
+        {
+          "file": "mountain-ridge-box-0.png",
+          "width": 2000,
+          "height": 967,
+          "alpha": {
+            "zero": 318995,
+            "partial": 98253,
+            "opaque": 1516752
+          }
+        }
+      ],
+      "audit": {
+        "attempted": 9,
+        "inflight": 0
+      }
+    },
+    {
+      "action": "preview-white-border",
+      "audit": {
+        "attempted": 9,
+        "inflight": 0
+      }
+    },
+    {
+      "label": "apartments-auto",
+      "status": "",
+      "error": [
+        "图片无法读取，请选择静态 JPG、PNG 或 WebP。 查询原任务"
+      ],
+      "outputs": [],
+      "audit": {
+        "attempted": 9,
+        "inflight": 0
+      }
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "before": {
+    "attempted": 5,
+    "inflight": 0
+  },
+  "health": {
+    "status": "ok",
+    "mode": "live",
+    "provider": "baidu",
+    "liveAvailable": true,
+    "photosAccepted": true,
+    "mock": false,
+    "capabilities": {
+      "automaticSeparateObjects": false,
+      "box": true,
+      "points": false
+    },
+    "localTtlSeconds": 3600
+  },
+  "audit": {
+    "attempted": 9,
+    "inflight": 0
+  }
+}

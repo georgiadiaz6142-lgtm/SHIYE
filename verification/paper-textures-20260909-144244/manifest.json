@@ -1,0 +1,113 @@
+{
+  "backup": "archive/20260909-144244-before-added-paper-textures.tar.gz",
+  "textures": [
+    {
+      "id": "texture-0297",
+      "name": "暮棕纸",
+      "source": "/Users/song/Desktop/纸张/p0297_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0297_m.jpeg",
+      "sha256": "00467ea538bdcc1b323a8911e644a69c317ff898edac9884ac6a74c03e7a89e6",
+      "bytes": 246719,
+      "color": "#75603e"
+    },
+    {
+      "id": "texture-0427",
+      "name": "米色牛皮",
+      "source": "/Users/song/Desktop/纸张/p0427_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0427_m.jpeg",
+      "sha256": "82883ee04e96ed47bd08bd0c40d801335f6d6c4311ecf8c54f7a1bc45075cbe1",
+      "bytes": 696613,
+      "color": "#d6bd8b"
+    },
+    {
+      "id": "texture-0445",
+      "name": "蜜蜡纸",
+      "source": "/Users/song/Desktop/纸张/p0445_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0445_m.jpeg",
+      "sha256": "53a16c1b1f656d89a458e62b48f7b7fb767f084b7166a948ecb7566062d85e5c",
+      "bytes": 567805,
+      "color": "#cbae6f"
+    },
+    {
+      "id": "texture-0454",
+      "name": "鼠尾草纸",
+      "source": "/Users/song/Desktop/纸张/p0454_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0454_m.jpeg",
+      "sha256": "93088b3b507df220dded93429830e3cfa3b8512f4a9a454b4ea77d887a7a9163",
+      "bytes": 494263,
+      "color": "#c4c7af"
+    },
+    {
+      "id": "texture-0302",
+      "name": "新绿渐染",
+      "source": "/Users/song/Desktop/纸张/p0302_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0302_m.jpeg",
+      "sha256": "f24329fd45fcec394fd9fd19aabde5794234f33b7be94c4c228b498fee2e9fcd",
+      "bytes": 355232,
+      "color": "#9dcc53"
+    },
+    {
+      "id": "texture-0431",
+      "name": "雾蓝砂纹",
+      "source": "/Users/song/Desktop/纸张/p0431_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0431_m.jpeg",
+      "sha256": "1ca25db76608b1adf6a84d65e1fc847a749c8f9c117595fa731b787d6279a141",
+      "bytes": 920281,
+      "color": "#9eafab"
+    },
+    {
+      "id": "texture-0444",
+      "name": "落日渐染",
+      "source": "/Users/song/Desktop/纸张/p0444_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0444_m.jpeg",
+      "sha256": "008f2964ecd63b2ec339e9b0df5521ce0ebfc61c391124a9e6a2424ee74297bc",
+      "bytes": 482702,
+      "color": "#cc8054"
+    },
+    {
+      "id": "texture-0452",
+      "name": "砖红砂纹",
+      "source": "/Users/song/Desktop/纸张/p0452_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0452_m.jpeg",
+      "sha256": "db894884e9daad07252a24f97c54f2611b0052f509a84949deed804a53a38013",
+      "bytes": 783179,
+      "color": "#b17065"
+    },
+    {
+      "id": "texture-0518",
+      "name": "岩纹纸",
+      "source": "/Users/song/Desktop/纸张/p0518_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0518_m.jpeg",
+      "sha256": "1442e6cfc4a8b9e935f5d7f958db325d02919f84e78c42e8ab7999e57f013d36",
+      "bytes": 556868,
+      "color": "#beb39a"
+    },
+    {
+      "id": "texture-0521",
+      "name": "云白纤维",
+      "source": "/Users/song/Desktop/纸张/p0521_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0521_m.jpeg",
+      "sha256": "ab2b27671c362f056e4509b31de2a3a5e6fc1386b841a3c193611d4e63c00c41",
+      "bytes": 669643,
+      "color": "#e1e2d4"
+    },
+    {
+      "id": "texture-0526",
+      "name": "青灰长纤",
+      "source": "/Users/song/Desktop/纸张/p0526_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0526_m.jpeg",
+      "sha256": "8e4bb09410c36d9901ad03d3ace871dcd1c1efda4620310916839ac32d180542",
+      "bytes": 503965,
+      "color": "#c5d5d1"
+    },
+    {
+      "id": "texture-0527",
+      "name": "墨色长纤",
+      "source": "/Users/song/Desktop/纸张/p0527_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0527_m.jpeg",
+      "sha256": "1a45404eb9007987319eb85e3d9e581bc29bc7af2b523a9ef4e894f901e4eb8b",
+      "bytes": 376023,
+      "color": "#202e33"
+    }
+  ]
+}

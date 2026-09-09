@@ -1,0 +1,21 @@
+{
+  "checks": [
+    {
+      "name": "local-steps-and-resume-without-refresh",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '[{\"x\":0.35000004052056205,\"y\":0.115,\"w\":0.2699999632093642,\"h\":0.35000000000000003,\"edgeId\":\"e5965077-6d8b-4d3e-88ff-5b860887e833\",\"edgeAssetId\":\"e5eef7a8-ecf7-4ea2-806e-898345c2fbfc\"}]'\n- '[{\"x\":0.35000004052056205,\"y\":0.115,\"w\":0.2699999632093642,\"h\":0.35000000000000003,\"edgeId\":\"e5965077-6d8b-4d3e-88ff-5b860887e833\"}]'\n"
+    },
+    {
+      "name": "return-to-original-editor-and-collection",
+      "status": "FAIL",
+      "error": "locator.click: Error: strict mode violation: locator('[data-action=\"nav\"][data-view=\"workshop\"]') resolved to 2 elements:\n    1) <button class=\"\" data-action=\"nav\" data-view=\"workshop\">…</button> aka getByRole('button', { name: '贴纸工坊' })\n    2) <button data-action=\"nav\" data-view=\"workshop\" class=\"button primary\">…</button> aka getByRole('button', { name: '制作贴纸' })\n\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"nav\"][data-view=\"workshop\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"\" data-action=\"nav\" data-view=\"workshop\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is not stable\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m  - element was detached from the DOM, retrying\u001b[22m\n"
+    },
+    {
+      "name": "mobile-and-baidu-entry-return",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": []
+}

@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "name": "all-12-content-undo-persistence",
+      "status": "PASS"
+    },
+    {
+      "name": "turn-front-back-and-read-only",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-paper-selection",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(await p.locator('.reader-spread.single > .album').count())\n\n    at flow.viewport.width (/Users/song/Documents/拾页/verification/cream-20260908/paper-library.cjs:28:366)\n    at async flow (/Users/song/Documents/拾页/verification/cream-20260908/paper-library.cjs:14:414)\n    at async main (/Users/song/Documents/拾页/verification/cream-20260908/paper-library.cjs:27:2)"
+    },
+    {
+      "name": "save-failure-and-retry",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "hashes": {
+    "app.js": "257b83e816ff5e7c3f345fdc3781df0f4aa7a26e9cd8fa7b66d896349a52802e",
+    "styles.css": "a2d871cca5b17175585345b23aa03501b29d8f6379c69ddf8ef3150e66ae1232",
+    "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2"
+  },
+  "screenshots": [
+    "01-paper-panel.png",
+    "paper-plain.png",
+    "paper-dots.png",
+    "paper-grid.png",
+    "paper-lines.png",
+    "paper-cotton.png",
+    "paper-watercolor.png",
+    "paper-kraft.png",
+    "paper-letter.png",
+    "paper-botanical.png",
+    "paper-postmark.png",
+    "paper-collage.png",
+    "paper-album.png",
+    "02-decorative-panel.png",
+    "03-two-papers-turn.png",
+    "04-mobile-panel.png",
+    "05-mobile-album.png",
+    "mobile-paper-selection-failure.png"
+  ],
+  "external": []
+}

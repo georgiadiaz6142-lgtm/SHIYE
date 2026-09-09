@@ -1,0 +1,28 @@
+{
+  "layer": "real local HTTP backend with synthetic fixtures; NOT real model validation",
+  "checks": [
+    {
+      "name": "home-and-mock-refine-blob-save-reload",
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#seg-sticker-preview') to be visible\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:30:76\n    at async flow (/Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:19:51)\n    at async main (/Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:23:2)"
+    },
+    {
+      "name": "source-page-save-failure-retry",
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#seg-sticker-preview') to be visible\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:40:43\n    at async flow (/Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:19:51)\n    at async main (/Users/song/Documents/拾页/verification/stage1-20260908/http-browser.cjs:37:2)"
+    },
+    {
+      "name": "mobile-candidate-prompts-layout",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "screenshots": [
+    "home.png",
+    "candidates.png",
+    "home-and-mock-refine-blob-save-reload-failure.png",
+    "source-page-save-failure-retry-failure.png",
+    "mobile-candidates.png"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-09-09T17:29:07.200658+08:00",
+  "provider": "baidu",
+  "runtime": ".local/baidu-live-trial-20260908",
+  "approvedUntil": "2026-09-09T20:10:11+08:00",
+  "maxCumulativeAttempts": 10,
+  "attemptedBeforeThisRun": 5,
+  "remainingAtCheck": 5,
+  "inFlightAtCheck": 0,
+  "priorJobsWithProviderRequestId": 5,
+  "newModelCallsThisRun": 0,
+  "actualBilling": "not verified",
+  "sampleSelection": "Song chose to supply other non-sensitive local file paths; paths pending"
+}

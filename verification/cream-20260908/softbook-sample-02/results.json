@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "name": "desktop-forward-back-cancel",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-drag-and-layout",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /03 — 04/. Input:\n\n'01 — 02 / 06'\n\n    at test.viewport.width (/Users/song/Documents/拾页/verification/cream-20260908/softbook-sample.cjs:45:10)\n    at async test (/Users/song/Documents/拾页/verification/cream-20260908/softbook-sample.cjs:13:91)\n    at async main (/Users/song/Documents/拾页/verification/cream-20260908/softbook-sample.cjs:40:2)"
+    },
+    {
+      "name": "reduce-motion-and-navigation",
+      "status": "PASS"
+    },
+    {
+      "name": "navigation-during-turn",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    "01-closed.png",
+    "02-open.png",
+    "03-turn-15.png",
+    "03-turn-30.png",
+    "03-turn-50.png",
+    "03-turn-70.png",
+    "03-turn-88.png",
+    "04-second-spread.png",
+    "05-reverse-middle.png",
+    "06-mobile-closed.png",
+    "07-mobile-middle.png",
+    "mobile-drag-and-layout-failure.png"
+  ],
+  "hashes": {
+    "app.js": "90f50af6c17e1c81b0dfbfbfaa0d8d5851532d5c1f08af420296d6416c732bff",
+    "styles.css": "14b9a31fadbdfab2a7d2c2abc76177c2e684f0d6644f00364145f1ca03c48483",
+    "index.html": "ff278abca8ecf5a5c76546705b0334d56e2593412fdc3b753d321723bdaf9ea2"
+  },
+  "browser": "152.0.7977.77"
+}

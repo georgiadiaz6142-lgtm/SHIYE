@@ -1,0 +1,33 @@
+.edge-panel{margin:16px 0;padding:15px 12px;background:#edf0e6;border:1px solid #d7ddcb;border-radius:8px}
+.edge-panel strong{font-size:13px;color:#425b42}.edge-panel p{font-size:11px;line-height:1.7;margin:9px 0;color:#606b56}
+.edge-panel .button{width:100%;margin:5px 0}.edge-panel .subject-buttons{gap:6px}.edge-panel .chip{font-size:11px;padding:7px 10px}
+.edge-overlay{position:absolute;pointer-events:none;z-index:4}.edge-mask{width:100%;height:100%;object-fit:fill!important;position:absolute!important;inset:0!important}
+.edge-seed{position:absolute;transform:translate(-50%,-50%);width:19px;height:19px;line-height:17px;text-align:center;border:1.5px solid white;border-radius:50%;color:white;background:#32754a;font:700 15px/17px sans-serif;box-shadow:0 1px 3px #0006}
+.edge-seed.remove{background:#b24d3d}.edge-point-mode{cursor:crosshair}.edge-point-mode .crop-edit-handles{display:none}
+#generate-button[hidden]{display:none}
+.edge-quick-tools{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.edge-quick-tools .chip{font-size:12px;padding:9px 13px}
+.edge-quick-tools [data-action="edge-run"]{background:#425b42;color:#fffdf6;border-color:#425b42}
+/* The guided flow keeps the three main actions with the photo. */
+.edge-simple{padding:14px 0;margin:0;background:transparent;border:0;border-radius:0}
+.edge-main-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.edge-main-actions .button{width:auto;margin:0;margin-left:auto;padding:12px 18px;font-size:12px}
+.edge-main-actions .chip{font-size:12px;padding:11px 15px}
+.edge-main-actions [data-action="edge-keep"].active{background:#425b42;border-color:#425b42;color:#fff}
+.edge-main-actions [data-action="edge-remove"].active{background:#a64f3e;border-color:#a64f3e;color:#fff}
+.edge-help{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:13px;color:#707760;font-size:12px;line-height:1.7}
+.edge-help [role="status"]{flex:1;min-width:160px}.edge-help .text-link{font-size:12px;white-space:nowrap}
+.edge-previous-note{display:block;color:#848873;font-size:10px;margin-top:5px}
+.edge-more{margin-top:25px;border-top:1px solid #dddccf;padding-top:16px}.edge-more summary{cursor:pointer;color:#737960;font-size:12px}
+.edge-more-buttons{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.edge-more-buttons .chip{font-size:11px}
+.edge-private{display:block;margin-top:10px;font-size:11px;color:#858a77}.edge-change-photo{font-size:12px}
+.edge-workshop{grid-template-columns:minmax(0,1fr)}
+.edge-photo-tools{display:flex;justify-content:flex-end;margin-bottom:10px}.edge-photo-tools .edge-change-photo{padding:6px 0}
+#edge-picked:empty{display:none}#edge-picked:not(:empty){margin-top:10px}
+.edge-next{margin-top:12px;width:100%}.edge-manual-return{margin:15px 0}
+.edge-hide-guides .crop-outline:not(.scissor-path),.edge-hide-guides .crop-box{visibility:hidden}
+#edge-picked{font-size:12px;line-height:1.7;color:#425b42}
+@media(max-width:800px){.edge-main-actions .button{margin-left:0;flex:1;min-width:170px}.edge-main-actions .chip{flex:1;white-space:nowrap}.edge-help{gap:10px}.edge-simple{padding:12px 0 8px}}
+
+.edge-selection-tools{display:flex;gap:8px;margin-bottom:12px}.edge-selection-tools .chip{padding:9px 16px;font-size:12px}
+
+.workshop-back{display:inline-flex;align-items:center;gap:7px;margin:0 0 18px;padding:5px 0;font-size:13px;color:#66715b}.workshop-back svg{width:16px;height:16px}

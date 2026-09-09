@@ -1,0 +1,9 @@
+{
+  "package.json": "6e38351e04d88f6b588d1eba4e43c81cae37015dafb6959dee7e82a9d70249e1",
+  "package-lock.json": "5074aa7b3f7ed66e5fadee0fa55f2646fc1ed6f563786bb2f7b52ea3f54c92c4",
+  "server/app.ts": "7d97a8bb45a049ed2dce17a976b9de827790a5c2d36e69be511de852fdad061c",
+  "server/tests/core.test.ts": "a9b541cd699ee4ccfc71f4f1ace89b87893c91306bfc3a33b6dd0a2248170792",
+  "shiye-editorial-prototype/app.js": "021b0fb4961aeac0fa298872e874d1ab56eadbc0fcdf9a4025e22670f5caa3b5",
+  "shiye-editorial-prototype/styles.css": "cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3",
+  "verification/stage1-20260908/http-browser.cjs": "c0a533fcf772739776bd3b65060332150b0c8dd843338d7bdf4269026bc1bdba"
+}

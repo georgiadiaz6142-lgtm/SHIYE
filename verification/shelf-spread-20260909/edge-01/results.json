@@ -1,0 +1,5 @@
+{
+  "checks": [],
+  "errors": [],
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    h: 212.1507568359375,\n    w: 204.146240234375,\n+   x: 664.3175048828125,\n-   x: 664.3331298828125,\n    y: 376.76055908203125\n  }\n\n    at /Users/song/Documents/拾页/verification/shelf-spread-20260909/edge-cases.cjs:7:245\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)"
+}

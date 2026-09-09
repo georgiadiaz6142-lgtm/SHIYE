@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "bookId": "48cc7aa3-9926-41f8-b5da-99db4e11634b",
+      "checks": "left/right inline text; fonts; independent/shared paper; one stored cross sticker with aligned projections; scope toggle; single/dual switching; duplicate/reorder/delete/undo/redo; reader turns; shelf pin/name sort; delete cancel; reload"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "bookId": "361d45c5-8f12-4a34-8cf0-72791374ac3a",
+      "checks": "left/right inline text; fonts; independent/shared paper; one stored cross sticker with aligned projections; scope toggle; single/dual switching; duplicate/reorder/delete/undo/redo; reader turns; shelf pin/name sort; delete cancel; reload"
+    }
+  ],
+  "errors": []
+}

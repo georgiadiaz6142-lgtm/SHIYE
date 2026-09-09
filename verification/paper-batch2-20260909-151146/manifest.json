@@ -1,0 +1,222 @@
+{
+  "backup": "archive/20260909-151146-before-paper-batch2.tar.gz",
+  "duplicates": [],
+  "textures": [
+    {
+      "id": "texture-0259",
+      "group": "暖色质感",
+      "name": "奶杏柔纹",
+      "source": "/Users/song/Downloads/p0259_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0259_m.jpeg",
+      "bytes": 134337,
+      "sha256": "4218f37cb2eec3d242898d08c59335279d0ffc53281a27ab38424462c4712565"
+    },
+    {
+      "id": "texture-0290",
+      "group": "手作纹理",
+      "name": "云絮纸",
+      "source": "/Users/song/Downloads/p0290_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0290_m.jpeg",
+      "bytes": 154636,
+      "sha256": "5a45022624f695e1c5a432ba37b15298df5c3d279dae125f8e33c95128917985"
+    },
+    {
+      "id": "texture-0292",
+      "group": "彩色纸面",
+      "name": "春野流彩",
+      "source": "/Users/song/Downloads/p0292_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0292_m.jpeg",
+      "bytes": 317961,
+      "sha256": "ba5cf24db93702ec4b79a616424e165c647298e0c364816487986e09be30aad6"
+    },
+    {
+      "id": "texture-0303",
+      "group": "彩色纸面",
+      "name": "苔绿渐染",
+      "source": "/Users/song/Downloads/p0303_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0303_m.jpeg",
+      "bytes": 283604,
+      "sha256": "66c392cf48c33d8cf56608899da69b26e9725692901235d29ad67cb6d2d219ff"
+    },
+    {
+      "id": "texture-0321",
+      "group": "暖色质感",
+      "name": "燕麦纸",
+      "source": "/Users/song/Downloads/p0321_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0321_m.jpeg",
+      "bytes": 510193,
+      "sha256": "5324cb2ce42193a93e5a35a0491534cdfc894e2f91bcc2c7dbb7a78539344a55"
+    },
+    {
+      "id": "texture-0330",
+      "group": "彩色纸面",
+      "name": "桃雾渐染",
+      "source": "/Users/song/Downloads/p0330_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0330_m.jpeg",
+      "bytes": 596409,
+      "sha256": "d4cc268e5c1b7bf468f9a4ad89c32c42d6db21804b01dc0aef60b159260c7cf9"
+    },
+    {
+      "id": "texture-0336",
+      "group": "彩色纸面",
+      "name": "蓝紫流光",
+      "source": "/Users/song/Downloads/p0336_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0336_m.jpeg",
+      "bytes": 801005,
+      "sha256": "ef3686a6184b6a8c5e1d14b52e36ba92bff2c60f83478e135db828583942a13d"
+    },
+    {
+      "id": "texture-0339",
+      "group": "彩色纸面",
+      "name": "晚霞织纹",
+      "source": "/Users/song/Downloads/p0339_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0339_m.jpeg",
+      "bytes": 890289,
+      "sha256": "d61b1a693e7e63bb1e1a8f07a8199329a31499f31840c7633f8b18b61748f67b"
+    },
+    {
+      "id": "texture-0344",
+      "group": "暖色质感",
+      "name": "旧玫瑰纸",
+      "source": "/Users/song/Downloads/p0344_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0344_m.jpeg",
+      "bytes": 741258,
+      "sha256": "5a5f08fbb16b2cccfcb59e7e7f58065707941f75c0c2eeef3a6f9c756ae36c85"
+    },
+    {
+      "id": "texture-0362",
+      "group": "彩色纸面",
+      "name": "晴空渐染",
+      "source": "/Users/song/Downloads/p0362_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0362_m.jpeg",
+      "bytes": 599988,
+      "sha256": "7ff9bb3d60334ba2aa233ddb0e983bcdb873c87f7910a408c3fe26ca926aba25"
+    },
+    {
+      "id": "texture-0366",
+      "group": "暖色质感",
+      "name": "浅粉棉纹",
+      "source": "/Users/song/Downloads/p0366_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0366_m.jpeg",
+      "bytes": 644637,
+      "sha256": "4d692d8e8cb0fe4027349039a2129923519aedb254889119129ac9d8314017d2"
+    },
+    {
+      "id": "texture-0369",
+      "group": "彩色纸面",
+      "name": "薄荷渐染",
+      "source": "/Users/song/Downloads/p0369_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0369_m.jpeg",
+      "bytes": 695301,
+      "sha256": "c6be31b9e761031c175a13a47a595b785bd9609a5ddc1faf57525195d9c21849"
+    },
+    {
+      "id": "texture-0375",
+      "group": "手作纹理",
+      "name": "麦金纤维",
+      "source": "/Users/song/Downloads/p0375_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0375_m.jpeg",
+      "bytes": 932807,
+      "sha256": "e0037e10bc51d1157da9e7a26e664306b4e451a766a5ea9141b8821a3e46b31f"
+    },
+    {
+      "id": "texture-0377",
+      "group": "手作纹理",
+      "name": "青金纤维",
+      "source": "/Users/song/Downloads/p0377_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0377_m.jpeg",
+      "bytes": 951854,
+      "sha256": "596a40ca1d2dd6e366ff7f09ed10b8d8c0fa7afbd49e593795953cce82dd5db3"
+    },
+    {
+      "id": "texture-0381",
+      "group": "轻装饰",
+      "name": "金箔便笺",
+      "source": "/Users/song/Downloads/p0381_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0381_m.jpeg",
+      "bytes": 755039,
+      "sha256": "92a69328a704f6b9d547b87ac91e7c9c2ae0b0683d385be63684a882b0652e91"
+    },
+    {
+      "id": "texture-0401",
+      "group": "手作纹理",
+      "name": "米白碎纤",
+      "source": "/Users/song/Downloads/p0401_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0401_m.jpeg",
+      "bytes": 355799,
+      "sha256": "748d7825c51b3854fca52533ec43d293360ee6e8723dce21cde74272c502cda9"
+    },
+    {
+      "id": "texture-0402",
+      "group": "手作纹理",
+      "name": "银灰棉纹",
+      "source": "/Users/song/Downloads/p0402_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0402_m.jpeg",
+      "bytes": 563629,
+      "sha256": "d340ddd115f883723f9e770058de8031997e55b7766d7cc0be6d8e79c3afcf48"
+    },
+    {
+      "id": "texture-0405",
+      "group": "彩色纸面",
+      "name": "湖蓝棉纹",
+      "source": "/Users/song/Downloads/p0405_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0405_m.jpeg",
+      "bytes": 608081,
+      "sha256": "b190c78b9d86d403af3bd679fe25dc8755dd49880fcb4c1efa87520494ac8ca3"
+    },
+    {
+      "id": "texture-0406",
+      "group": "彩色纸面",
+      "name": "嫩绿棉纹",
+      "source": "/Users/song/Downloads/p0406_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0406_m.jpeg",
+      "bytes": 599915,
+      "sha256": "ac5e3f5e7c826477386d95d1b5aed6385afd9deae61ddfdeffd694fe42302184"
+    },
+    {
+      "id": "texture-0411",
+      "group": "暖色质感",
+      "name": "芥黄纸",
+      "source": "/Users/song/Downloads/p0411_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0411_m.jpeg",
+      "bytes": 562859,
+      "sha256": "2242e3ecbc24e9c112229f191f8e73fd6401bf1fa0cfd24cfe578f62f34d5d6c"
+    },
+    {
+      "id": "texture-0420",
+      "group": "暖色质感",
+      "name": "焦糖旧纸",
+      "source": "/Users/song/Downloads/p0420_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0420_m.jpeg",
+      "bytes": 547451,
+      "sha256": "bd7f579138fee9a244d28da2aad2296ca6736c8792819fda85a5c1225873dd92"
+    },
+    {
+      "id": "texture-0428",
+      "group": "手作纹理",
+      "name": "雪白长纤",
+      "source": "/Users/song/Downloads/p0428_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0428_m.jpeg",
+      "bytes": 317029,
+      "sha256": "520751c5e3ca8209f093cecd573dbae608652454ab1d0e422ef6a192cc712214"
+    },
+    {
+      "id": "texture-0429",
+      "group": "手作纹理",
+      "name": "朱红长纤",
+      "source": "/Users/song/Downloads/p0429_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0429_m.jpeg",
+      "bytes": 451067,
+      "sha256": "5cba18225e4be002c8a4ee44224c2130eaea4eeb0186bce625cc3da846e6903b"
+    },
+    {
+      "id": "texture-0433",
+      "group": "暖色质感",
+      "name": "鎏金砂纹",
+      "source": "/Users/song/Downloads/p0433_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0433_m.jpeg",
+      "bytes": 970778,
+      "sha256": "633dd7bdbbddddc74c491b1ca478089ad43f61879513b1fc567937b718048f14"
+    }
+  ]
+}

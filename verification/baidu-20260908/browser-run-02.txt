@@ -1,0 +1,4 @@
+PASS mock-remains-off
+PASS baidu-photo-box-transparent-save-reload
+PASS mobile-box-coordinate-alignment
+{"layer":"OFFLINE Baidu contract fixture + local HTTP + isolated browser; NOT real model validation","checks":[{"name":"mock-remains-off","status":"PASS"},{"name":"baidu-photo-box-transparent-save-reload","status":"PASS"},{"name":"mobile-box-coordinate-alignment","status":"PASS"},{"name":"existing-three-mock-HTTP-browser-flows","status":"PASS"}],"errors":[],"external":[],"offlineTransportRequests":5}

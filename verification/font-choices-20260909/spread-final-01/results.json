@@ -1,0 +1,63 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "families": {
+        "serif": "\"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "sans": "-apple-system, \"system-ui\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "hand": "KaiTi, STKaiti, \"Kaiti SC\", \"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "fangsong": "FangSong, STFangsong, \"FangSong SC\", \"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "rounded": "\"Yuanti SC\", STYuanti, YouYuan, -apple-system, \"system-ui\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+      },
+      "actual": {
+        "serif": [
+          "Songti SC"
+        ],
+        "sans": [
+          "PingFang SC"
+        ],
+        "hand": [
+          "STKaiti"
+        ],
+        "fangsong": [
+          "STFangsong"
+        ],
+        "rounded": [
+          "Yuanti SC"
+        ]
+      },
+      "checks": "5 options; default does not create text; inline inheritance; only font changes; thumbnail/read parity; undo/redo; vertical; reload; no viewport overflow"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "families": {
+        "serif": "\"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "sans": "-apple-system, \"system-ui\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "hand": "KaiTi, STKaiti, \"Kaiti SC\", \"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "fangsong": "FangSong, STFangsong, \"FangSong SC\", \"Songti SC\", STSong, \"Noto Serif CJK SC\", serif",
+        "rounded": "\"Yuanti SC\", STYuanti, YouYuan, -apple-system, \"system-ui\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+      },
+      "actual": {
+        "serif": [
+          "Songti SC"
+        ],
+        "sans": [
+          "PingFang SC"
+        ],
+        "hand": [
+          "STKaiti"
+        ],
+        "fangsong": [
+          "STFangsong"
+        ],
+        "rounded": [
+          "Yuanti SC"
+        ]
+      },
+      "checks": "5 options; default does not create text; inline inheritance; only font changes; thumbnail/read parity; undo/redo; vertical; reload; no viewport overflow"
+    }
+  ],
+  "errors": []
+}

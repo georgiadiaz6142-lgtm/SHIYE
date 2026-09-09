@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "name": "freehand-stays-editable-until-confirmed",
+      "status": "PASS"
+    },
+    {
+      "name": "point-selection-clear-undo-keyboard-resize",
+      "status": "PASS"
+    },
+    {
+      "name": "confirmation-save-to-original-page-and-reload",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-taps-adjust-and-explicit-confirm",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "screenshots": [
+    "01-stays-on-photo.png",
+    "02-explicit-preview.png",
+    "03-adjusted-window.png",
+    "04-mobile-adjust.png"
+  ],
+  "hashes": {
+    "app.js": "a4cd8b34b79742178de016b5585c684bba1507ae8b0220c9588061f7908de95b",
+    "index.html": "8a294936a1031da8610f9acb8ab7d4376d09cd4a27cab9873621ab7c279cf7a6",
+    "styles.css": "cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3",
+    "selection.js": "62036889b7907fcbdbb0029799c1b751ef60ffaec4d4f74354dd43de1d7712f9",
+    "segmentation.css": "61c227e626f7845783a5f591bb5560c81862080f31b6f4c1575e0cef8c5c9199"
+  }
+}

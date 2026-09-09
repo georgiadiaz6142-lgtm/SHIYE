@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "papers": 9,
+      "checks": "image decode; full surface sizing in swatches/editor/thumbnails/reader; no horizontal overflow"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "papers": 9,
+      "checks": "image decode; full surface sizing in swatches/editor/thumbnails/reader; no horizontal overflow"
+    }
+  ],
+  "errors": []
+}

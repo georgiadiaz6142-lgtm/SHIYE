@@ -1,0 +1,27 @@
+{
+  "checks": [
+    {
+      "name": "auto-outline-correction-undo-next-save",
+      "status": "PASS"
+    },
+    {
+      "name": "cancel-change-photo-and-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "failure-stops-auto-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "manual-tool-remains-available",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-tap-close-and-correction",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": []
+}

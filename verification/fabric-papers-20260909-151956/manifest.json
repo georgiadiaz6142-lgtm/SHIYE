@@ -1,0 +1,89 @@
+{
+  "backup": "archive/20260909-151956-before-fabric-papers.tar.gz",
+  "textures": [
+    {
+      "code": "0476",
+      "lightness": 87.8892770998865,
+      "color": "#e3dece",
+      "exists": false,
+      "id": "texture-0476",
+      "name": "米白亚麻",
+      "source": "/Users/song/Downloads/p0476_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0476_m.jpeg",
+      "bytes": 851308,
+      "sha256": "8cded558cc37d3f5e221acb5b9a9f0abbf551d06f726b02951f7d5b48738eb95"
+    },
+    {
+      "code": "0474",
+      "lightness": 81.5553100170261,
+      "color": "#dacc97",
+      "exists": false,
+      "id": "texture-0474",
+      "name": "奶黄绒纹",
+      "source": "/Users/song/Downloads/p0474_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0474_m.jpeg",
+      "bytes": 845587,
+      "sha256": "eda0e58728e463f298c4c61487255da7b5596a705ee5a91f5fcdd162d8afb7c4"
+    },
+    {
+      "code": "0485",
+      "lightness": 79.02709633938706,
+      "color": "#b9cbab",
+      "exists": false,
+      "id": "texture-0485",
+      "name": "浅绿织纹",
+      "source": "/Users/song/Downloads/p0485_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0485_m.jpeg",
+      "bytes": 954027,
+      "sha256": "1101e6062ec98023ce4d1095c537eb243d0fdf7475384f20097a39239bdcaee5"
+    },
+    {
+      "code": "0483",
+      "lightness": 68.23344033768446,
+      "color": "#afa88e",
+      "exists": false,
+      "id": "texture-0483",
+      "name": "卡其织纹",
+      "source": "/Users/song/Downloads/p0483_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0483_m.jpeg",
+      "bytes": 973042,
+      "sha256": "0bd1f3481e8dc7e70313046181b086b7bb3faa85bf796daf4cb8260f2a9bc8c9"
+    },
+    {
+      "code": "0486",
+      "lightness": 48.48322396424518,
+      "color": "#816f85",
+      "exists": false,
+      "id": "texture-0486",
+      "name": "雾紫格织",
+      "source": "/Users/song/Downloads/p0486_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0486_m.jpeg",
+      "bytes": 883632,
+      "sha256": "e00f110c120ea17141ddce11717b6d53ae3c5eabf3660a79e8bdba570099c14e"
+    },
+    {
+      "code": "0487",
+      "lightness": 40.711726730987515,
+      "color": "#626372",
+      "exists": false,
+      "id": "texture-0487",
+      "name": "靛灰细织",
+      "source": "/Users/song/Downloads/p0487_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0487_m.jpeg",
+      "bytes": 880368,
+      "sha256": "44b4643aed0da2581103a239dfd075ec39683aa6e07de2e817478556650eefbb"
+    },
+    {
+      "code": "0477",
+      "lightness": 39.849113223609535,
+      "color": "#665f52",
+      "exists": false,
+      "id": "texture-0477",
+      "name": "深棕格布",
+      "source": "/Users/song/Downloads/p0477_m.jpeg",
+      "asset": "shiye-editorial-prototype/assets/paper-p0477_m.jpeg",
+      "bytes": 871562,
+      "sha256": "185e1c1c160705cfb6b36ef93947005819d110576931f7c24c97d3eb3b7362df"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "name": "local-steps-and-resume-without-refresh",
+      "status": "PASS"
+    },
+    {
+      "name": "return-to-original-editor-and-collection",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-and-baidu-entry-return",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": []
+}
