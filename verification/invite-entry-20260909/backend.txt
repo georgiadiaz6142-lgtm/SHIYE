@@ -1,0 +1,186 @@
+
+> shiye@0.1.0 test
+> npm run build && node --test dist/server/tests/*.test.js
+
+
+> shiye@0.1.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: invite grant survives restart, hides code, rejects tampering and expires
+ok 1 - invite grant survives restart, hides code, rejects tampering and expires
+  ---
+  duration_ms: 16.014458
+  type: 'test'
+  ...
+# Subtest: disabled, bound and expired invite records revoke existing grants immediately
+ok 2 - disabled, bound and expired invite records revoke existing grants immediately
+  ---
+  duration_ms: 11.972958
+  type: 'test'
+  ...
+# Subtest: bad codes cannot pass; client and IP throttles reject repeated guesses
+ok 3 - bad codes cannot pass; client and IP throttles reject repeated guesses
+  ---
+  duration_ms: 13.2495
+  type: 'test'
+  ...
+# Subtest: missing or damaged configuration fails closed
+ok 4 - missing or damaged configuration fails closed
+  ---
+  duration_ms: 3.108125
+  type: 'test'
+  ...
+# Subtest: HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+ok 5 - HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+  ---
+  duration_ms: 80.370375
+  type: 'test'
+  ...
+# Subtest: Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+ok 6 - Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+  ---
+  duration_ms: 52.765709
+  type: 'test'
+  ...
+# Subtest: Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+ok 7 - Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+  ---
+  duration_ms: 8.53125
+  type: 'test'
+  ...
+# Subtest: Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+ok 8 - Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+  ---
+  duration_ms: 16.419083
+  type: 'test'
+  ...
+# Subtest: Baidu timeout fails without retry and image/box validation precedes credential transmission
+ok 9 - Baidu timeout fails without retry and image/box validation precedes credential transmission
+  ---
+  duration_ms: 14.458667
+  type: 'test'
+  ...
+# Subtest: Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+ok 10 - Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+  ---
+  duration_ms: 209.460084
+  type: 'test'
+  ...
+# Subtest: Baidu cancelled late response never commits; restart never resubmits live tasks
+ok 11 - Baidu cancelled late response never commits; restart never resubmits live tasks
+  ---
+  duration_ms: 52.81525
+  type: 'test'
+  ...
+# Subtest: HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+ok 12 - HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+  ---
+  duration_ms: 89.053084
+  type: 'test'
+  ...
+# Subtest: explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+ok 13 - explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+  ---
+  duration_ms: 336.064292
+  type: 'test'
+  ...
+# Subtest: three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+ok 14 - three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+  ---
+  duration_ms: 66.351416
+  type: 'test'
+  ...
+# Subtest: a repeated operation reuses the job; conflicting content cannot reuse its ID
+ok 15 - a repeated operation reuses the job; conflicting content cannot reuse its ID
+  ---
+  duration_ms: 66.65125
+  type: 'test'
+  ...
+# Subtest: refine preserves successful candidates and rejects stale versions
+ok 16 - refine preserves successful candidates and rejects stale versions
+  ---
+  duration_ms: 97.019333
+  type: 'test'
+  ...
+# Subtest: cancelled job never commits late candidates
+ok 17 - cancelled job never commits late candidates
+  ---
+  duration_ms: 121.737292
+  type: 'test'
+  ...
+# Subtest: synthetic-only running jobs recover after restart without a second job record
+ok 18 - synthetic-only running jobs recover after restart without a second job record
+  ---
+  duration_ms: 89.64025
+  type: 'test'
+  ...
+# Subtest: expired synthetic files become inaccessible and cleanup touches only managed media
+ok 19 - expired synthetic files become inaccessible and cleanup touches only managed media
+  ---
+  duration_ms: 23.281
+  type: 'test'
+  ...
+# Subtest: failed atomic transaction leaves both memory and disk unchanged
+ok 20 - failed atomic transaction leaves both memory and disk unchanged
+  ---
+  duration_ms: 11.097583
+  type: 'test'
+  ...
+# Subtest: malformed store fails closed instead of resetting state
+ok 21 - malformed store fails closed instead of resetting state
+  ---
+  duration_ms: 4.137959
+  type: 'test'
+  ...
+# Subtest: mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+ok 22 - mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+  ---
+  duration_ms: 14.705166
+  type: 'test'
+  ...
+# Subtest: invalid coordinates, missing foreground and unsupported prompt fields fail validation
+ok 23 - invalid coordinates, missing foreground and unsupported prompt fields fail validation
+  ---
+  duration_ms: 0.83425
+  type: 'test'
+  ...
+# Subtest: actual image decoder rejects disguised or malformed input
+ok 24 - actual image decoder rejects disguised or malformed input
+  ---
+  duration_ms: 5.496292
+  type: 'test'
+  ...
+# Subtest: HTTP limits origins, session ownership, personal uploads and static files
+ok 25 - HTTP limits origins, session ownership, personal uploads and static files
+  ---
+  duration_ms: 106.302667
+  type: 'test'
+  ...
+# Subtest: live mode cannot silently fall back to simulated output
+ok 26 - live mode cannot silently fall back to simulated output
+  ---
+  duration_ms: 2.797375
+  type: 'test'
+  ...
+# Subtest: Baidu naming uses recognition endpoint, selects confident label and does not retry
+ok 27 - Baidu naming uses recognition endpoint, selects confident label and does not retry
+  ---
+  duration_ms: 19.847875
+  type: 'test'
+  ...
+# Subtest: final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+ok 28 - final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+  ---
+  duration_ms: 235.124292
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 908.971084

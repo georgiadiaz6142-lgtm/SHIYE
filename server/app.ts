@@ -7,8 +7,9 @@ import { Store } from './store.js';
 import { type LiveOptions } from './baidu.js';
 import { Jobs } from './jobs.js';
 import { Naming, type NamingProvider } from './naming.js';
+import { type InviteAccess } from './access.js';
 
-export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider}) {
+export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
   if(runtime===staticRoot||!relative(staticRoot,runtime).startsWith('..'+sep))
     throw new Error('运行目录必须位于静态目录之外。');
@@ -37,10 +38,22 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
-      if(req.method!=='GET'||req.path!=='/session'){next(new Fault(401,'SESSION_REQUIRED','请重新打开工坊。'));return;}
+      if(req.method!=='GET'||!['/session','/access/session'].includes(req.path)){next(new Fault(401,'SESSION_REQUIRED','请重新打开工坊。'));return;}
       token=randomBytes(32).toString('hex');res.cookie('shiye_session',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:7*24*3600*1000});
     }
     res.locals.owner=createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
+  });
+  const accessToken=(req:express.Request)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_invite='))?.slice(13);
+  app.get('/api/access/session',async(req,res)=>res.json(options.access?await options.access.status(accessToken(req)):{available:false,authorized:false}));
+  app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{
+    if(!options.access)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
+    const grant=await options.access.verify(req.body?.code,res.locals.owner,req.socket.remoteAddress||'local');
+    res.cookie('shiye_invite',grant.token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:grant.maxAge});
+    res.json({authorized:true});
+  });
+  app.use('/api',async(req,_res,next)=>{
+    if(options.access&&!(await options.access.status(accessToken(req))).authorized)throw new Fault(401,'INVITE_REQUIRED','请先输入邀请码进入。');
+    next();
   });
   // The explicit upload button submits the chosen file; same-origin and session gates precede parsing.
   app.post('/api/uploads/photo',(req,_res,next)=>{

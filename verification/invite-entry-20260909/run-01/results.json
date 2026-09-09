@@ -1,0 +1,17 @@
+[
+  {
+    "width": 1440,
+    "status": "FAIL",
+    "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.seg-workshop') to be visible\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/invite-entry-20260909/browser.cjs:9:296"
+  },
+  {
+    "width": 390,
+    "status": "FAIL",
+    "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.seg-workshop') to be visible\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/invite-entry-20260909/browser.cjs:9:296"
+  },
+  {
+    "width": 320,
+    "status": "FAIL",
+    "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.seg-workshop') to be visible\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/invite-entry-20260909/browser.cjs:9:296"
+  }
+]

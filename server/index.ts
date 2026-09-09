@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { BaiduProvider } from './baidu.js';
 import { createApp } from './app.js';
+import { InviteAccess } from './access.js';
 
 const host=process.env.SHIYE_HOST||'127.0.0.1';
 if(host!=='127.0.0.1')throw new Error('本阶段仅允许回环监听。');
@@ -30,7 +31,7 @@ async function lock() {
 }
 await lock();
 try {
-  const {app,jobs}=await createApp({runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live,naming:process.env.SHIYE_BAIDU_NAMING_ENABLED==='true'?live?.provider:undefined});
+  const {app,jobs}=await createApp({access:new InviteAccess(resolve(runtime,'invites.json')),runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live,naming:process.env.SHIYE_BAIDU_NAMING_ENABLED==='true'?live?.provider:undefined});
   const server=app.listen(port,host,()=>console.log(`拾页本机服务 http://${host}:${port}；${mode==='live'?'百度抠图，仅处理主动点击上传的照片。':'模拟模式，无外部模型调用。'}`));
   server.on('error',async e=>{console.error(e instanceof Error?e.message:'服务启动失败');await unlink(lockPath);process.exitCode=1;});
   const timer=setInterval(()=>jobs.expire().catch(()=>console.error('临时测试数据清理失败。')),60_000);timer.unref();
