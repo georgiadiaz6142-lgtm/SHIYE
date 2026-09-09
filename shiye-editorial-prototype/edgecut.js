@@ -38,7 +38,6 @@ window.ShiyeEdge = (() => {
     stage.before(photoTools);
     stage.after(panel);
     panel.appendChild(aside.querySelector('#edge-picked'));
-    const privacy=document.createElement('small');privacy.className='edge-private';privacy.textContent='照片仅在本机处理';panel.appendChild(privacy);
     panel.appendChild(aside.querySelector('.edge-more'));
     aside.remove();
     const overlay=document.createElement('div');overlay.className='edge-overlay';stage.appendChild(overlay);

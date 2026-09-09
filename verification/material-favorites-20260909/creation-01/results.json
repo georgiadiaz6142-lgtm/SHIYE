@@ -1,0 +1,18 @@
+{
+  "layer": "isolated local HTTP and browser, deterministic provider fixture; zero actual Baidu calls",
+  "checks": [
+    {
+      "width": 1440,
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#seg-photo') to be visible\u001b[22m\n\u001b[2m    23 × locator resolved to hidden <input hidden=\"\" type=\"file\" id=\"seg-photo\" accept=\"image/jpeg,image/png,image/webp\"/>\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/material-favorites-20260909/creation-regression.cjs:45:147"
+    },
+    {
+      "width": 390,
+      "status": "FAIL",
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"nav\"][data-view=\"collection\"]:visible').first()\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/material-favorites-20260909/creation-regression.cjs:43:81"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "fixtureCalls": 2
+}

@@ -328,4 +328,15 @@ dialog{border:1px solid #ddd9cd;border-radius:10px;background:var(--bg);padding:
 .book-popover .book-menu-delete:hover{background:#f4e9e2;color:#963f31}
 @media(max-width:560px){.book-meta .book-more{width:36px;height:40px;margin-top:-8px}.book-popover button{min-height:44px}}
 
+.shelf-create-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.shelf-create-actions .button{width:126px;min-height:38px;padding:8px 12px;font-size:12px}
+.shelf-create-actions .icon{width:17px;height:17px}
+.sticker-card{display:flex;flex-direction:column;min-width:0}
+.sticker-card-actions{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:10px}
+.sticker-card-actions .sticker-use{display:inline-flex;margin:0;padding:7px 11px;min-height:36px;font-size:11px;gap:0}
+.sticker-card-actions .sticker-more{font-size:23px;width:34px;min-width:34px;height:36px}
+.asset-pin{display:inline-flex;vertical-align:middle;margin-right:4px}.asset-pin .icon{width:12px;height:12px}
+.collection-header .tabs{flex-wrap:wrap}
+@media(max-width:560px){.shelf-create-actions .button{width:110px}.collection-header .tabs{gap:18px}.sticker-card-actions{gap:4px}.sticker-card-actions .sticker-use{font-size:10px;padding:7px;min-height:40px}.sticker-card-actions .sticker-more{width:30px;min-width:30px;height:40px}.collection-header~#collection-results .sticker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 .book-meta .book-more{font-size:23px;line-height:1;color:#767a6e}
