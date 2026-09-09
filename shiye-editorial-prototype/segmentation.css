@@ -21,3 +21,16 @@
 .upload-zone.has-photo{display:block;padding:18px;text-align:center}.seg-upload-preview{margin:0 auto 18px}.seg-upload-preview>img{max-height:none;margin:0}
 .seg-upload-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin:20px 0 6px}.seg-upload-actions .button{min-width:190px}.seg-upload-actions [aria-pressed="true"]{border-color:#60744f;color:#435331;background:#e5eadb}
 @media(max-width:700px){.upload-zone.has-photo{padding:10px}.seg-upload-actions .button{width:100%;min-height:44px}}
+
+.workshop-layout.seg-workspace{display:block;max-width:1120px;margin:0 auto}
+.seg-workspace .upload-zone{min-height:280px;padding:16px;background:transparent}
+.seg-workspace .seg-upload-preview,.seg-workspace .seg-main-photo{width:min(100%,calc(clamp(220px,calc(100dvh - 350px),600px) * var(--photo-ratio)));margin:0 auto 14px}
+.seg-workspace .upload-zone p{max-width:none;margin:8px auto;font-size:11px;overflow-wrap:anywhere}
+.seg-workspace .seg-upload-actions{margin:12px 0 0;gap:10px}
+.seg-help{margin:14px auto 0;max-width:600px;font-size:12px;color:var(--muted)}
+.seg-help summary{cursor:pointer;width:fit-content;margin:auto;padding:6px 12px}
+.seg-help p{margin:10px 0;padding:12px 16px;background:#eeede3;border-radius:4px}
+.seg-workspace .seg-result-stage{padding:20px;border:1px solid var(--line);background:repeating-conic-gradient(#e3e2d9 0% 25%,#f0efe7 0% 50%) 50%/22px 22px}
+.seg-result-actions{display:flex;justify-content:center;gap:14px;margin:18px auto 0;max-width:540px}
+.seg-result-actions .button{flex:1;min-height:48px;white-space:nowrap;padding:12px 16px}
+@media(max-width:700px){.seg-workspace .upload-zone{padding:10px}.seg-result-actions{gap:10px}.seg-result-actions .button{font-size:12px;padding:12px 8px}.seg-workspace .seg-result-stage{padding:14px}}

@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "pass": true,
+      "checks": [
+        "local preview without POST",
+        "empty box blocked locally",
+        "mouse/touch normalized box",
+        "one direct refine call",
+        "result controls removed",
+        "local retouch preserved",
+        "no horizontal overflow"
+      ]
+    },
+    {
+      "width": 390,
+      "pass": true,
+      "checks": [
+        "local preview without POST",
+        "empty box blocked locally",
+        "mouse/touch normalized box",
+        "one direct refine call",
+        "result controls removed",
+        "local retouch preserved",
+        "no horizontal overflow"
+      ]
+    },
+    {
+      "width": 320,
+      "pass": true,
+      "checks": [
+        "local preview without POST",
+        "empty box blocked locally",
+        "mouse/touch normalized box",
+        "one direct refine call",
+        "result controls removed",
+        "local retouch preserved",
+        "no horizontal overflow"
+      ]
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "providerCalls": [
+    {
+      "box": {
+        "x": 0.09999998516764125,
+        "y": 0.14999999443109888,
+        "width": 0.5,
+        "height": 0.6500000501201101
+      },
+      "width": 600,
+      "height": 400
+    },
+    {
+      "box": {
+        "x": 0.09999999052249127,
+        "y": 0.15000002852110106,
+        "width": 0.5,
+        "height": 0.6500000285211011
+      },
+      "width": 600,
+      "height": 400
+    },
+    {
+      "box": {
+        "x": 0.10000000302753752,
+        "y": 0.14999996352367168,
+        "width": 0.49999998486231245,
+        "height": 0.6499999635236717
+      },
+      "width": 600,
+      "height": 400
+    }
+  ]
+}
