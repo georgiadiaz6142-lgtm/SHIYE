@@ -1,0 +1,18 @@
+{
+  "layer": "isolated local HTTP and browser, deterministic provider fixture; zero actual Baidu calls",
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "checks": "restore original RGB and outside bounds; erase; undo/redo and keyboard; compare; zoom/pan; apply; draft reload; saved provenance; completed save/use starts new round on reentry/reload; unfinished task resumes; white border; collection and book reload; no extra provider calls"
+    },
+    {
+      "width": 390,
+      "status": "PASS",
+      "checks": "restore original RGB and outside bounds; erase; undo/redo and keyboard; compare; zoom/pan; apply; draft reload; saved provenance; completed save/use starts new round on reentry/reload; unfinished task resumes; white border; collection and book reload; no extra provider calls"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "fixtureCalls": 4
+}

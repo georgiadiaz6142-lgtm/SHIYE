@@ -974,5 +974,5 @@ async function saveSegmentedAssets(results,use){
   return true;
  }finally{savingStickers=false;}
 }
-segmentedWorkshop=window.ShiyeSegmentation?.({esc,shell,toast,visible:()=>currentView==='workshop',origin:()=>workshopOrigin,restoreOrigin:origin=>{if(!workshopOrigin)workshopOrigin=origin;},renderLegacy:renderWorkshop,save:saveSegmentedAssets});
+segmentedWorkshop=window.ShiyeSegmentation?.({esc,shell,toast,visible:()=>currentView==='workshop',origin:()=>workshopOrigin,restoreOrigin:origin=>{if(!workshopOrigin)workshopOrigin=origin;},renderLegacy:renderWorkshop,save:saveSegmentedAssets,completed:id=>savedWorkspace?.assets.some(a=>a.provenance?.imageSessionId===id)||false});
 init();

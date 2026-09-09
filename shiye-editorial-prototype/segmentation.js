@@ -57,7 +57,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(retouch){
       const e=retouch.editor;
       main=`<div class="retouch-toolbar"><label>查看 <select id="seg-retouch-view" ${pending?'disabled':''}>${[['result','修正结果'],['source','原照片'],['initial','原抠图']].map(([v,t])=>`<option value="${v}" ${e.view===v?'selected':''}>${t}</option>`).join('')}</select></label><label>缩放 <select id="seg-retouch-zoom" ${pending?'disabled':''}>${[1,1.5,2,3,4].map(v=>`<option value="${v}" ${e.zoom===v?'selected':''}>${v*100}%</option>`).join('')}</select></label></div><div class="retouch-viewport"><div class="retouch-plane" style="width:${e.zoom*100}%"></div></div>`;
-      aside=`<div class="eyebrow">修整这一枚</div><h3>把想留下的，<br>慢慢修好。</h3><div class="retouch-tools">${[['restore','恢复'],['erase','擦除'],['pan','移动画布']].map(([v,t])=>`<button class="button outline small ${e.tool===v?'active':''}" data-action="seg-retouch-tool" data-tool="${v}" aria-pressed="${e.tool===v}" ${pending?'disabled':''}>${t}</button>`).join('')}</div><label class="field"><span>笔刷大小 <output id="seg-brush-value">${e.size}</output> px</span><input id="seg-retouch-size" type="range" min="2" max="${Math.max(80,Math.round(s.width*.2))}" value="${e.size}" ${pending?'disabled':''}></label><div class="seg-actions">${button('retouch-undo','撤销',pending||!e.canUndo)}${button('retouch-redo','重做',pending||!e.canRedo)}${button('retouch-reset','还原原抠图',pending)}</div><p>恢复原照片中被误删的部分，或擦掉多余背景。放大后可切换“移动画布”。</p><p>${e.view==='result'?'修正只在本机进行，不调用百度。':'正在对比查看，切回“修正结果”后可继续涂画。'}</p><button class="button primary" data-action="seg-retouch-apply" ${pending?'disabled':''}>应用修正</button>${button('retouch-cancel','返回候选',pending)}<p class="retouch-hint">应用后会暂存修正；未应用的笔画刷新后会丢失。确认满意后收入收藏。</p>`;
+      aside=`<div class="eyebrow">修整这一枚</div><h3>把想留下的，<br>慢慢修好。</h3><div class="retouch-tools">${[['restore','恢复'],['erase','擦除'],['pan','移动画布']].map(([v,t])=>`<button class="button outline small ${e.tool===v?'active':''}" data-action="seg-retouch-tool" data-tool="${v}" aria-pressed="${e.tool===v}" ${pending?'disabled':''}>${t}</button>`).join('')}</div><label class="field"><span>笔刷大小 <output id="seg-brush-value">${e.size}</output> px</span><input id="seg-retouch-size" type="range" min="2" max="${Math.max(80,Math.round(s.width*.2))}" value="${e.size}" ${pending?'disabled':''}></label><div class="seg-actions">${button('retouch-undo','撤销',pending||!e.canUndo)}${button('retouch-redo','重做',pending||!e.canRedo)}${button('retouch-reset','还原原抠图',pending)}</div><p>恢复原照片中被误删的部分，或擦掉多余背景。放大后可切换“移动画布”。</p>${e.view==='result'?'':'<p>正在对比查看，切回“修正结果”后可继续涂画。</p>'}<button class="button primary" data-action="seg-retouch-apply" ${pending?'disabled':''}>应用修正</button>${button('retouch-cancel','返回候选',pending)}<p class="retouch-hint">应用后会暂存修正；未应用的笔画刷新后会丢失。确认满意后收入收藏。</p>`;
     }else if(!s&&real){
       const preview=data.previewUrl&&data.previewSize;
       const picture=preview?`<div class="seg-source seg-upload-preview" style="aspect-ratio:${data.previewSize.width}/${data.previewSize.height};--photo-ratio:${data.previewSize.width/data.previewSize.height}"><img id="seg-source" src="${esc(data.previewUrl)}" alt="${esc(data.file.name)}">${data.selectionMode?`<svg id="seg-prompts" viewBox="0 0 ${data.previewSize.width} ${data.previewSize.height}" preserveAspectRatio="none" aria-label="上传前框选景物"></svg>`:''}</div>`:'<div class="upload-symbol" aria-hidden="true">✂</div>';
@@ -129,13 +129,22 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
       if(['queued','running'].includes(result.status))pollId=setTimeout(()=>poll(jobId,generation),350);
     }catch(e){if(generation===data.generation){data.error=e.message;draw();}}
   }
+  function resetCompletedRound(){
+    data.generation++;clearTimeout(pollId);clearPreview();
+    for(const r of data.results)URL.revokeObjectURL(r.url);
+    for(const c of corrections.values())URL.revokeObjectURL(c.url);
+    corrections.clear();operations={};
+    Object.assign(data,{session:null,job:null,file:null,selectionMode:false,box:null,candidates:[],selected:new Set(),target:null,outline:[],positive:[],negative:[],stage:1,results:[],preview:0,error:''});
+  }
   async function restore() {
     const g=data.generation;
     const health=await api('/health');
     if(g!==data.generation)return;data.health=health;data.mode=health.mode;
     const value=await api('/session');
     if(g!==data.generation)return;
-    if(value.session){
+    if(value.session&&bridge.completed?.(value.session.imageSessionId)){
+      resetCompletedRound();
+    }else if(value.session){
       data.session=value.session;data.candidates=value.session.candidates;data.selected=new Set(data.candidates.map(c=>c.candidateId));
       try {const saved=JSON.parse(localStorage.getItem('shiye-seg-origin')||'null');if(saved?.imageSessionId===data.session.imageSessionId)bridge.restoreOrigin(saved.origin);}catch{}
       await loadCorrections();
@@ -259,7 +268,7 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     if(action==='confirm'){await makeResults();return;}
     if(action==='save'||action==='use'){
       const ok=await bridge.save(data.results,action==='use');
-      if(ok){data.active=false;data.generation++;clearTimeout(pollId);}
+      if(ok){data.active=false;resetCompletedRound();}
     }
   }
   document.addEventListener('click',async e=>{

@@ -1,0 +1,18 @@
+{
+  "layer": "isolated local HTTP and browser, deterministic provider fixture; zero actual Baidu calls",
+  "checks": [
+    {
+      "width": 1440,
+      "status": "PASS",
+      "checks": "restore original RGB and outside bounds; erase; undo/redo and keyboard; compare; zoom/pan; apply; draft reload; saved provenance; completed save/use starts new round on reentry/reload; unfinished task resumes; white border; collection and book reload; no extra provider calls"
+    },
+    {
+      "width": 390,
+      "status": "FAIL",
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"nav\"][data-view=\"shelf\"]:visible').first()\u001b[22m\n\n    at /Users/song/Documents/拾页/verification/cutout-new-round-20260909/browser.cjs:43:76"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "fixtureCalls": 3
+}
