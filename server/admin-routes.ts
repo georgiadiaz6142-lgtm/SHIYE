@@ -1,12 +1,22 @@
-import { Router } from 'express';
+import { Router,type RequestHandler } from 'express';
 import { z } from 'zod';
 import { Admin,feature } from './admin.js';
 import { Fault } from '../shared/contracts.js';
 export const adminToken=(cookie?:string)=>cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_admin='))?.slice(12);
+export function accountLogin(admin:Admin):RequestHandler {
+ return async(req,res)=>{
+  const input=z.object({username:z.string().trim().min(1).max(32),password:z.string().min(1).max(128)}).strict().parse(req.body);
+  const token=await admin.login(input.username,input.password,req.socket.remoteAddress||'local');
+  const previous=adminToken(req.headers.cookie);if(previous)await admin.logout(previous);
+  res.cookie('shiye_admin',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:8*3600000});res.clearCookie('shiye_invite',{path:'/api'});
+  const session=admin.session(token)!;
+  res.json({authenticated:true,authorized:true,account:{id:session.accountId,username:session.username,role:session.role}});
+ };
+}
 export function adminRoutes(admin:Admin){
  const router=Router();router.use((req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
  router.get('/session',(req,res)=>{const session=admin.session(adminToken(req.headers.cookie));res.json({authenticated:!!session,...(session?{username:session.username}:{})});});
- router.post('/login',async(req,res)=>{const token=await admin.login(req.body?.username,req.body?.password,req.socket.remoteAddress||'local');const previous=adminToken(req.headers.cookie);if(previous)await admin.logout(previous);res.cookie('shiye_admin',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:8*3600000});res.clearCookie('shiye_invite',{path:'/api'});res.json({authenticated:true});});
+ router.post('/login',accountLogin(admin));
  router.use((req,res,next)=>{const token=adminToken(req.headers.cookie),session=admin.session(token);if(!session)throw new Fault(403,'ADMIN_REQUIRED','请先登录管理员账号。');res.locals.admin=session.username;res.locals.adminToken=token;next();});
  router.post('/logout',async(req,res)=>{await admin.logout(res.locals.adminToken);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});
  router.post('/password',async(req,res)=>{await admin.changePassword(res.locals.admin,req.body?.oldPassword,req.body?.newPassword);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});

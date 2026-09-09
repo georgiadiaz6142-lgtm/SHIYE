@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "scope": "live entry and account migration checks",
+  "username": "宋静雯",
+  "fixedAccountIdPresent": true,
+  "passwordPreserved": true,
+  "apiConfigurationPreserved": true,
+  "invitationsPreserved": true,
+  "homepageAccountEntry": true,
+  "dedicatedEntry": true,
+  "anonymousAdminDenied": true,
+  "realAccountLogin": "Not attempted: current user-set password is private; complete flow tested with isolated accounts",
+  "externalRequests": 0
+}

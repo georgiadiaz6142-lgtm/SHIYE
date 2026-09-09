@@ -453,10 +453,12 @@ function textDialog(existing=false){const e=existing?currentElement():null;showD
 function about(){showDialog('一点使用说明',`<p class="dialog-description">拾页 · 高保真交互原型<br>把日子，慢慢收好。</p><ul class="about-list"><li><b>可以真正操作</b>创建手帐、翻页、拖动贴纸、缩放旋转、编辑文字、切换纸张、整理页面、撤销重做与本机保存。</li><li><b>贴纸工坊</b>示例使用预制透明素材体验多主体选择。上传个人照片后可框选或轮廓裁切。正式流程为自动提取所有主要物体，再圈选纠错并自动贴边；真实 AI 分割尚未接入。</li><li><b>你的内容留在本机</b>使用浏览器 IndexedDB 保存，清理网站数据会移除作品。原型没有账号、云同步或后台服务。</li><li><b>先从一本示例书开始</b>书架前三本为可编辑示例。点击封面翻阅，再切换到“编辑”；双击文字可以修改。</li></ul>`,`<button class="button primary" data-action="close-dialog">知道了，开始拾页</button>`);}
 let accessDestination='shelf',accessRequest=0,accessPending=false,accessController=null;
 $('#dialog').addEventListener('cancel',()=>accessController?.abort());
+$('#dialog').addEventListener('close',()=>$('#account-form')?.reset());
 function openAccess(destination='shelf',tab='invite'){
  accessController?.abort();accessDestination=destination;const attempt=++accessRequest;accessPending=false;
- showDialog('登录/注册',`<p class="access-intro">把喜欢的片刻，收进自己的书里。</p><div class="access-tabs" role="tablist" aria-label="进入方式"><button role="tab" aria-selected="${tab==='invite'}" class="${tab==='invite'?'active':''}" data-action="access-tab" data-value="invite">邀请码进入</button><button role="tab" aria-selected="${tab==='phone'}" class="${tab==='phone'?'active':''}" data-action="access-tab" data-value="phone">手机号登录/注册 <small>暂未开放</small></button></div>${tab==='invite'?`<form id="invite-form"><label class="field"><span>邀请码</span><input id="invite-code" name="inviteCode" type="text" maxlength="128" placeholder="请输入邀请码" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="access-error" autofocus></label><p class="access-note">内测期间，仅限受邀用户进入。</p><p id="access-error" class="access-error" role="alert"></p><button class="button primary access-submit" type="submit">验证并进入</button></form>`:`<p class="access-note">手机号登录与注册暂未开放，请使用邀请码进入。</p><fieldset class="access-phone" disabled><label class="field"><span>手机号</span><input type="tel" placeholder="请输入手机号" autocomplete="off"></label><label class="field"><span>短信验证码</span><div class="access-sms"><input inputmode="numeric" placeholder="请输入验证码" autocomplete="off"><button class="button outline small" type="button">获取验证码</button></div></label><button class="button primary access-submit" type="button">登录/注册（暂未开放）</button></fieldset>`}`);
+ showDialog('登录/注册',`<p class="access-intro">把喜欢的片刻，收进自己的书里。</p><div class="access-tabs" role="tablist" aria-label="进入方式"><button role="tab" aria-selected="${tab==='invite'}" class="${tab==='invite'?'active':''}" data-action="access-tab" data-value="invite">邀请码进入</button><button role="tab" aria-selected="${tab==='account'}" class="${tab==='account'?'active':''}" data-action="access-tab" data-value="account">账号密码登录</button><button role="tab" aria-selected="${tab==='phone'}" class="${tab==='phone'?'active':''}" data-action="access-tab" data-value="phone">手机号登录/注册 <small>暂未开放</small></button></div>${tab==='invite'?`<form id="invite-form"><label class="field"><span>邀请码</span><input id="invite-code" name="inviteCode" type="text" maxlength="128" placeholder="请输入邀请码" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="access-error" autofocus></label><p class="access-note">内测期间，仅限受邀用户进入。</p><p id="access-error" class="access-error" role="alert"></p><button class="button primary access-submit" type="submit">验证并进入</button></form>`:tab==='account'?`<form id="account-form"><label class="field"><span>用户名</span><input id="account-username" name="username" type="text" maxlength="32" placeholder="请输入用户名" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus></label><label class="field"><span>密码</span><input id="account-password" name="password" type="password" maxlength="128" placeholder="请输入密码" autocomplete="current-password" required aria-describedby="account-error"></label><p id="account-error" class="access-error" role="alert"></p><button class="button primary access-submit" type="submit">登录并进入</button></form>`:`<p class="access-note">手机号登录与注册暂未开放，请使用邀请码进入。</p><fieldset class="access-phone" disabled><label class="field"><span>手机号</span><input type="tel" placeholder="请输入手机号" autocomplete="off"></label><label class="field"><span>短信验证码</span><div class="access-sms"><input inputmode="numeric" placeholder="请输入验证码" autocomplete="off"><button class="button outline small" type="button">获取验证码</button></div></label><button class="button primary access-submit" type="button">登录/注册（暂未开放）</button></fieldset>`}`);
  $('#dialog').classList.add('access-dialog');
+ bindAccountLogin(attempt);
  const form=$('#invite-form');if(form)form.onsubmit=async event=>{
   event.preventDefault();if(accessPending)return;const input=$('#invite-code'),code=input.value.trim();if(!code){input.focus();return;}
   accessController=new AbortController();const controller=accessController,signal=controller.signal,timer=setTimeout(()=>controller.abort(),15000);
@@ -470,6 +472,23 @@ function openAccess(destination='shelf',tab='invite'){
    input.value='';closeDialog();await navigate(accessDestination);
   }catch(e){if(attempt===accessRequest&&$('#dialog').open){error.textContent=e.name==='AbortError'?'验证超时，请重试。':e instanceof TypeError?'暂时无法连接，请检查网络后重试。':e.message;input.focus();}}
   finally{clearTimeout(timer);if(attempt===accessRequest){accessPending=false;button.disabled=false;button.textContent='验证并进入';}}
+ };
+}
+function bindAccountLogin(attempt){
+ const form=$('#account-form');if(!form)return;
+ form.onsubmit=async event=>{
+  event.preventDefault();if(accessPending)return;
+  const username=$('#account-username'),password=$('#account-password'),button=form.querySelector('[type="submit"]'),error=$('#account-error');
+  const controller=new AbortController();accessController=controller;const timer=setTimeout(()=>controller.abort(),15000);
+  accessPending=true;button.disabled=true;button.textContent='正在登录…';error.textContent='';
+  try{
+   const response=await fetch('/api/access/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username.value.trim(),password:password.value}),signal:controller.signal});
+   const result=await response.json();if(!response.ok||result.authenticated!==true)throw Error(result.error?.message||'登录未完成，请重试。');
+   identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
+   if(attempt!==accessRequest||!$('#dialog').open)return;
+   form.reset();closeDialog();await navigate('shelf');
+  }catch(e){if(attempt===accessRequest&&$('#dialog').open){error.textContent=e.name==='AbortError'?'登录超时，请重试。':e instanceof TypeError?'暂时无法连接，请检查网络后重试。':e.message;password.value='';password.focus();}}
+  finally{clearTimeout(timer);if(attempt===accessRequest){accessPending=false;button.disabled=false;button.textContent='登录并进入';}}
  };
 }
 function applyIdentity(session){

@@ -9,7 +9,7 @@ import { Jobs } from './jobs.js';
 import { Naming, type NamingProvider } from './naming.js';
 import { type InviteAccess } from './access.js';
 import { type Admin } from './admin.js';
-import { adminRoutes,adminToken } from './admin-routes.js';
+import { adminRoutes,adminToken,accountLogin } from './admin-routes.js';
 
 export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
@@ -38,6 +38,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   });
   app.get('/api/health',async(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming&&(!options.admin||await options.admin.apiEnabled('naming')),limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:(!options.admin||await options.admin.apiEnabled('cutout'))&&live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
   if(options.admin)app.use('/api/admin',express.json({limit:'128kb',strict:true}),adminRoutes(options.admin));
+  if(options.admin)app.post('/api/access/login',express.json({limit:'2kb',strict:true}),accountLogin(options.admin));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
     if(!token||!/^[a-f0-9]{64}$/.test(token)){
@@ -47,7 +48,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     res.locals.owner=createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
   const accessToken=(req:express.Request)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_invite='))?.slice(13);
-  app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:'admin',username:admin.username}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
+  app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:admin.role,accountId:admin.accountId,username:admin.username}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
   app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{
     if(!options.access)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
     const grant=await options.access.verify(req.body?.code,res.locals.owner,req.socket.remoteAddress||'local');

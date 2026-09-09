@@ -343,8 +343,8 @@ dialog{border:1px solid #ddd9cd;border-radius:10px;background:var(--bg);padding:
 
 .access-dialog{width:min(460px,calc(100vw - 32px));padding:28px}
 .access-intro{font-size:13px;color:var(--muted);margin:0 0 24px}
-.access-tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:22px}
-.access-tabs button{font-size:13px;padding:10px 0 13px;color:var(--muted);border-bottom:2px solid transparent}
+.access-tabs{display:flex;gap:12px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.access-tabs button{flex:1;text-align:center;font-size:13px;padding:10px 0 13px;color:var(--muted);border-bottom:2px solid transparent}
 .access-tabs button.active{border-bottom-color:var(--accent);color:var(--ink)}
 .access-tabs small{display:block;font-size:10px;margin-top:4px;color:var(--muted)}
 .access-note{font-size:12px;color:var(--muted);line-height:1.7}
@@ -353,4 +353,4 @@ dialog{border:1px solid #ddd9cd;border-radius:10px;background:var(--bg);padding:
 .access-phone{border:0;padding:0;margin:0;min-width:0;opacity:.6}
 .access-phone input{min-width:0}
 .access-sms{display:flex;gap:8px}.access-sms input{flex:1}.access-sms button{white-space:nowrap}
-@media(max-width:560px){.access-dialog{padding:22px}.access-tabs{gap:16px}.access-tabs button{font-size:12px}.access-dialog .field input{font-size:16px}.access-sms button{padding:8px;font-size:11px}}
+@media(max-width:560px){.access-dialog{padding:22px}.access-tabs{gap:10px}.access-tabs button{font-size:12px}.access-dialog .field input{font-size:16px}.access-sms button{padding:8px;font-size:11px}}

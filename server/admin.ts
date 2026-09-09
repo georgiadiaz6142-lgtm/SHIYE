@@ -8,37 +8,37 @@ import { BaiduProvider } from './baidu.js';
 const feature=z.enum(['cutout','naming']);export type Feature=z.infer<typeof feature>;
 const event=z.object({id:z.string(),at:z.number(),actor:z.string(),action:z.string(),target:z.string()});
 const apiSchema=z.object({enabled:z.boolean(),cipher:z.string(),revision:z.number(),testedAt:z.number().optional(),lastCall:z.object({at:z.number(),status:z.string(),error:z.string().optional()}).optional()});
-const schema=z.object({version:z.literal(1),username:z.string(),salt:z.string(),passwordHash:z.string(),apis:z.object({cutout:apiSchema,naming:apiSchema}),audit:z.array(event)});
+const schema=z.object({version:z.literal(1),accountId:z.string().uuid().optional(),role:z.literal('admin').optional(),username:z.string(),salt:z.string(),passwordHash:z.string(),apis:z.object({cutout:apiSchema,naming:apiSchema}),audit:z.array(event)});
 type Document=z.infer<typeof schema>;
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 const passwordHash=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,(e,key)=>e?reject(e):resolve(key)));
 const audit=(actor:string,action:string,target='')=>({id:randomUUID(),at:Date.now(),actor,action,target});
 export class Admin {
- private key!:Buffer;private sessions=new Map<string,{username:string;expiresAt:number}>();private limits=new Map<string,{count:number;until:number}>();
+ private key!:Buffer;private accountId='';private sessions=new Map<string,{accountId:string;role:'admin';username:string;expiresAt:number}>();private limits=new Map<string,{count:number;until:number}>();
  private proofs=new Map<string,{fingerprint:string;expiresAt:number;revision:number}>();private providers=new Map<string,BaiduProvider>();
  constructor(readonly file:string,readonly access:InviteAccess,private factory=(key:string,secret:string)=>new BaiduProvider(key,secret)){}
  async init(initial:{apiKey:string;secretKey:string;cutout:boolean;naming:boolean},receipt:string){
   try{this.key=await readFile(this.file+'.key');if(this.key.length!==32)throw Error('key');}
   catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw Error('管理员加密文件无效，已保留原文件。');try{await fileExists(this.file);throw Error('管理员加密密钥缺失，不能重新生成。');}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}this.key=randomBytes(32);await writeFile(this.file+'.key',this.key,{flag:'wx',mode:0o600});}
-  try{const d=await this.read();this.decrypt(d.apis.cutout.cipher);this.decrypt(d.apis.naming.cipher);return;}
+  try{const d=await this.read();this.decrypt(d.apis.cutout.cipher);this.decrypt(d.apis.naming.cipher);this.accountId=d.accountId&&d.role?d.accountId:await this.update(current=>{current.accountId??=randomUUID();current.role='admin';current.audit.push(audit('本机初始化','绑定管理员账号身份',current.accountId));return current.accountId;});return;}
   catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw Error('管理员数据无法读取，已保留原文件。');}
   const username='admin',password=randomBytes(18).toString('base64url'),salt=randomBytes(16).toString('hex'),cipher=this.encrypt(JSON.stringify({apiKey:initial.apiKey,secretKey:initial.secretKey}));
-  const data:Document={version:1,username,salt,passwordHash:(await passwordHash(password,salt)).toString('hex'),apis:{cutout:{enabled:initial.cutout,cipher,revision:0},naming:{enabled:initial.naming,cipher,revision:0}},audit:[audit('本机初始化','创建管理员')]};
+  const data:Document={version:1,accountId:randomUUID(),role:'admin',username,salt,passwordHash:(await passwordHash(password,salt)).toString('hex'),apis:{cutout:{enabled:initial.cutout,cipher,revision:0},naming:{enabled:initial.naming,cipher,revision:0}},audit:[audit('本机初始化','创建管理员')]};
   await writeFile(receipt,`拾页本机管理员\n地址：http://127.0.0.1:4176/admin\n用户名：${username}\n密码：${password}\n首次登录后可在后台修改密码。请妥善保存本文件。\n`,{flag:'wx',mode:0o600});
-  await writeFile(this.file,JSON.stringify(data),{flag:'wx',mode:0o600});
+  await writeFile(this.file,JSON.stringify(data),{flag:'wx',mode:0o600});this.accountId=data.accountId!;
  }
  private async read(){return schema.parse(JSON.parse(await readFile(this.file,'utf8')));}
  private update<T>(fn:(data:Document)=>T|Promise<T>){return editJson(this.file,v=>schema.parse(v),fn);}
  private encrypt(text:string){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',this.key,iv),body=Buffer.concat([c.update(text,'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),body]).toString('base64');}
  private decrypt(text:string){const b=Buffer.from(text,'base64'),c=createDecipheriv('aes-256-gcm',this.key,b.subarray(0,12));c.setAuthTag(b.subarray(12,28));return Buffer.concat([c.update(b.subarray(28)),c.final()]).toString('utf8');}
- session(token?:string){if(!token||token.length>128)return null;const entry=this.sessions.get(hash(token));if(!entry||entry.expiresAt<=Date.now()){this.sessions.delete(hash(token));return null;}return entry;}
+ session(token?:string){if(!token||token.length>128)return null;const entry=this.sessions.get(hash(token));if(!entry||entry.expiresAt<=Date.now()||entry.accountId!==this.accountId||entry.role!=='admin'){this.sessions.delete(hash(token));return null;}return entry;}
  async login(username:unknown,password:unknown,ip:string){
   const b=this.limits.get(ip)||{count:0,until:Date.now()+900000};if(b.until<=Date.now()){b.count=0;b.until=Date.now()+900000;}if(b.count>=8)throw new Fault(429,'ADMIN_RATE_LIMIT','尝试次数较多，请 15 分钟后重试。');b.count++;this.limits.set(ip,b);
   const d=await this.read(),candidate=typeof password==='string'&&password.length<=128?password:'';
-  const valid=timingSafeEqual(await passwordHash(candidate,d.salt),Buffer.from(d.passwordHash,'hex'))&&username===d.username;
+  const valid=timingSafeEqual(await passwordHash(candidate,d.salt),Buffer.from(d.passwordHash,'hex'))&&username===d.username&&d.accountId===this.accountId&&d.role==='admin';
   if(!valid){await this.update(s=>{s.audit.push(audit('未登录','管理员登录失败'));});throw new Fault(401,'ADMIN_LOGIN_FAILED','用户名或密码不正确。');}
   this.limits.delete(ip);for(const [key,value] of this.sessions)if(value.expiresAt<=Date.now())this.sessions.delete(key);
-  const token=randomBytes(32).toString('hex');this.sessions.set(hash(token),{username:d.username,expiresAt:Date.now()+8*3600000});await this.update(s=>{s.audit.push(audit(d.username,'管理员登录'));});return token;
+  const token=randomBytes(32).toString('hex');this.sessions.set(hash(token),{accountId:d.accountId!,role:d.role!,username:d.username,expiresAt:Date.now()+8*3600000});await this.update(s=>{s.audit.push(audit(d.username,'管理员登录'));});return token;
  }
  async logout(token:string){const s=this.session(token);this.sessions.delete(hash(token));if(s)await this.update(d=>{d.audit.push(audit(s.username,'退出后台'));});}
  async changePassword(actor:string,old:unknown,next:unknown){

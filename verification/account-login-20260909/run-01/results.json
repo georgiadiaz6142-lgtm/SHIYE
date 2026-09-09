@@ -1,0 +1,41 @@
+[
+  {
+    "width": 1440,
+    "status": "PASS",
+    "checks": [
+      "homepage password login without invitation",
+      "same fixed identity in two independent browsers",
+      "ordinary invitation remains non-admin",
+      "dedicated administrator entry retained",
+      "wrong password rejected",
+      "password cleared on close",
+      "phone registration remains disabled"
+    ]
+  },
+  {
+    "width": 390,
+    "status": "PASS",
+    "checks": [
+      "homepage password login without invitation",
+      "same fixed identity in two independent browsers",
+      "ordinary invitation remains non-admin",
+      "dedicated administrator entry retained",
+      "wrong password rejected",
+      "password cleared on close",
+      "phone registration remains disabled"
+    ]
+  },
+  {
+    "width": 320,
+    "status": "PASS",
+    "checks": [
+      "homepage password login without invitation",
+      "same fixed identity in two independent browsers",
+      "ordinary invitation remains non-admin",
+      "dedicated administrator entry retained",
+      "wrong password rejected",
+      "password cleared on close",
+      "phone registration remains disabled"
+    ]
+  }
+]

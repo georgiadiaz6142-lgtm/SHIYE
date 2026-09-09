@@ -51,3 +51,26 @@ test('persisted Chinese administrator username replaces the old login without ch
  await assert.rejects(admin.login('admin',s.password,'local'),/不正确/);
  const token=await admin.login('宋静雯',s.password,'local');assert.equal(admin.session(token)?.username,'宋静雯');assert.equal(await admin.apiEnabled('cutout'),true);assert.equal(await admin.apiEnabled('naming'),false);
 });
+test('legacy administrator receives a stable account ID that survives renaming and restart without resetting credentials',async()=>{
+ const s=await setup(),file=s.admin.file,legacy=JSON.parse(await readFile(file,'utf8'));delete legacy.accountId;delete legacy.role;await writeFile(file,JSON.stringify(legacy));
+ const initial={apiKey:'ignored',secretKey:'ignored',cutout:false,naming:true},receipt=join(s.dir,'credentials.txt');
+ const migrated=new Admin(file,s.access);await migrated.init(initial,receipt);const first=JSON.parse(await readFile(file,'utf8'));
+ assert.match(first.accountId,/^[a-f0-9-]{36}$/);assert.equal(first.role,'admin');assert.equal(first.passwordHash,legacy.passwordHash);assert.equal(first.salt,legacy.salt);assert.deepEqual(first.apis,legacy.apis);
+ first.username='宋静雯';await writeFile(file,JSON.stringify(first));
+ const restarted=new Admin(file,s.access);await restarted.init(initial,receipt);const session=restarted.session(await restarted.login('宋静雯',s.password,'fresh-browser'))!;assert.equal(session.accountId,first.accountId);assert.equal(session.role,'admin');assert.equal(JSON.parse(await readFile(file,'utf8')).accountId,first.accountId);
+});
+test('homepage password login needs no invitation and resolves the same account in independent browsers and the dedicated entry',async()=>{
+ const s=await setup(),{app}=await createApp({runtime:join(s.dir,'runtime'),staticRoot:resolve('shiye-editorial-prototype'),admin:s.admin,access:s.access}),server=app.listen(0,'127.0.0.1');await new Promise<void>(r=>server.once('listening',r));const base=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ try{
+  const headers={origin:base,'content-type':'application/json'},credentials={username:'admin',password:s.password};
+  const login=(route:string,body:unknown=credentials)=>fetch(base+route,{method:'POST',headers,body:JSON.stringify(body)});
+  assert.equal((await login('/api/access/login',{...credentials,password:'wrong'})).status,401);
+  assert.equal((await login('/api/access/login',{...credentials,role:'admin',accountId:'forged'})).status,422);
+  const a=await login('/api/access/login'),b=await login('/api/access/login'),dedicated=await login('/api/admin/login');assert.equal(a.status,200);assert.equal(b.status,200);assert.equal(dedicated.status,200);
+  const account=(await a.json()).account;assert.equal(account.role,'admin');assert.equal((await b.json()).account.id,account.id);assert.equal((await dedicated.json()).account.id,account.id);
+  const cookieA=a.headers.getSetCookie()[0].split(';')[0],cookieB=b.headers.getSetCookie()[0].split(';')[0];assert.notEqual(cookieA,cookieB);
+  const status=await (await fetch(base+'/api/access/session',{headers:{cookie:cookieA}})).json();assert.equal(status.accountId,account.id);assert.equal(status.authorized,true);
+  await fetch(base+'/api/admin/logout',{method:'POST',headers:{...headers,cookie:cookieA},body:'{}'});assert.equal((await fetch(base+'/api/admin/overview',{headers:{cookie:cookieA}})).status,403);assert.equal((await fetch(base+'/api/admin/overview',{headers:{cookie:cookieB}})).status,200);
+  assert.equal((await fetch(base+'/api/admin/overview')).status,403);assert.equal((await s.access.snapshot())!.invites.some(i=>i.useCount),false);
+ }finally{await new Promise<void>(r=>server.close(()=>r()));}
+});
