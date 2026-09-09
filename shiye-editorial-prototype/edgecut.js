@@ -18,8 +18,14 @@ window.ShiyeEdge = (() => {
     if(!r)s.tool=null;
     const generate=document.querySelector('#generate-button'),aside=generate.closest('aside');
     if(!s.enabled){
-      const panel=document.createElement('div');panel.id='edge-panel';panel.className='edge-manual-return';
-      panel.innerHTML='<button class="text-link" data-action="edge-enable">返回自动贴边</button>';generate.before(panel);return;
+      const stage=document.querySelector('#crop-stage');
+      stage.closest('.workshop-layout').classList.add('manual-crop-workshop');
+      const panel=document.createElement('div');panel.id='edge-panel';panel.className='manual-crop-panel';
+      const pendingPoints=w.scissorPoints?.length||0;
+      panel.innerHTML=`<div class="manual-selection-row"><p id="selected-count">${w.crops.length?`已圈好 ${w.crops.length} 个区域 · 拖动圆点调整边界`:'沿景物点选，或按住画一圈。'}</p>${w.crops.length>1?`<div class="crop-selection-list" role="group" aria-label="选择要调整的区域">${w.crops.map((r,i)=>`<button class="chip ${w.activeCrop===i?'active':''}" data-action="select-crop" data-value="${i}" aria-pressed="${w.activeCrop===i}">选区 ${i+1}</button>`).join('')}</div>`:''}</div><div class="manual-crop-tools" role="group" aria-label="选区操作">${pendingPoints?`<button class="chip" data-action="finish-scissors" ${pendingPoints<3?'disabled':''}>完成圈选</button>`:''}<div class="manual-history"><button class="chip" data-action="undo-crop" ${!w.cropHistory?.length?'disabled':''}>撤销</button><button class="chip" data-action="redo-crop" ${!w.cropFuture?.length?'disabled':''}>恢复撤销</button></div>${w.crops.length>1?'<button class="chip" data-action="delete-crop">移除当前选区</button>':''}<button class="chip manual-clear" data-action="clear-crops" ${!w.crops.length&&!pendingPoints?'disabled':''}>清除选区</button></div><div class="manual-crop-actions"><div class="manual-secondary"><button class="text-link" data-action="edge-enable">返回自动贴边</button><button class="text-link muted" data-action="workshop-reset">换一张照片</button></div></div>`;
+      generate.textContent='确认选区，预览贴纸';
+      panel.querySelector('.manual-crop-actions').appendChild(generate);
+      stage.after(panel);aside.remove();return;
     }
     const selectionList=aside.querySelector('.crop-selection-list');
     const hint=busy?'正在更新边缘…':s.tool==='keep'?'在漏掉的地方点一下，自动补回来。':s.tool==='remove'?'在多余的地方点一下，自动去掉。':r?'绿色部分会留下。看看有没有多了或少了。':(w.cropMode==='rect'?'拖出一个框，松手后自动贴边。':'大致圈住想留下的东西，不必贴着边缘。');
