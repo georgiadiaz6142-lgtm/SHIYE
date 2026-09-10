@@ -44,3 +44,21 @@ export function packageImages(content:BookPackage){
  for(const ref of references){if('imageId' in ref)ids.add(ref.imageId);else if('builtinPath' in ref)builtins.add(ref.builtinPath);}
  return {ids:[...ids],builtins:[...builtins]};
 }
+
+// One revision covers the shelf and the independent sticker library, including deletions.
+const builtinAssets=['flower','coffee','camera','orange','ticket','leaf','stamp','tape','star'].map(id=>({id,name:id,category:'',image:{builtinId:id}}));
+export const workspaceDocument=z.object({schemaVersion:z.literal(1),books:z.array(bookDocument).max(500),assets:z.array(savedAsset).max(5000),archivedAssets:z.array(savedAsset).max(5000)}).strict().superRefine((v,ctx)=>{
+ const all=[...v.assets,...v.archivedAssets];
+ if(new Set(v.books.map(b=>b.id)).size!==v.books.length||new Set(all.map(a=>a.id)).size!==all.length)ctx.addIssue({code:'custom',message:'手账或素材编号重复。'});
+ const byId=new Map([...builtinAssets,...all].map(a=>[a.id,a]));
+ for(const book of v.books){const used=new Set(book.pages.flatMap(p=>p.elements.flatMap(e=>e.type==='sticker'?[e.assetId]:[])));const result=bookPackage.safeParse({schemaVersion:1,book,assets:[...used].flatMap(id=>byId.has(id)?[byId.get(id)]:[])});if(!result.success)ctx.addIssue({code:'custom',message:'手账内容或图片引用不完整。'});}
+});
+export const saveWorkspaceInput=z.object({operationId:z.string().uuid(),baseRevision:z.number().int().nonnegative(),content:workspaceDocument}).strict();
+export type WorkspaceDocument=z.infer<typeof workspaceDocument>;
+export function workspaceImages(content:WorkspaceDocument){
+ const ids=new Set<string>(),builtins=new Set<string>();
+ const references=[...content.assets,...content.archivedAssets].map(a=>a.image);
+ for(const book of content.books)for(const page of book.pages)for(const e of page.elements)if(e.type==='photo')references.push(e.image);
+ for(const ref of references){if('imageId' in ref)ids.add(ref.imageId);else if('builtinPath' in ref)builtins.add(ref.builtinPath);}
+ return {ids:[...ids],builtins:[...builtins]};
+}

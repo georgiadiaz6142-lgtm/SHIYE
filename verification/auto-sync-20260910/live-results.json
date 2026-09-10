@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checks": [
+    "current homepage and invitation dialog render",
+    "automatic synchronization script loads; workspace routes require account",
+    "administrator access still protected",
+    "Baidu mode and unlimited settings retained"
+  ],
+  "realBaiduCalls": 0,
+  "realUserWorksUploaded": 0
+}

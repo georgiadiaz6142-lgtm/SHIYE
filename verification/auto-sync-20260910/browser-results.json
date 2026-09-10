@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Entry renders without errors",
+    "Guest import is optional; declining does not sync guest works",
+    "Existing account works, independent PNG and built-in stickers automatically sync",
+    "Independent browser automatically restores editable spread, fonts, archived and unused stickers",
+    "Inline typing keeps textarea focus during automatic save and restores structured text",
+    "Temporary identity endpoint outage does not log out an already verified account",
+    "Offline edit survives reload and reconnect submits automatically",
+    "Lost acknowledgement replays persisted operation without duplicate works",
+    "Concurrent edits keep server version and a conflict copy",
+    "Book deletion, sticker rename, pin and favorite updates propagate",
+    "Account header blocks delayed old-account write; pending work resumes only on original login",
+    "Explicit guest import merges with existing server account and carries images",
+    "Desktop and mobile rendering have no uncaught JavaScript errors"
+  ],
+  "errors": []
+}

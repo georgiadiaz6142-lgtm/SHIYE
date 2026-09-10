@@ -28,11 +28,12 @@ async function accountOnboarding(){
   const marker='import-choice:'+currentIdentity.accountId;if(await localRecord(marker))return;
   await new Promise((resolve,reject)=>{const tx=db.transaction('data','readwrite');tx.objectStore('data').put('offered',marker);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
   const guest=await localRecord('workspace');if(!guest)return;
-  showDialog('归入本机作品？',`<p>本机访客空间有 ${guest.books.length} 本手账、${guest.assets.length} 个素材。是否归入当前账号？</p><p class="muted">归入后只在此账号下展示；选择保留时，继续留在访客空间。本机作品暂不跨浏览器同步。</p><p id="import-error" class="account-error" role="alert"></p>`,`<button class="button outline" data-action="close-dialog">保留在访客空间</button><button class="button primary" id="import-guest">归入当前账号</button>`);
+  showDialog('归入本机作品？',`<p>本机访客空间有 ${guest.books.length} 本手账、${guest.assets.length} 个素材。是否归入当前账号？</p><p class="muted">归入后只在此账号下展示；选择保留时，继续留在访客空间。归入的作品将随当前账号自动同步。</p><p id="import-error" class="account-error" role="alert"></p>`,`<button class="button outline" data-action="close-dialog">保留在访客空间</button><button class="button primary" id="import-guest">归入当前账号</button>`);
+  const choiceClosed=new Promise(resolve=>$('#dialog').addEventListener('close',resolve,{once:true}));
   $('#import-guest').onclick=async e=>{e.currentTarget.disabled=true;try{
    const auth=await fetch('/api/access/session',{cache:'no-store'}).then(r=>r.json());if(workspaceFor(auth)!==workspaceKey)throw Error('账号已切换，请重新登录后再操作。');
    await new Promise((resolve,reject)=>{const tx=db.transaction('data','readwrite'),store=tx.objectStore('data');let error;tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(error||tx.error);const g=store.get('workspace'),a=store.get(workspaceKey);let count=0;const done=()=>{if(++count!==2)return;try{if(!same(g.result,guest)||!same(a.result,savedWorkspace))throw Error('作品刚刚发生变化，请保留当前内容，稍后再整理。');store.put(guest,workspaceKey);store.put(seed(),'workspace');store.put(guest,workspaceKey+':import-backup');for(const asset of [...guest.assets,...(guest.archivedAssets||[])])if(asset.blobKey){const b=store.get(asset.blobKey);b.onsuccess=()=>{if(b.result)store.put(b.result,scopedBlobKey(asset.blobKey));};}}catch(err){error=err;tx.abort();}};g.onsuccess=a.onsuccess=done;});reloadIdentity('shelf');
-  }catch(err){$('#import-error').textContent=err.message;const button=$('#import-guest');if(button)button.disabled=false;}};return;
+  }catch(err){$('#import-error').textContent=err.message;const button=$('#import-guest');if(button)button.disabled=false;}};await choiceClosed;return;
  }
  if(sessionStorage.getItem('shiye-account-setup')){sessionStorage.removeItem('shiye-account-setup');if(currentIdentity?.authorized&&!currentIdentity.accountId)await openAccountPanel();}
 }

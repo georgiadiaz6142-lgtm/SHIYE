@@ -112,7 +112,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.use('/api',(_req,_res,next)=>next(new Fault(404,'NOT_FOUND','接口不存在。')));
   // Explicit public-file allowlist: archives, documents, runtime and secrets are never served.
   app.get('/admin',(_req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'");res.sendFile(resolve(staticRoot,'admin.html'));});
-  const entries=new Set(['/account-ui.js','/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
+  const entries=new Set(['/work-sync.js','/account-ui.js','/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
     '/edgecut.js','/edgecut.css','/edgecut-core.js','/edgecut-worker.js',
     '/vendor/opencv-4.13.0/opencv.js','/vendor/opencv-4.13.0/LICENSE']);
   app.use((req,res,next)=>{

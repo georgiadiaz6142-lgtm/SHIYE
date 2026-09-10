@@ -2,12 +2,12 @@ import { mkdir,readFile,open,rename,unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID,createHash } from 'node:crypto';
 import { z } from 'zod';
-import { bookPackage } from '../shared/works.js';
+import { bookPackage,workspaceDocument } from '../shared/works.js';
 import { editJson } from './local-json.js';
 
 const imageRecord=z.object({id:z.string().uuid(),hash:z.string().regex(/^[a-f0-9]{64}$/),width:z.number().int().positive(),height:z.number().int().positive(),bytes:z.number().int().positive(),createdAt:z.number()}).strict();
 const receipt=z.object({bookId:z.string(),revision:z.number().int().positive(),updatedAt:z.number()}).strict();
-const stateSchema=z.object({schemaVersion:z.literal(1),images:z.array(imageRecord),books:z.array(z.object({content:bookPackage,revision:z.number().int().positive(),updatedAt:z.number()})),operations:z.array(z.object({id:z.string().uuid(),fingerprint:z.string(),result:receipt}))}).strict();
+const stateSchema=z.object({schemaVersion:z.literal(1),images:z.array(imageRecord),books:z.array(z.object({content:bookPackage,revision:z.number().int().positive(),updatedAt:z.number()})),operations:z.array(z.object({id:z.string().uuid(),fingerprint:z.string(),result:receipt})),workspace:z.object({content:workspaceDocument,revision:z.number().int().positive(),updatedAt:z.number()}).optional()}).strict();
 export type WorkState=z.infer<typeof stateSchema>;
 export type ImageRecord=z.infer<typeof imageRecord>;
 export interface WorkRepository{

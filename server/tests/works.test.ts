@@ -99,3 +99,38 @@ test('works HTTP APIs enforce account ownership, CSRF, body limits, logout and a
   await admin.logout(again.split('shiye_admin=')[1]);assert.equal((await request(again,'/books')).status,401);
  }finally{await new Promise<void>(r=>server.close(()=>r()));}
 });
+
+test('automatic workspace saves independent assets, deletions and conflicts without changing old receipts',async()=>{
+ const f=await fixture(),imageId=randomUUID(),pack=packageFor(imageId);await f.works.upload(f.owner,imageId,await png());
+ const content={schemaVersion:1,books:[pack.book],assets:[{id:'unplaced',name:'尚未使用的贴纸',category:'照片',favorite:true,pinned:true,image:{imageId}}],archivedAssets:pack.assets};
+ const input={operationId:randomUUID(),baseRevision:0,content};const first=await f.works.saveWorkspace(f.owner,input);assert.equal(first.revision,1);
+ const next={operationId:randomUUID(),baseRevision:1,content:{...content,books:[],assets:[{...content.assets[0],name:'自动改名',favorite:false}]}};
+ await f.works.saveWorkspace(f.owner,next);assert.deepEqual(await f.works.list(f.owner),[]);assert.equal((await f.works.workspace(f.owner)).content.assets[0].name,'自动改名');
+ assert.deepEqual(await f.works.saveWorkspace(f.owner,input),first);assert.equal((await f.works.workspace(f.owner)).revision,2);
+ await assert.rejects(f.works.saveWorkspace(f.owner,{...next,operationId:randomUUID()}),failure('WORK_REVISION_CONFLICT'));
+ await assert.rejects(f.works.saveWorkspace(f.owner,{...input,content:{...content,books:[]}}),failure('OPERATION_CONFLICT'));
+ await assert.rejects(f.works.save(f.owner,pack.book.id,{operationId:randomUUID(),baseRevision:0,content:pack}),failure('WORKSPACE_SYNC_ACTIVE'));
+ const fresh=new Works(new LocalWorkRepository(join(f.root,'metadata')),new LocalWorkObjects(join(f.root,'objects')),async()=>true);
+ assert.deepEqual((await fresh.workspace(f.owner)).content,next.content);
+ assert.deepEqual((await fresh.workspace(randomUUID())).content,{schemaVersion:1,books:[],assets:[],archivedAssets:[]});
+});
+
+test('workspace cannot publish a missing standalone image, foreign asset, or duplicate ID',async()=>{
+ const f=await fixture(),imageId=randomUUID(),pack=packageFor(imageId);
+ const content={schemaVersion:1,books:[],assets:pack.assets,archivedAssets:[]};
+ await f.works.upload(randomUUID(),imageId,await png());await assert.rejects(f.works.saveWorkspace(f.owner,{operationId:randomUUID(),baseRevision:0,content}),failure('WORK_IMAGE_MISSING'));
+ assert.equal((await f.works.workspace(f.owner)).revision,0);
+ await f.works.upload(f.owner,imageId,await png());
+ await assert.rejects(f.works.saveWorkspace(f.owner,{operationId:randomUUID(),baseRevision:0,content:{...content,archivedAssets:pack.assets}}));
+ assert.equal((await f.works.workspace(f.owner)).revision,0);
+});
+
+test('migration from per-book saves rejects an intervening legacy write',async()=>{
+ const f=await fixture(),imageId=randomUUID(),pack=packageFor(imageId);await f.works.upload(f.owner,imageId,await png());
+ await f.works.save(f.owner,pack.book.id,{operationId:randomUUID(),baseRevision:0,content:pack});
+ const before=await f.works.workspace(f.owner);assert.equal(before.revision,1);
+ await f.works.save(f.owner,pack.book.id,{operationId:randomUUID(),baseRevision:1,content:{...pack,book:{...pack.book,title:'迁移时的新修改'}}});
+ await assert.rejects(f.works.saveWorkspace(f.owner,{operationId:randomUUID(),baseRevision:before.revision,content:before.content}),failure('WORK_REVISION_CONFLICT'));
+ const latest=await f.works.workspace(f.owner);assert.equal(latest.revision,2);
+ await f.works.saveWorkspace(f.owner,{operationId:randomUUID(),baseRevision:latest.revision,content:latest.content});assert.equal((await f.works.workspace(f.owner)).revision,3);
+});
