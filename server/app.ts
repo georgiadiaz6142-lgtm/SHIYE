@@ -10,6 +10,10 @@ import { Naming, type NamingProvider } from './naming.js';
 import { type InviteAccess } from './access.js';
 import { type Admin } from './admin.js';
 import { accountRoutes } from './account-routes.js';
+import { Works } from './works.js';
+import { LocalWorkRepository,LocalWorkObjects } from './work-storage.js';
+import { workRoutes } from './work-routes.js';
+import { stat } from 'node:fs/promises';
 import { adminRoutes,adminToken,accountLogin } from './admin-routes.js';
 
 export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin}) {
@@ -49,6 +53,12 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     const account=options.admin?.session(adminToken(req.headers.cookie));res.locals.owner=account?'account:'+account.accountId:createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
   if(options.admin&&options.access)app.use('/api/account',express.json({limit:'3mb',strict:true}),accountRoutes(options.admin,options.access));
+  if(options.admin){
+    const works=new Works(new LocalWorkRepository(resolve(runtime,'works-dev','metadata')),new LocalWorkObjects(resolve(runtime,'works-dev','objects')),async path=>{
+      try{return (await stat(resolve(staticRoot,path))).isFile();}catch{return false;}
+    });
+    app.use('/api/works',workRoutes(options.admin,works));
+  }
   const accessToken=(req:express.Request)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_invite='))?.slice(13);
   app.get('/api/access/session',async(req,res)=>{const admin=options.admin?.session(adminToken(req.headers.cookie));res.json(admin?{available:true,authorized:true,role:admin.role,accountId:admin.accountId,username:admin.username,avatar:(await options.admin!.profile(adminToken(req.headers.cookie))).avatar}:options.access?await options.access.status(accessToken(req)):{available:false,authorized:false});});
   app.post('/api/access/invite/verify',express.json({limit:'2kb',strict:true}),async(req,res)=>{

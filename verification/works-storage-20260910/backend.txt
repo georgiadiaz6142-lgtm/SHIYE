@@ -1,0 +1,294 @@
+
+> shiye@0.1.0 test
+> npm run build && node --test dist/server/tests/*.test.js
+
+
+> shiye@0.1.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: invite grant survives restart, hides code, rejects tampering and expires
+ok 1 - invite grant survives restart, hides code, rejects tampering and expires
+  ---
+  duration_ms: 26.777416
+  type: 'test'
+  ...
+# Subtest: disabled, bound and expired invite records revoke existing grants immediately
+ok 2 - disabled, bound and expired invite records revoke existing grants immediately
+  ---
+  duration_ms: 8.457875
+  type: 'test'
+  ...
+# Subtest: bad codes cannot pass; client and IP throttles reject repeated guesses
+ok 3 - bad codes cannot pass; client and IP throttles reject repeated guesses
+  ---
+  duration_ms: 38.73975
+  type: 'test'
+  ...
+# Subtest: missing or damaged configuration fails closed
+ok 4 - missing or damaged configuration fails closed
+  ---
+  duration_ms: 21.500542
+  type: 'test'
+  ...
+# Subtest: HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+ok 5 - HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+  ---
+  duration_ms: 87.156834
+  type: 'test'
+  ...
+# Subtest: invite registration atomically binds a single ordinary account; credentials and profile persist with unique names
+ok 6 - invite registration atomically binds a single ordinary account; credentials and profile persist with unique names
+  ---
+  duration_ms: 429.134042
+  type: 'test'
+  ...
+# Subtest: ordinary accounts cannot use administrator endpoints; profile updates reject foreign IDs and avatar scripts
+ok 7 - ordinary accounts cannot use administrator endpoints; profile updates reject foreign IDs and avatar scripts
+  ---
+  duration_ms: 351.239542
+  type: 'test'
+  ...
+# Subtest: administrator profile edits preserve administrator ID and allow the new username and password at both login entry points
+ok 8 - administrator profile edits preserve administrator ID and allow the new username and password at both login entry points
+  ---
+  duration_ms: 181.751625
+  type: 'test'
+  ...
+# Subtest: admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+ok 9 - admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+  ---
+  duration_ms: 362.18675
+  type: 'test'
+  ...
+# Subtest: API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+ok 10 - API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+  ---
+  duration_ms: 104.509375
+  type: 'test'
+  ...
+# Subtest: HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+ok 11 - HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+  ---
+  duration_ms: 127.963625
+  type: 'test'
+  ...
+# Subtest: entering with an invitation revokes the previous administrator session instead of inheriting its role
+ok 12 - entering with an invitation revokes the previous administrator session instead of inheriting its role
+  ---
+  duration_ms: 118.516583
+  type: 'test'
+  ...
+# Subtest: persisted Chinese administrator username replaces the old login without changing the password or API credentials
+ok 13 - persisted Chinese administrator username replaces the old login without changing the password or API credentials
+  ---
+  duration_ms: 92.704416
+  type: 'test'
+  ...
+# Subtest: legacy administrator receives a stable account ID that survives renaming and restart without resetting credentials
+ok 14 - legacy administrator receives a stable account ID that survives renaming and restart without resetting credentials
+  ---
+  duration_ms: 58.644833
+  type: 'test'
+  ...
+# Subtest: homepage password login needs no invitation and resolves the same account in independent browsers and the dedicated entry
+ok 15 - homepage password login needs no invitation and resolves the same account in independent browsers and the dedicated entry
+  ---
+  duration_ms: 154.428209
+  type: 'test'
+  ...
+# Subtest: Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+ok 16 - Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+  ---
+  duration_ms: 67.069583
+  type: 'test'
+  ...
+# Subtest: Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+ok 17 - Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+  ---
+  duration_ms: 6.168875
+  type: 'test'
+  ...
+# Subtest: Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+ok 18 - Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+  ---
+  duration_ms: 18.561875
+  type: 'test'
+  ...
+# Subtest: Baidu timeout fails without retry and image/box validation precedes credential transmission
+ok 19 - Baidu timeout fails without retry and image/box validation precedes credential transmission
+  ---
+  duration_ms: 18.398958
+  type: 'test'
+  ...
+# Subtest: Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+ok 20 - Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+  ---
+  duration_ms: 325.928375
+  type: 'test'
+  ...
+# Subtest: Baidu cancelled late response never commits; restart never resubmits live tasks
+ok 21 - Baidu cancelled late response never commits; restart never resubmits live tasks
+  ---
+  duration_ms: 81.3645
+  type: 'test'
+  ...
+# Subtest: HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+ok 22 - HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+  ---
+  duration_ms: 138.980875
+  type: 'test'
+  ...
+# Subtest: explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+ok 23 - explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+  ---
+  duration_ms: 404.917083
+  type: 'test'
+  ...
+# Subtest: Cutout diagnostics distinguish response timeout, HTTP status and safe provider rejection codes
+ok 24 - Cutout diagnostics distinguish response timeout, HTTP status and safe provider rejection codes
+  ---
+  duration_ms: 19.464292
+  type: 'test'
+  ...
+# Subtest: Oversize original and encoded image are rejected before provider submission
+ok 25 - Oversize original and encoded image are rejected before provider submission
+  ---
+  duration_ms: 238.199916
+  type: 'test'
+  ...
+# Subtest: three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+ok 26 - three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+  ---
+  duration_ms: 130.636125
+  type: 'test'
+  ...
+# Subtest: a repeated operation reuses the job; conflicting content cannot reuse its ID
+ok 27 - a repeated operation reuses the job; conflicting content cannot reuse its ID
+  ---
+  duration_ms: 132.414
+  type: 'test'
+  ...
+# Subtest: refine preserves successful candidates and rejects stale versions
+ok 28 - refine preserves successful candidates and rejects stale versions
+  ---
+  duration_ms: 112.317625
+  type: 'test'
+  ...
+# Subtest: cancelled job never commits late candidates
+ok 29 - cancelled job never commits late candidates
+  ---
+  duration_ms: 122.289291
+  type: 'test'
+  ...
+# Subtest: synthetic-only running jobs recover after restart without a second job record
+ok 30 - synthetic-only running jobs recover after restart without a second job record
+  ---
+  duration_ms: 128.811959
+  type: 'test'
+  ...
+# Subtest: expired synthetic files become inaccessible and cleanup touches only managed media
+ok 31 - expired synthetic files become inaccessible and cleanup touches only managed media
+  ---
+  duration_ms: 32.301291
+  type: 'test'
+  ...
+# Subtest: failed atomic transaction leaves both memory and disk unchanged
+ok 32 - failed atomic transaction leaves both memory and disk unchanged
+  ---
+  duration_ms: 12.074708
+  type: 'test'
+  ...
+# Subtest: malformed store fails closed instead of resetting state
+ok 33 - malformed store fails closed instead of resetting state
+  ---
+  duration_ms: 7.504875
+  type: 'test'
+  ...
+# Subtest: mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+ok 34 - mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+  ---
+  duration_ms: 14.854875
+  type: 'test'
+  ...
+# Subtest: invalid coordinates, missing foreground and unsupported prompt fields fail validation
+ok 35 - invalid coordinates, missing foreground and unsupported prompt fields fail validation
+  ---
+  duration_ms: 0.676708
+  type: 'test'
+  ...
+# Subtest: actual image decoder rejects disguised or malformed input
+ok 36 - actual image decoder rejects disguised or malformed input
+  ---
+  duration_ms: 5.299708
+  type: 'test'
+  ...
+# Subtest: HTTP limits origins, session ownership, personal uploads and static files
+ok 37 - HTTP limits origins, session ownership, personal uploads and static files
+  ---
+  duration_ms: 132.258166
+  type: 'test'
+  ...
+# Subtest: live mode cannot silently fall back to simulated output
+ok 38 - live mode cannot silently fall back to simulated output
+  ---
+  duration_ms: 1.699709
+  type: 'test'
+  ...
+# Subtest: Baidu naming uses recognition endpoint, selects confident label and does not retry
+ok 39 - Baidu naming uses recognition endpoint, selects confident label and does not retry
+  ---
+  duration_ms: 50.122375
+  type: 'test'
+  ...
+# Subtest: final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+ok 40 - final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+  ---
+  duration_ms: 309.44475
+  type: 'test'
+  ...
+# Subtest: local works survive restart with editable cross-page content, archived images and private immutable files
+ok 41 - local works survive restart with editable cross-page content, archived images and private immutable files
+  ---
+  duration_ms: 91.140875
+  type: 'test'
+  ...
+# Subtest: save and image retries are idempotent, conflicting writers and re-used operation IDs cannot overwrite
+ok 42 - save and image retries are idempotent, conflicting writers and re-used operation IDs cannot overwrite
+  ---
+  duration_ms: 115.72775
+  type: 'test'
+  ...
+# Subtest: missing, foreign and corrupt image files cannot publish a book; failed object writes leave no visible metadata
+ok 43 - missing, foreign and corrupt image files cannot publish a book; failed object writes leave no visible metadata
+  ---
+  duration_ms: 93.679417
+  type: 'test'
+  ...
+# Subtest: failed metadata transaction preserves prior book; corrupted metadata is never reset
+ok 44 - failed metadata transaction preserves prior book; corrupted metadata is never reset
+  ---
+  duration_ms: 60.57275
+  type: 'test'
+  ...
+# Subtest: work contracts reject owner injection, ephemeral URLs, missing asset references and broken spreads
+ok 45 - work contracts reject owner injection, ephemeral URLs, missing asset references and broken spreads
+  ---
+  duration_ms: 1.137458
+  type: 'test'
+  ...
+# Subtest: works HTTP APIs enforce account ownership, CSRF, body limits, logout and authenticated restart recovery
+ok 46 - works HTTP APIs enforce account ownership, CSRF, body limits, logout and authenticated restart recovery
+  ---
+  duration_ms: 406.581166
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1558.485375
