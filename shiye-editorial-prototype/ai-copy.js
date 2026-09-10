@@ -82,7 +82,7 @@ async function applyAICopy(panel){
  try{
   await refreshIdentity();const latestRevision=await aiCopyHash(aiCopySnapshot());if(!aiCopyCurrent(panel)||panel.result.sourceRevision!==latestRevision)throw Error('账号或页面已发生变化，旧结果不能覆盖当前内容。');
   if(panel.targetId&&!currentPage().elements.some(e=>e.id===panel.targetId&&e.type==='text'))throw Error('原文字已不存在，请重新生成。');
-  change(()=>{if(panel.targetId){const e=currentPage().elements.find(e=>e.id===panel.targetId);e.text=text;e.aiSource=clone(panel.result.source);selectedId=e.id;}else{const e=node('text',{text,font:panel.anchor?.font||newTextFont,direction:'horizontal',x:panel.anchor?.x??15,y:panel.anchor?.y??20,w:panel.anchor?.w??70,size:23,color:'#505b46',aiSource:clone(panel.result.source)});currentPage().elements.push(e);selectedId=e.id;}drawer=null;});
+  change(()=>{if(panel.targetId){const e=currentPage().elements.find(e=>e.id===panel.targetId);e.text=text;e.aiSource=clone(panel.result.source);selectedId=e.id;}else{const e=node('text',{text,font:panel.anchor?.font||newTextFont,direction:'horizontal',x:panel.anchor?.x??15,y:panel.anchor?.y??20,w:panel.anchor?.w??70,size:newTextSize,color:'#505b46',aiSource:clone(panel.result.source)});currentPage().elements.push(e);selectedId=e.id;}drawer=null;});
   sessionStorage.removeItem(panel.key);aiCopyPanel=null;closeDialog();await saveNow();
  }catch(error){if(aiCopyCurrent(panel)){$('#ai-copy-error').textContent=error.message;$('#ai-copy-apply').disabled=false;}}
 }

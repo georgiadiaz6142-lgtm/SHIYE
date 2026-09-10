@@ -363,3 +363,10 @@ dialog{border:1px solid #ddd9cd;border-radius:10px;background:var(--bg);padding:
 .work-sync-status{border:0;background:none;padding:2px 0;color:var(--muted);font:inherit;font-size:11px;cursor:pointer;text-align:left;}
 .work-sync-status.sync-error{color:var(--accent);}
 .top-right{flex-wrap:wrap;}
+
+.text-size-field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 14px;font-size:11px;color:var(--muted)}
+.text-size-field>div{display:flex;align-items:center;gap:6px}
+.text-size-field input{width:76px;min-height:38px;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:13px var(--sans)}
+.context-toolbar .text-size-field{margin:0 0 8px}
+.text-font-preview{overflow:auto;max-height:160px}
+@media(max-width:800px){.context-toolbar .text-size-field{flex-shrink:0;margin:0 6px}.context-toolbar .text-size-field input{width:62px}}

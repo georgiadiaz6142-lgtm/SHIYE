@@ -1,4 +1,5 @@
 import express from 'express';
+import { CopyPromptStore } from './copy-prompt.js';
 import { AICopy } from './ai-copy.js';
 import { CopySettingsStore } from './copy-settings.js';
 import { copyRoutes } from './copy-routes.js';
@@ -31,7 +32,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   const store=new Store(runtime);await store.init();
   const jobs=new Jobs(store,options.ttl??3_600_000,options.latency,options.live);await jobs.recover();
   const naming=new Naming(jobs,live?options.naming:undefined);
-  const copySettings=options.admin?new CopySettingsStore(resolve(runtime,'ai-copy-config.json'),s=>options.admin!.sealProviderData(s),s=>options.admin!.openProviderData(s)):undefined;
+  const copySettings=options.admin?new CopySettingsStore(resolve(runtime,'ai-copy-config.json'),s=>options.admin!.sealProviderData(s),s=>options.admin!.openProviderData(s),undefined,new CopyPromptStore(resolve(runtime,'ai-copy-prompt.json'))):undefined;
   const copy=copySettings?new AICopy(resolve(runtime,'ai-copy-state.json'),copySettings,s=>options.admin!.sealProviderData(s),s=>options.admin!.openProviderData(s),options.copyProvider):undefined;
   await copy?.init();
   const app=express();app.disable('x-powered-by');

@@ -1,3 +1,4 @@
+import { CopyPromptStore } from './copy-prompt.js';
 import { readFile,writeFile } from 'node:fs/promises';
 import { z } from 'zod';
 import { Fault } from '../shared/contracts.js';
@@ -7,7 +8,7 @@ const input=z.object({revision:z.number().int().nonnegative(),apiKey:z.string().
 const schema=input.omit({apiKey:true}).extend({version:z.literal(1),cipher:z.string(),updatedAt:z.number(),actor:z.string()}).strict();
 export type CopySettings=z.infer<typeof schema>;
 export class CopySettingsStore {
- constructor(readonly file:string,private seal:(s:string)=>string,private unseal:(s:string)=>string,private now=()=>Date.now()){}
+ constructor(readonly file:string,private seal:(s:string)=>string,private unseal:(s:string)=>string,private now=()=>Date.now(),readonly prompts?:CopyPromptStore){}
  private blank():CopySettings{return {version:1,revision:0,cipher:'',model:'',enabled:false,maxCalls:10,approvedUntil:null,inputRate:null,outputRate:null,updatedAt:0,actor:''};}
  async read(){try{return schema.parse(JSON.parse(await readFile(this.file,'utf8')));}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return this.blank();throw new Fault(503,'COPY_CONFIG_UNAVAILABLE','文案配置暂时无法读取。');}}
  async public(){const s=await this.read();return {kind:'copy',name:'AI 手账文案',provider:'火山方舟',endpoint:ARK_COPY_ENDPOINT,revision:s.revision,model:s.model,enabled:s.enabled,configured:!!s.cipher&&!!s.model,apiKeyMasked:s.cipher?'已配置，内容隐藏':'未配置',maxCalls:s.maxCalls,approvedUntil:s.approvedUntil,inputRate:s.inputRate,outputRate:s.outputRate,updatedAt:s.updatedAt};}
@@ -19,5 +20,5 @@ export class CopySettingsStore {
    const {apiKey:_,...rest}=v;Object.assign(s,rest,{cipher,version:1,revision:s.revision+1,updatedAt:this.now(),actor});});return this.public();
  }
  async available(){const s=await this.read();return !!s.enabled&&!!s.cipher&&!!s.model&&!!s.approvedUntil&&s.approvedUntil>this.now();}
- async provider(){const s=await this.read();if(!s.enabled||!s.cipher||!s.model)throw new Fault(503,'COPY_DISABLED','AI 文案尚未启用，可以继续自己写字。');if(!s.approvedUntil||s.approvedUntil<=this.now())throw new Fault(503,'COPY_APPROVAL_EXPIRED','文案服务授权期限已到，请联系管理员。');return new ArkCopyProvider(this.unseal(s.cipher),s.model);}
+ async provider(){const s=await this.read();if(!s.enabled||!s.cipher||!s.model)throw new Fault(503,'COPY_DISABLED','AI 文案尚未启用，可以继续自己写字。');if(!s.approvedUntil||s.approvedUntil<=this.now())throw new Fault(503,'COPY_APPROVAL_EXPIRED','文案服务授权期限已到，请联系管理员。');return new ArkCopyProvider(this.unseal(s.cipher),s.model,undefined,(await this.prompts?.read())?.text);}
 }

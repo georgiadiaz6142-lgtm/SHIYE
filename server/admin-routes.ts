@@ -30,6 +30,10 @@ export function adminRoutes(admin:Admin,copySettings?:CopySettingsStore,copy?:AI
  router.post('/invites/:id/status',async(req,res)=>{await admin.setInvite(res.locals.admin,z.string().uuid().parse(req.params.id),z.boolean().parse(req.body?.disabled));res.json({ok:true});});
  router.get('/apis',async(_req,res)=>res.json({items:await apis()}));
  if(copySettings)router.post('/apis/copy',async(req,res)=>{const result=await copySettings.save(res.locals.admin,req.body);await admin.logCopyConfig(res.locals.admin,result.enabled);res.json(result);});
+ if(copySettings?.prompts){
+  router.get('/copy/prompt',async(_req,res)=>res.json(await copySettings.prompts!.public()));
+  router.post('/copy/prompt',async(req,res)=>{const result=await copySettings.prompts!.save(res.locals.admin,req.body);await admin.logCopyPrompt(res.locals.admin,result.revision);res.json(result);});
+ }
  if(copy)router.get('/copy/usage',async(_req,res)=>res.json(await copy.usage()));
  router.post('/apis/:kind/test',async(req,res)=>res.json(await admin.testApi(res.locals.admin,res.locals.adminToken,feature.parse(req.params.kind),req.body)));
  router.post('/apis/:kind',async(req,res)=>{await admin.saveApi(res.locals.admin,res.locals.adminToken,feature.parse(req.params.kind),req.body);res.json({ok:true});});
