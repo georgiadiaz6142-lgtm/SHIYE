@@ -30,6 +30,8 @@ export class Admin {
   await writeFile(receipt,`拾页本机管理员\n地址：http://127.0.0.1:4176/admin\n用户名：${username}\n密码：${password}\n首次登录后可在后台修改密码。请妥善保存本文件。\n`,{flag:'wx',mode:0o600});
   await writeFile(this.file,JSON.stringify(data),{flag:'wx',mode:0o600});this.accountId=data.accountId!;
  }
+ sealProviderData(value:string){return this.encrypt(value);}
+ openProviderData(value:string){return this.decrypt(value);}
  private async read(){return schema.parse(JSON.parse(await readFile(this.file,'utf8')));}
  private update<T>(fn:(data:Document)=>T|Promise<T>){return editJson(this.file,v=>schema.parse(v),fn);}
  private encrypt(text:string){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',this.key,iv),body=Buffer.concat([c.update(text,'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),body]).toString('base64');}
@@ -94,6 +96,7 @@ export class Admin {
  }
  async setInvite(actor:string,id:string,disabled:boolean){await this.access.update(d=>{const row=d.invites.find(i=>i.id===id);if(!row)throw new Fault(404,'NOT_FOUND','邀请码不存在。');if(row.status==='bound')throw new Fault(409,'INVITE_BOUND','已绑定邀请码不能恢复使用。');if(disabled)row.grantVersion=(row.grantVersion||0)+1;row.status=disabled?'disabled':'unbound';(d.audit??=[]).push(audit(actor,disabled?'停用邀请码':'恢复邀请码',id));});}
  async reveal(actor:string,ids:string[]){return this.access.update(d=>{const rows=ids.map(id=>d.invites.find(i=>i.id===id));if(rows.some(i=>!i?.cipher))throw new Fault(404,'CODE_UNAVAILABLE','部分历史码未保存完整内容。');(d.audit??=[]).push(audit(actor,ids.length>1?'导出邀请码':'查看邀请码',ids.length>1?`${ids.length} 个`:ids[0]));return rows.map(i=>({id:i!.id,code:this.decrypt(i!.cipher!)}));});}
+ async logCopyConfig(actor:string,enabled:boolean){await this.update(d=>{d.audit.push(audit(actor,enabled?'启用文案配置':'保存停用文案配置','copy'));});}
  async logs(){const [a,b]=await Promise.all([this.read(),this.access.snapshot()]);return [...a.audit,...(b?.audit||[])].sort((x,y)=>y.at-x.at);}
  async apiEnabled(kind:Feature){return (await this.read()).apis[kind].enabled;}
  async apiList(){const d=await this.read();return (['cutout','naming'] as Feature[]).map(kind=>{const a=d.apis[kind],keys=JSON.parse(this.decrypt(a.cipher));return {kind,provider:'百度智能云',name:kind==='cutout'?'自动抠图':'贴纸自动命名',endpoint:kind==='cutout'?'https://aip.baidubce.com/rest/2.0/image-process/v1/segment':'https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general',enabled:a.enabled,configured:!!keys.apiKey&&!!keys.secretKey,apiKeyMasked:keys.apiKey?'••••••'+keys.apiKey.slice(-4):'未配置',secretConfigured:!!keys.secretKey,revision:a.revision,testedAt:a.testedAt,lastCall:a.lastCall};});}

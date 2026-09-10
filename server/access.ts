@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { editJson } from './local-json.js';
 import { Fault } from '../shared/contracts.js';
 
-export const userSchema=z.object({id:z.string().uuid(),role:z.literal('user'),username:z.string(),salt:z.string(),passwordHash:z.string(),avatar:z.string().nullable().default(null),createdAt:z.number(),inviteId:z.string().uuid()});
+export const userSchema=z.object({id:z.string().uuid(),role:z.literal('user'),username:z.string(),salt:z.string(),passwordHash:z.string(),avatar:z.string().nullable().default(null),createdAt:z.number(),memberUntil:z.number().int().positive().optional(),inviteId:z.string().uuid()});
 export type UserAccount=z.infer<typeof userSchema>;
 export const configSchema=z.object({version:z.literal(1),users:z.array(userSchema).optional(),secret:z.string().regex(/^[a-f0-9]{64}$/),invites:z.array(z.object({id:z.string().uuid(),hash:z.string().regex(/^[a-f0-9]{64}$/),status:z.enum(['unbound','bound','disabled']),boundAccountId:z.string().uuid().optional(),expiresAt:z.number().int().positive().nullable(),grantVersion:z.number().int().nonnegative().optional(),createdAt:z.number().nullable().optional(),batch:z.string().optional(),note:z.string().optional(),cipher:z.string().optional(),useCount:z.number().optional(),firstUsedAt:z.number().optional(),lastUsedAt:z.number().optional(),trackingSince:z.number().optional()})),audit:z.array(z.object({id:z.string(),at:z.number(),actor:z.string(),action:z.string(),target:z.string()})).optional()});
 export type InviteConfig=z.infer<typeof configSchema>;

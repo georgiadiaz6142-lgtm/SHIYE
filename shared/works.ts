@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { copySource } from './copy-source.js';
 
 // Versioned service representation. Browser blob:/data: URLs are never durable image references.
 export const workId=z.string().min(1).max(96).regex(/^[A-Za-z0-9_-]+$/);
@@ -11,7 +12,7 @@ const imageReference=z.union([
   z.object({builtinId:z.enum(['flower','coffee','camera','orange','ticket','leaf','stamp','tape','star'])}).strict(),
 ]);
 const element=z.discriminatedUnion('type',[
-  z.object({...position,type:z.literal('text'),text:z.string().max(20000),size:finite.positive().max(500),font:z.enum(['serif','sans','hand','fangsong','rounded']).optional(),color:z.string().regex(/^#[\da-fA-F]{3,8}$/).optional(),direction:z.enum(['horizontal','vertical']).optional(),bold:z.boolean().optional(),italic:z.boolean().optional()}).strict(),
+  z.object({...position,type:z.literal('text'),aiSource:copySource.optional(),text:z.string().max(20000),size:finite.positive().max(500),font:z.enum(['serif','sans','hand','fangsong','rounded']).optional(),color:z.string().regex(/^#[\da-fA-F]{3,8}$/).optional(),direction:z.enum(['horizontal','vertical']).optional(),bold:z.boolean().optional(),italic:z.boolean().optional()}).strict(),
   z.object({...position,type:z.literal('sticker'),assetId:workId}).strict(),
   z.object({...position,type:z.literal('photo'),image:imageReference,frame:z.boolean().optional()}).strict(),
 ]);

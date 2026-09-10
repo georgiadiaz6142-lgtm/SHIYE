@@ -1,4 +1,8 @@
 import express from 'express';
+import { AICopy } from './ai-copy.js';
+import { CopySettingsStore } from './copy-settings.js';
+import { copyRoutes } from './copy-routes.js';
+import type { CopyProvider } from './copy-provider.js';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { resolve, relative, sep } from 'node:path';
 import { ZodError } from 'zod';
@@ -16,7 +20,7 @@ import { workRoutes } from './work-routes.js';
 import { stat } from 'node:fs/promises';
 import { adminRoutes,adminToken,accountLogin } from './admin-routes.js';
 
-export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin}) {
+export async function createApp(options:{runtime:string;staticRoot:string;ttl?:number;latency?:number;mode?:string;live?:LiveOptions;naming?:NamingProvider;access?:InviteAccess;admin?:Admin;copyProvider?:CopyProvider}) {
   const runtime=resolve(options.runtime), staticRoot=resolve(options.staticRoot);
   if(runtime===staticRoot||!relative(staticRoot,runtime).startsWith('..'+sep))
     throw new Error('运行目录必须位于静态目录之外。');
@@ -27,6 +31,9 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   const store=new Store(runtime);await store.init();
   const jobs=new Jobs(store,options.ttl??3_600_000,options.latency,options.live);await jobs.recover();
   const naming=new Naming(jobs,live?options.naming:undefined);
+  const copySettings=options.admin?new CopySettingsStore(resolve(runtime,'ai-copy-config.json'),s=>options.admin!.sealProviderData(s),s=>options.admin!.openProviderData(s)):undefined;
+  const copy=copySettings?new AICopy(resolve(runtime,'ai-copy-state.json'),copySettings,s=>options.admin!.sealProviderData(s),s=>options.admin!.openProviderData(s),options.copyProvider):undefined;
+  await copy?.init();
   const app=express();app.disable('x-powered-by');
   app.use((req,res,next)=>{
     const origin=`http://127.0.0.1:${req.socket.localPort}`;
@@ -42,7 +49,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     next();
   });
   app.get('/api/health',async(_req,res)=>res.json({status:'ok',namingAvailable:live&&!!options.naming&&(!options.admin||await options.admin.apiEnabled('naming')),limitsDisabled:live&&options.live!.maxCalls===null&&options.live!.approvedUntil===null,mode:live?'live':'mock',provider:live?'baidu':'mock',liveAvailable:live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),photosAccepted:(!options.admin||await options.admin.apiEnabled('cutout'))&&live&&(options.live!.approvedUntil===null||options.live!.approvedUntil>Date.now()),mock:!live,capabilities:{automaticSeparateObjects:false,box:live,points:!live},...(live?{localTtlSeconds:options.ttl!/1000}:{} )}));
-  if(options.admin)app.use('/api/admin',express.json({limit:'128kb',strict:true}),adminRoutes(options.admin));
+  if(options.admin)app.use('/api/admin',express.json({limit:'128kb',strict:true}),adminRoutes(options.admin,copySettings,copy));
   if(options.admin)app.post('/api/access/login',express.json({limit:'2kb',strict:true}),accountLogin(options.admin,false));
   app.use('/api',(req,res,next)=>{
     let token=req.headers.cookie?.split(';').map(x=>x.trim()).find(x=>x.startsWith('shiye_session='))?.slice(14);
@@ -52,6 +59,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     }
     const account=options.admin?.session(adminToken(req.headers.cookie));res.locals.owner=account?'account:'+account.accountId:createHash('sha256').update(token).digest('hex');res.locals.requestId=randomUUID();next();
   });
+  if(options.admin&&copy)app.use('/api/ai/copy',copyRoutes(options.admin,copy));
   if(options.admin&&options.access)app.use('/api/account',express.json({limit:'3mb',strict:true}),accountRoutes(options.admin,options.access));
   if(options.admin){
     const works=new Works(new LocalWorkRepository(resolve(runtime,'works-dev','metadata')),new LocalWorkObjects(resolve(runtime,'works-dev','objects')),async path=>{
@@ -112,7 +120,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
   app.use('/api',(_req,_res,next)=>next(new Fault(404,'NOT_FOUND','接口不存在。')));
   // Explicit public-file allowlist: archives, documents, runtime and secrets are never served.
   app.get('/admin',(_req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'");res.sendFile(resolve(staticRoot,'admin.html'));});
-  const entries=new Set(['/work-sync.js','/account-ui.js','/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
+  const entries=new Set(['/ai-copy.js','/ai-copy.css','/work-sync.js','/account-ui.js','/admin.js','/admin.css','/','/index.html','/app.js','/styles.css','/segmentation.js','/selection.js','/segmentation.css',
     '/edgecut.js','/edgecut.css','/edgecut-core.js','/edgecut-worker.js',
     '/vendor/opencv-4.13.0/opencv.js','/vendor/opencv-4.13.0/LICENSE']);
   app.use((req,res,next)=>{
@@ -127,7 +135,7 @@ export async function createApp(options:{runtime:string;staticRoot:string;ttl?:n
     const e=error instanceof Fault?error:error instanceof ZodError?new Fault(422,'INVALID_INPUT','输入内容或版本不符合要求。'):parseError?.type==='entity.too.large'?new Fault(413,'INPUT_TOO_LARGE',_req.path==='/api/uploads/photo'?'图片超过上传上限 10 MB，请压缩后重新选择。照片尚未发送至百度。':'请求超过允许大小。'):parseError?.type==='entity.parse.failed'?new Fault(400,'INVALID_INPUT','请求不是有效 JSON。'):parseError?.status===404?new Fault(404,'NOT_FOUND','文件不存在。'):new Fault(500,'INTERNAL_ERROR','操作未完成，已有内容仍保留。');
     res.status(e.status).json({requestId:res.locals.requestId,error:{errorType:e.errorType,message:e.message,retryable:e.retryable}});
   });
-  return {app,store,jobs};
+  return {app,store,jobs,copy};
 }
 function publicJob(job:ReturnType<Jobs['get']>) {
   const {owner:_,fingerprint:__,...result}=job;return result;

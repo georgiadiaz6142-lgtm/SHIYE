@@ -35,11 +35,11 @@ try {
   const access=new InviteAccess(resolve(runtime,'invites.json')),admin=new Admin(resolve(runtime,'admin.json'),access);
   await admin.init({apiKey:process.env.BAIDU_API_KEY||'',secretKey:process.env.BAIDU_SECRET_KEY||'',cutout:mode==='live',naming:process.env.SHIYE_BAIDU_NAMING_ENABLED==='true'},resolve('.local/admin-account.txt'));
   if(live)live.provider=admin;
-  const {app,jobs}=await createApp({admin,access,runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live,naming:mode==='live'?admin:undefined});
+  const {app,jobs,copy}=await createApp({admin,access,runtime,staticRoot:resolve('shiye-editorial-prototype'),ttl:ttl*1000,mode,live,naming:mode==='live'?admin:undefined});
   const server=app.listen(port,host,()=>console.log(`拾页本机服务 http://${host}:${port}；${mode==='live'?'百度抠图，仅处理主动点击上传的照片。':'模拟模式，无外部模型调用。'}`));
   server.on('error',async e=>{console.error(e instanceof Error?e.message:'服务启动失败');await unlink(lockPath);process.exitCode=1;});
   const timer=setInterval(()=>jobs.expire().catch(()=>console.error('临时测试数据清理失败。')),60_000);timer.unref();
   let closing=false;
-  const stop=()=>{if(closing)return;closing=true;clearInterval(timer);server.close(async()=>{await jobs.idle();await unlink(lockPath);process.exit(0);});};
+  const stop=()=>{if(closing)return;closing=true;clearInterval(timer);server.close(async()=>{await jobs.idle();await copy?.idle();await unlink(lockPath);process.exit(0);});};
   process.on('SIGINT',stop);process.on('SIGTERM',stop);
 }catch(e){await unlink(lockPath);throw e;}

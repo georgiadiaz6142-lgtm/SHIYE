@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Home loads without blank screen or framework errors",
+    "Explicit request uses selected page thumbnail and draft only; preview does not alter page",
+    "Apply preserves font, direction, position and rotation; undo/redo restores AI metadata",
+    "Inline editing remains focused and automatically syncs structured text with provenance; reload restores it",
+    "Text drawer can create AI text; reopening recovers preview; regenerate alone makes a new charge",
+    "Lost acknowledgement queries original task without another supplier request",
+    "Applying an outdated preview does not overwrite a changed page",
+    "Changed account is rejected by server identity header; delayed result never enters another account",
+    "390px form has no horizontal overflow; failed generation reports error without preview or user charge",
+    "Opposite-leaf spanning stickers participate in context revision; late cross-page changes block apply",
+    "Admin has independent disabled copy configuration and usage; saving makes no model call",
+    "No uncaught JavaScript errors across desktop, mobile and admin flows"
+  ],
+  "errors": []
+}
