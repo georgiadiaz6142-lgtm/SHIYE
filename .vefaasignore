@@ -1,0 +1,18 @@
+# Do not deploy from the working tree until runtime/storage adaptation is verified.
+# scripts/prepare-deployment.mjs creates an independently inspectable source directory.
+.git/
+.agents/
+.codex/
+.vefaas/
+.local/
+.env*
+node_modules/
+dist/
+archive/
+verification/
+*.log
+**/.DS_Store
+**/*.tar.gz
+**/*.zip
+**/*.key
+**/*.pem

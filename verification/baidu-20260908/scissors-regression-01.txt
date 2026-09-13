@@ -1,5 +1,0 @@
-PASS freehand-stays-editable-until-confirmed
-PASS point-selection-clear-undo-keyboard-resize
-PASS confirmation-save-to-original-page-and-reload
-PASS mobile-taps-adjust-and-explicit-confirm
-{"out":"/Users/song/Documents/拾页/verification/stage1-20260908/baidu-scissors-regression-01","checks":[{"name":"freehand-stays-editable-until-confirmed","status":"PASS"},{"name":"point-selection-clear-undo-keyboard-resize","status":"PASS"},{"name":"confirmation-save-to-original-page-and-reload","status":"PASS"},{"name":"mobile-taps-adjust-and-explicit-confirm","status":"PASS"}],"errors":[],"external":[],"screenshots":["01-stays-on-photo.png","02-explicit-preview.png","03-adjusted-window.png","04-mobile-adjust.png"],"hashes":{"app.js":"ecd87b10ffa230204136b76ab8eb37ba450589e280f9df4021e6e0a50f31d9a6","index.html":"7f50d6f6f71219f02a90cb11434c76d929ad2fbdd2450dc1f31ff49c87180db9","styles.css":"cd1d8bbc10da7b90054451a1c3ec0a68161f760ba9a61c66bd78817078e260e3","selection.js":"62036889b7907fcbdbb0029799c1b751ef60ffaec4d4f74354dd43de1d7712f9","segmentation.css":"61c227e626f7845783a5f591bb5560c81862080f31b6f4c1575e0cef8c5c9199"}}

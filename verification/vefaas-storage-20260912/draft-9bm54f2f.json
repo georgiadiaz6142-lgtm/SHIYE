@@ -1,0 +1,7 @@
+{
+  "id": "9bm54f2f",
+  "updateOK": false,
+  "codeSize": null,
+  "code": "API_ERROR",
+  "message": "UpdateFunction: ResourceNotFound: The specified resource Source cannot be found. TOS object vefaas-prod-cn-beijing-3az:code_temp_cache/4d78482e-440e-4ac1-959a-897da5e91a2d.zip not exist, err Forbidden: Forbidden | \tstatu"
+}

@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "data": {
+    "target": "application",
+    "id": "862432459a9a",
+    "name": "shiye-web-test",
+    "function_id": "ulvzu4v3"
+  },
+  "returnedFields": [
+    "target",
+    "id",
+    "name",
+    "function_id",
+    "access_url",
+    "settings",
+    "released"
+  ]
+}

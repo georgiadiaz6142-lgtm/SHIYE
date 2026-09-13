@@ -1,3 +1,4 @@
+import type {ObjectDocumentGroup} from './object-documents.js';
 import {readFile,writeFile} from 'node:fs/promises';
 import {z} from 'zod';
 import {editJson} from './local-json.js';
@@ -45,12 +46,14 @@ export const DEFAULT_COPY_PROMPT=`你是「拾页」的手账写作助手，帮�
 const input=z.object({revision:z.number().int().nonnegative(),text:z.string().trim().min(1).max(12000)}).strict();
 const schema=input.extend({version:z.literal(1),updatedAt:z.number(),actor:z.string()}).strict();
 export class CopyPromptStore {
- constructor(readonly file:string){}
+ constructor(readonly file:string,readonly documents?:ObjectDocumentGroup){}
+ private get cell(){return this.documents?.cell('copy-prompt',v=>schema.parse(v));}
+ private update<R>(change:(s:z.infer<typeof schema>)=>R|Promise<R>){return this.cell?this.cell.update(change):editJson(this.file,v=>schema.parse(v),change);}
  private blank(){return {version:1 as const,revision:0,text:DEFAULT_COPY_PROMPT,updatedAt:0,actor:''};}
- async read(){try{return schema.parse(JSON.parse(await readFile(this.file,'utf8')));}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return this.blank();throw new Fault(503,'COPY_PROMPT_UNAVAILABLE','文案提示词暂时无法读取。');}}
+ async read(){try{return this.cell?await this.cell.read():schema.parse(JSON.parse(await readFile(this.file,'utf8')));}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return this.blank();throw new Fault(503,'COPY_PROMPT_UNAVAILABLE','文案提示词暂时无法读取。');}}
  async public(){return {...await this.read(),defaultText:DEFAULT_COPY_PROMPT};}
  async save(actor:string,value:unknown){const v=input.parse(value);
-  try{await writeFile(this.file,JSON.stringify(this.blank()),{flag:'wx',mode:0o600});}catch(e){if((e as NodeJS.ErrnoException).code!=='EEXIST')throw e;}
-  await editJson(this.file,x=>schema.parse(x),s=>{if(s.revision!==v.revision)throw new Fault(409,'COPY_PROMPT_CHANGED','提示词已被更新，请重新打开后再保存。');Object.assign(s,{text:v.text,revision:s.revision+1,updatedAt:Date.now(),actor});});return this.public();
+  if(this.cell)await this.cell.initialize(this.blank());else try{await writeFile(this.file,JSON.stringify(this.blank()),{flag:'wx',mode:0o600});}catch(e){if((e as NodeJS.ErrnoException).code!=='EEXIST')throw e;}
+  await this.update(s=>{if(s.revision!==v.revision)throw new Fault(409,'COPY_PROMPT_CHANGED','提示词已被更新，请重新打开后再保存。');Object.assign(s,{text:v.text,revision:s.revision+1,updatedAt:Date.now(),actor});});return this.public();
  }
 }

@@ -1,0 +1,17 @@
+{
+  "before": {
+    "shiye-editorial-prototype/edgecut.js": "07d397a0a72d4786bd7040826779ebabe9f604253a4731aee363c80c81db8232",
+    "shiye-editorial-prototype/edgecut-worker.js": "51bd18a226678b8b4c9f25e564905c9fb6c41d0ba02acbfb0fadee418f6a077c",
+    "shiye-editorial-prototype/edgecut.css": "266bdb03550df89cf67006737d476a45c6cbbb49970fc3e3c5a3436074fc79af",
+    "server/app.ts": "ee77fb0159bd3fdefec21ca90feebbc03f28cf2c837d0975c7e1ec635de2b7e6"
+  },
+  "after": {
+    "shiye-editorial-prototype/edgecut.js": "255c88767c017f36970ab7dc11dbc50b7efb06fefa829b5b9fb27ee2e9642f1c",
+    "shiye-editorial-prototype/edgecut-worker.js": "797df23fbd60048c13a75db7e5aa140f52bec3d6ee8d26e9f70449e44c736c47",
+    "shiye-editorial-prototype/edgecut.css": "c6c9f3dc19650a60e64e3513c04ede0cb795b3196ef7ae657504ed365491db8c",
+    "server/app.ts": "bef42396460b33e035cfe4144b567303d9fcf103f3fe1e1de9a4e88780a74b9e",
+    "server/edge-tool-assets.ts": "7c8fbf49989da05c997755d5cd7d95f9089b73f361a1d225c5ba4cade74a3c49",
+    "server/tests/edge-tool-assets.test.ts": "d5c6c7ae813cb2c717967a2f0753388951853980652d00edeb53cb2947419716",
+    "verification/edge-loading-20260912/browser.cjs": "d7fc14598d10edc467cc50b84c4c7af042192aee8f36cca0663379ca4c881814"
+  }
+}

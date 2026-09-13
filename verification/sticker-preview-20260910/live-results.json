@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "activeTasksBeforeRestart": 0,
+  "protectedConfigurationUnchanged": true,
+  "served": {
+    "sticker-preview.js": true,
+    "app.js": true,
+    "styles.css": true
+  }
+}

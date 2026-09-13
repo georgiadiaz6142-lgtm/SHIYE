@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="icon"
+      type="image/png"
+      href="/room-home/media/favicon-96x96.png"
+      sizes="96x96"
+    />
+    <link rel="icon" type="image/svg+xml" href="/room-home/media/favicon.svg" />
+    <link rel="shortcut icon" href="/room-home/media/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/room-home/media/apple-touch-icon.png"
+    />
+    
+
+    <meta name="description" content="拾页：把照片变成贴纸，把日子慢慢收好。" />
+    <title>拾页 SHIYE</title>
+    <script type="module" crossorigin src="/room-home/book/room-book.js"></script>
+    <link rel="stylesheet" crossorigin href="/room-home/assets/index-BylXNHBx.css">
+  <link rel="stylesheet" href="/room-home/preview.css?v=floating-intro"><link rel="stylesheet" href="/room-home/book/book-controls.css"><link rel="stylesheet" href="/room-home/integration.css"><link rel="stylesheet" href="/specular-buttons.css">
+</head>
+  <body>
+    <div class="preloader">
+      <div class="preloader__inner">
+        <div class="preloader__progress-wrapper">
+          <div class="preloader__progress-bar"></div>
+        </div>
+        <span class="preloader__percent">0%</span>
+        <p id="room-preparation-status" role="status">正在准备你的手账房间…</p>
+        <button id="room-load-retry" type="button" hidden>重新加载</button>
+
+        <div class="preloader__intro">
+          <p class="preview-eyebrow">SHIYE</p>
+          <h1 class="preview-heading">拾页</h1>
+          <p class="preloader__description preview-product-copy">从照片里拾起喜欢的片刻，<br>做成贴纸，收进只属于你的数字手帐。</p>
+          <span class="preview-divider" aria-hidden="true"></span>
+          <p class="preview-guide">右上角可以切换白天与夜晚。<br>点击桌面上的书本，开始探索。</p>
+          <div class="preloader__buttons">
+            <button
+              id="enter-btn" disabled
+              class="preloader__btn preloader__btn--primary"
+            >
+              进入房间 · 有音乐
+            </button>
+            <button
+              id="enter-silent-btn" disabled
+              class="preloader__btn preloader__btn--secondary"
+            >
+              安静地进入
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="experience-wrapper">
+      <canvas id="experience-canvas"></canvas>
+    </div>
+
+    <button id="back-btn" class="back-btn">&#8592; 返回房间</button>
+
+    <div class="top-right-controls">
+      <button id="day-night-toggle" aria-label="切换白天与夜晚" class="day-night-btn" data-mode="day">
+        <span class="day-night-btn__icon">&#9790;</span>
+      </button>
+      <button id="info-btn" class="info-btn" hidden aria-hidden="true" tabindex="-1">i</button>
+    </div>
+
+  <script src="/room-home/preview-health.js?v=floating-intro"></script><script src="/specular-buttons.js" defer></script>
+</body>
+</html>

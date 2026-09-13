@@ -14,10 +14,11 @@ const imageReference=z.union([
 const element=z.discriminatedUnion('type',[
   z.object({...position,type:z.literal('text'),aiSource:copySource.optional(),text:z.string().max(20000),size:finite.positive().max(500),font:z.enum(['serif','sans','hand','fangsong','rounded']).optional(),color:z.string().regex(/^#[\da-fA-F]{3,8}$/).optional(),direction:z.enum(['horizontal','vertical']).optional(),bold:z.boolean().optional(),italic:z.boolean().optional()}).strict(),
   z.object({...position,type:z.literal('sticker'),assetId:workId}).strict(),
-  z.object({...position,type:z.literal('photo'),image:imageReference,frame:z.boolean().optional()}).strict(),
+  z.object({...position,type:z.literal('photo'),image:imageReference,frame:z.boolean().optional(),crop:z.object({aspect:finite.min(0.2).max(5),zoom:finite.min(1).max(3),x:finite.min(0).max(100),y:finite.min(0).max(100)}).strict().optional()}).strict(),
 ]);
 const page=z.object({id:workId,paper:token,spreadKey:workId.optional(),spreadSide:z.enum(['left','right']).optional(),paperSpread:z.object({paper:token,side:z.enum(['left','right'])}).strict().optional(),elements:z.array(element).max(1000)}).strict();
-export const bookDocument=z.object({id:workId,title:z.string().min(1).max(200),subtitle:z.string().max(500).optional(),cover:token,sample:z.boolean().optional(),pinned:z.boolean().optional(),updated:finite.nonnegative().optional(),page:z.number().int().nonnegative().optional(),editorLayout:z.enum(['single','spread']).optional(),stickerPlacement:z.enum(['page','spread']).optional(),pages:z.array(page).min(1).max(500)}).strict();
+const coverDesign=z.object({id:workId,paper:z.literal('plain'),color:z.string().regex(/^#[\da-fA-F]{6}$/),material:z.enum(['plain','paper','cloth']),titleId:workId,titleVisible:z.boolean(),elements:z.array(element).max(1000)}).strict();
+export const bookDocument=z.object({id:workId,title:z.string().min(1).max(200),subtitle:z.string().max(500).optional(),cover:token,sample:z.boolean().optional(),pinned:z.boolean().optional(),updated:finite.nonnegative().optional(),page:z.number().int().nonnegative().optional(),editorLayout:z.enum(['single','spread']).optional(),stickerPlacement:z.enum(['page','spread']).optional(),coverDesign:coverDesign.optional(),pages:z.array(page).min(1).max(500)}).strict();
 const provenance=z.object({mock:z.boolean(),provider:z.enum(['baidu','mock']),providerRequestId:z.string().max(80).optional(),imageSessionId:z.string().uuid(),sourceRevision:z.number().int().nonnegative(),candidateId:z.string().uuid(),candidateRevision:z.number().int().nonnegative(),localRetouch:z.object({version:z.literal(1),editedAt:finite.nonnegative()}).strict().optional()}).strict();
 export const savedAsset=z.object({id:workId,name:z.string().min(1).max(200),category:z.string().max(40),createdAt:finite.nonnegative().optional(),pinned:z.boolean().optional(),favorite:z.boolean().optional(),archived:z.boolean().optional(),border:finite.min(0).max(500).optional(),borderBaked:z.boolean().optional(),width:finite.positive().max(24000000).optional(),height:finite.positive().max(24000000).optional(),image:imageReference,provenance:provenance.optional()}).strict();
 export const bookPackage=z.object({schemaVersion:z.literal(1),book:bookDocument,assets:z.array(savedAsset).max(2000)}).strict().superRefine((v,ctx)=>{
@@ -27,6 +28,7 @@ export const bookPackage=z.object({schemaVersion:z.literal(1),book:bookDocument,
  const pages=new Set(v.book.pages.map(p=>p.id)),assets=new Set(v.assets.map(a=>a.id)),elements=new Set<string>();
  if(pages.size!==v.book.pages.length||assets.size!==v.assets.length)issue('页面或素材 ID 重复。');
  if(v.book.page!==undefined&&v.book.page>=v.book.pages.length)issue('当前页不存在。');
+ if(v.book.coverDesign){const c=v.book.coverDesign;if(pages.has(c.id))issue('封面与内页 ID 重复。');for(const e of c.elements){if(elements.has(e.id))issue('元素 ID 重复。');elements.add(e.id);if(e.spreadWith)issue('封面元素不能跨内页。');if(e.type==='sticker'&&!assets.has(e.assetId))issue('缺少封面贴纸。');}}
  for(const p of v.book.pages){
   if(p.paperSpread){const mates=v.book.pages.filter(other=>pair.get(other.id)===pair.get(p.id));if(mates.length!==2||mates.some(other=>other.paperSpread?.paper!==p.paperSpread!.paper))issue('跨页纸张需要完整、匹配的左右两页。');}
   for(const e of p.elements){
@@ -39,9 +41,10 @@ export const bookPackage=z.object({schemaVersion:z.literal(1),book:bookDocument,
 export const saveBookInput=z.object({operationId:z.string().uuid(),baseRevision:z.number().int().nonnegative(),content:bookPackage}).strict();
 export type BookPackage=z.infer<typeof bookPackage>;
 export type SaveBookInput=z.infer<typeof saveBookInput>;
+export const documentPages=(book:z.infer<typeof bookDocument>)=>[...(book.coverDesign?[book.coverDesign]:[]),...book.pages];
 export function packageImages(content:BookPackage){
  const ids=new Set<string>(),builtins=new Set<string>();
- const references=[...content.assets.map(a=>a.image),...content.book.pages.flatMap(p=>p.elements.flatMap(e=>e.type==='photo'?[e.image]:[]))];
+ const references=[...content.assets.map(a=>a.image),...documentPages(content.book).flatMap(p=>p.elements.flatMap(e=>e.type==='photo'?[e.image]:[]))];
  for(const ref of references){if('imageId' in ref)ids.add(ref.imageId);else if('builtinPath' in ref)builtins.add(ref.builtinPath);}
  return {ids:[...ids],builtins:[...builtins]};
 }
@@ -52,14 +55,14 @@ export const workspaceDocument=z.object({schemaVersion:z.literal(1),books:z.arra
  const all=[...v.assets,...v.archivedAssets];
  if(new Set(v.books.map(b=>b.id)).size!==v.books.length||new Set(all.map(a=>a.id)).size!==all.length)ctx.addIssue({code:'custom',message:'手账或素材编号重复。'});
  const byId=new Map([...builtinAssets,...all].map(a=>[a.id,a]));
- for(const book of v.books){const used=new Set(book.pages.flatMap(p=>p.elements.flatMap(e=>e.type==='sticker'?[e.assetId]:[])));const result=bookPackage.safeParse({schemaVersion:1,book,assets:[...used].flatMap(id=>byId.has(id)?[byId.get(id)]:[])});if(!result.success)ctx.addIssue({code:'custom',message:'手账内容或图片引用不完整。'});}
+ for(const book of v.books){const used=new Set(documentPages(book).flatMap(p=>p.elements.flatMap(e=>e.type==='sticker'?[e.assetId]:[])));const result=bookPackage.safeParse({schemaVersion:1,book,assets:[...used].flatMap(id=>byId.has(id)?[byId.get(id)]:[])});if(!result.success)ctx.addIssue({code:'custom',message:'手账内容或图片引用不完整。'});}
 });
 export const saveWorkspaceInput=z.object({operationId:z.string().uuid(),baseRevision:z.number().int().nonnegative(),content:workspaceDocument}).strict();
 export type WorkspaceDocument=z.infer<typeof workspaceDocument>;
 export function workspaceImages(content:WorkspaceDocument){
  const ids=new Set<string>(),builtins=new Set<string>();
  const references=[...content.assets,...content.archivedAssets].map(a=>a.image);
- for(const book of content.books)for(const page of book.pages)for(const e of page.elements)if(e.type==='photo')references.push(e.image);
+ for(const book of content.books)for(const page of documentPages(book))for(const e of page.elements)if(e.type==='photo')references.push(e.image);
  for(const ref of references){if('imageId' in ref)ids.add(ref.imageId);else if('builtinPath' in ref)builtins.add(ref.builtinPath);}
  return {ids:[...ids],builtins:[...builtins]};
 }

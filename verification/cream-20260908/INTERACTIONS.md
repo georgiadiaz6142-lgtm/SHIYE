@@ -21,7 +21,7 @@
 
 | 检查 | 结果 | 证据 |
 |---|---|---|
-| 米白首页身份 | 1/1 | [首页截图](interaction-identity/cream-home-identity.png) |
+| 米白首页身份 | 1/1 | [首页截图](fix-identity/cream-home-identity.png) |
 | 原有功能回归 | 21/21 | [interaction-regression-02](interaction-regression-02/results.json) |
 | 新交互主链路 | 8/8 | [interaction-features-02](interaction-features-02/results.json) |
 | 最终布局与边界 | 7/7 | [interaction-edges-01](interaction-edges-01/results.json) |
@@ -35,7 +35,7 @@
 
 ### 关键截图
 
-- [竖排文字和操作柄](interaction-features-02/vertical-text-and-handles.png)
+- [竖排文字和操作柄](interaction-features-01/vertical-text-and-handles.png)
 - [用户手帐第 2、3 页](interaction-features-02/real-book-spread.png)
 - [翻页时纸张背面](interaction-features-02/real-book-corner-fold.png)
 - [最终手机阅读布局](interaction-edges-01/reading-layout-390.png)

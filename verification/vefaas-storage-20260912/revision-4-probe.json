@@ -1,0 +1,15 @@
+{
+  "httpStatus": 200,
+  "result": {
+    "status": "passed",
+    "runId": "be56c200-cf3e-4888-a31f-35d6f5c01b9f",
+    "prefix": "shiye-verification/be56c200-cf3e-4888-a31f-35d6f5c01b9f/",
+    "checks": [
+      "create-only",
+      "single-writer-cas",
+      "new-client-recovery",
+      "cleanup"
+    ],
+    "realTos": true
+  }
+}

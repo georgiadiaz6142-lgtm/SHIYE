@@ -1,0 +1,250 @@
+{
+  "files": [
+    {
+      "path": ".vefaasignore",
+      "bytes": 319,
+      "sha256": "03e2f6a3f63818ee481fb8a93a720abcb424a56e7a872cbbfe1b052db5ba5c50"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 69967,
+      "sha256": "cef610dcf6461461e7e51ecdffa2f3b1c564b44877cb6fdf6739f6fa70dafb80"
+    },
+    {
+      "path": "package.json",
+      "bytes": 946,
+      "sha256": "b7512acb25942de6ba9c2edbba1141185e6c1368d90a0968501a4da27bd6ad39"
+    },
+    {
+      "path": "runtime/NODE-LICENSE",
+      "bytes": 143299,
+      "sha256": "e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49"
+    },
+    {
+      "path": "runtime/node",
+      "bytes": 123405064,
+      "sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31"
+    },
+    {
+      "path": "server/access.ts",
+      "bytes": 7903,
+      "sha256": "e0ae10c4c5895d95dab403612cfdd0524035d639045a5da027c84d61064f40ef"
+    },
+    {
+      "path": "server/account-profile.ts",
+      "bytes": 1206,
+      "sha256": "e9cd298b5e04b7e2864077c6b4543fcce9ccf36a62fe31a59abe27f7500a6a35"
+    },
+    {
+      "path": "server/account-routes.ts",
+      "bytes": 2452,
+      "sha256": "02880a8e45021733a548b574571f6aa592cf8a0ed566afb01b37c8884726eadb"
+    },
+    {
+      "path": "server/admin-routes.ts",
+      "bytes": 4873,
+      "sha256": "827fe849d83ada504e2ea4e9b4fb88580e84214e8db473260ce60c3877388865"
+    },
+    {
+      "path": "server/admin.ts",
+      "bytes": 22081,
+      "sha256": "32203889dbbc67818932b3b94d55479bb176f68fab2cc10cffd0b4473c5a373d"
+    },
+    {
+      "path": "server/ai-copy.ts",
+      "bytes": 12847,
+      "sha256": "0330c4fff9f905644e8144d36676c502742e5422db73eb1b0a70e59abe503f45"
+    },
+    {
+      "path": "server/app.ts",
+      "bytes": 14060,
+      "sha256": "e0e39e378887092a33d2f820607899007d0648a516df94b9ade1e24386e9138b"
+    },
+    {
+      "path": "server/baidu.ts",
+      "bytes": 9452,
+      "sha256": "9da08248bcc5ccc54c8f67315cc9f906ab00762c530aacc3034f355d6282c04e"
+    },
+    {
+      "path": "server/cloud-bootstrap.ts",
+      "bytes": 3617,
+      "sha256": "23bb79efd361a4bc885dff4a840dbbf969234842f15460e66b3797ed0335ffaa"
+    },
+    {
+      "path": "server/cloud-index.ts",
+      "bytes": 715,
+      "sha256": "af404983af338bdfa012e79b377e8172e60a29aa53172c00e3f25653ea4d5210"
+    },
+    {
+      "path": "server/cloud-role-app.ts",
+      "bytes": 1118,
+      "sha256": "264a99c9c75956bb0afcd04820acee7541974bafe5e821c5542daa3ba91e6507"
+    },
+    {
+      "path": "server/cloud-tasks.ts",
+      "bytes": 4880,
+      "sha256": "6b4e085e12c278063c0d1df70adb9fad638c2941e35bc1aeff4cc3e0e69d0f7e"
+    },
+    {
+      "path": "server/copy-prompt.ts",
+      "bytes": 3690,
+      "sha256": "16ff134067daa7bd60821513c0027fed019d89ecf3f83916642889d0f4eab3e0"
+    },
+    {
+      "path": "server/copy-provider.ts",
+      "bytes": 5036,
+      "sha256": "6f0b3d1de55a3c109440b493ebd35480f79c8538deee9ec519490502e43f1c4c"
+    },
+    {
+      "path": "server/copy-routes.ts",
+      "bytes": 2054,
+      "sha256": "dc50614cf6e182c6474ce6fe3c4fd0e5f4278134271e73580d3ef0aaff73e2dc"
+    },
+    {
+      "path": "server/copy-settings.ts",
+      "bytes": 4676,
+      "sha256": "42085c55d85a2b83b3796443a035bc2e31d385d1e6bb5d87b9660ea74a48e147"
+    },
+    {
+      "path": "server/http-policy.ts",
+      "bytes": 1897,
+      "sha256": "ed20e8756cfd7a4478f6003bc1d00e2f5faf39c2c1aa3a747afcb30c74c026f2"
+    },
+    {
+      "path": "server/images.ts",
+      "bytes": 4099,
+      "sha256": "a6019e1e1898a8a6efbd9e829dc4011e301ea25a033adb9ad5c89de1bac9e8a4"
+    },
+    {
+      "path": "server/index.ts",
+      "bytes": 3471,
+      "sha256": "117c7acf8a26f573e8bfff34dd94137e626bd9400bbf5bac0cca4391ba9b6331"
+    },
+    {
+      "path": "server/jobs.ts",
+      "bytes": 15237,
+      "sha256": "c3c99f7a9575e00b7a365e92b291291611a69c24b393fa5806a7797c9583764c"
+    },
+    {
+      "path": "server/local-json.ts",
+      "bytes": 706,
+      "sha256": "f686fad04653f5e45c9fa219c2dc9f0e30de3f7fa2dec2cd192998034450144d"
+    },
+    {
+      "path": "server/naming.ts",
+      "bytes": 3031,
+      "sha256": "3213ab2e5d6e0f90c79de12847cbf99475c995d1fdb2e64a326017804cee049b"
+    },
+    {
+      "path": "server/object-documents.ts",
+      "bytes": 4584,
+      "sha256": "db9ce0ba3b821cca546426236f5d6498956a60f8ae05c929c97d1688bfca8138"
+    },
+    {
+      "path": "server/object-rate-limit.ts",
+      "bytes": 1255,
+      "sha256": "98716cc96ca35c270c7e6d2cb892fa6d39a99415283f9f04c388c72d121880f7"
+    },
+    {
+      "path": "server/room-home-files.ts",
+      "bytes": 5567,
+      "sha256": "7fbe0e7648b08060423a0aaabc2d355664b7c13137f7777ee69d43734823cb54"
+    },
+    {
+      "path": "server/runtime-config.ts",
+      "bytes": 1681,
+      "sha256": "35f07cae7c5684600459821ceb6bc0806424d36c6a148e2700a1107d50043074"
+    },
+    {
+      "path": "server/store.ts",
+      "bytes": 2951,
+      "sha256": "6101b88e587a18d8e2f7dcc5b34d9d9b4e2ab3cc479a45c71d97a60bc70fa92c"
+    },
+    {
+      "path": "server/task-http.ts",
+      "bytes": 3253,
+      "sha256": "a504bd8139d3890ac1b2bcd2ca298a954ae9cda26bc17f8fefed69f009b20733"
+    },
+    {
+      "path": "server/task-identity.ts",
+      "bytes": 1396,
+      "sha256": "3a1981d3a68327d69baf6b235ca2c07b997b7eb304217e0b06b72479458bb571"
+    },
+    {
+      "path": "server/temporary-media.ts",
+      "bytes": 1491,
+      "sha256": "704272d0500934d033985875779beef07351a98a1a1410f89544d03209289026"
+    },
+    {
+      "path": "server/tos-check-app.ts",
+      "bytes": 1538,
+      "sha256": "d18ea20ba799f92552d373a387e434fd5ddf5801ec9840d6c5986f8bea9d7590"
+    },
+    {
+      "path": "server/tos-check-index.ts",
+      "bytes": 521,
+      "sha256": "401d83957b93d6e6a7fcee613e7c5641624510dfcca25442bc11e580b4be40a8"
+    },
+    {
+      "path": "server/tos-client.ts",
+      "bytes": 1275,
+      "sha256": "f3eb7949f24505f060b2a478e9be00143be0f274f607e231eee0b7cd3d727c78"
+    },
+    {
+      "path": "server/tos-objects.ts",
+      "bytes": 3218,
+      "sha256": "7aaeb8e86639f61f94dfe935bd89bcc1ec8c7cd88ef82fbb48675099dbf0645e"
+    },
+    {
+      "path": "server/tos-smoke.ts",
+      "bytes": 2569,
+      "sha256": "280569a9b4b3b08758e5af45ae8991b2133a79a194ca88012ed68dd8713359b4"
+    },
+    {
+      "path": "server/vefaas-credentials.ts",
+      "bytes": 1792,
+      "sha256": "3ab430c74f9f79a5046f6a7ac609f2f4eb5d4c7a981d8839fa179896bfbfd9b0"
+    },
+    {
+      "path": "server/work-routes.ts",
+      "bytes": 2177,
+      "sha256": "52471f20f973446a4bfdda4111ecce583ccd1107490bd37d50776a068ef0985b"
+    },
+    {
+      "path": "server/work-storage.ts",
+      "bytes": 5946,
+      "sha256": "1910bd5babfe98f3bf83cddff8ad0589d9a2e6c2484fe1328aa9fccf0a3298ac"
+    },
+    {
+      "path": "server/works.ts",
+      "bytes": 8030,
+      "sha256": "7df0aa032263e1204fed916dca117b3ff3e92fbe7869e833892ed666203b2914"
+    },
+    {
+      "path": "shared/ai-copy.ts",
+      "bytes": 1214,
+      "sha256": "e4f686d86a8f6411ed23684c539d0a1c7b5c96a2f93ebbf857473d9acefeab43"
+    },
+    {
+      "path": "shared/contracts.ts",
+      "bytes": 5675,
+      "sha256": "36132b3556e64be36ade1f190f308721809857f2ff36cda8f4ef29a81a16653c"
+    },
+    {
+      "path": "shared/copy-source.ts",
+      "bytes": 253,
+      "sha256": "ee3475dfa4dcf971e02500e6dcea19ec3e86c798538fb36fadb20c915b26201f"
+    },
+    {
+      "path": "shared/works.ts",
+      "bytes": 8225,
+      "sha256": "923ba541e6718ea7831df89ecc4ff2f6b9d4b9d5ccf5fb57342e8c5542c9eb6a"
+    },
+    {
+      "path": "tsconfig.json",
+      "bytes": 334,
+      "sha256": "5f3920550b611cb3f5b33d12628b1fdaf25e9edbedb631b37a58bd7f76fd47eb"
+    }
+  ],
+  "purpose": "storage-verification-only"
+}

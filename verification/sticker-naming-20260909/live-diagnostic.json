@@ -1,8 +1,0 @@
-{
-  "kind": "one diagnostic naming call to capture rejection code; no segmentation",
-  "source": "previously approved night-building-box-0.png",
-  "attemptedAt": "2026-09-09T12:24:06.909Z",
-  "status": "failed",
-  "errorType": "NAMING_REJECTED",
-  "message": "百度名称识别未通过，错误码：6。"
-}

@@ -1,22 +1,32 @@
 # 拾页 SHIYE：项目入口
 
-当前使用的交互原型是 [shiye-editorial-prototype](./shiye-editorial-prototype/README.md)，不是归档里的旧实验。
+> 当前启动方式（2026-09-13）：本项目使用 Node.js 前后端服务。请按下方命令启动；早期静态原型的 Python 预览方式不能提供账号、抠图和作品同步接口。
+
+> 2026-09-11 清理说明：经 Song 确认，早期原型与已撤回画笔实验的代码、专用测试和产物已删除；下文相关描述属于历史记录，旧路径不再作为可运行入口。重复截图的现存路径见[清理记录](archive/CLEANUP-20260911.md)。
+
+当前前端代码和素材位于 [shiye-editorial-prototype](./shiye-editorial-prototype/README.md)，服务端位于 `server/`，共享类型和数据约定位于 `shared/`。目录名沿用原型阶段名称。
 
 ## 当前预览
 
 - 地址：[http://127.0.0.1:4176/](http://127.0.0.1:4176/)
 - 页面标题：拾页 SHIYE — 把日子，慢慢收好。
-- 唯一验收外观：米白底、左侧品牌与宣传语／“开始创作贴纸”和“观看演示”，右侧绿皮“山野来信”与漂浮照片贴纸。不是木桌背景版；不能只凭端口或标题确认版本。
+- 当前入口包含书房首页、手帐和贴纸制作；历史外观描述与旧实验不作为当前版本入口。
 - 入口文件：`shiye-editorial-prototype/index.html`。
 - 页面脚本、样式和素材均位于该目录中。
 
-需要重新启动时，在项目根目录运行以下命令；如果 4176 已有服务，不要重复启动或切换到旧版目录：
+使用 Node.js `>=22.22.0 <23`。首次克隆后，在项目根目录安装依赖并构建：
 
 ```sh
-python3 -m http.server 4176 --bind 127.0.0.1 --directory shiye-editorial-prototype
+npm ci
+npm run build
+npm start
 ```
 
-作品存放在浏览器中，代码归档和 checkpoint 均不等于作品备份。归档未改变新版路径或站点地址，未清理浏览器数据。
+需要真实 AI 服务时，参考 `.env.example` 配置本机 `.env.local`；未配置时默认使用模拟模式。环境变量、账号、邀请码和运行数据不随 Git 仓库分发。若 4176 已有服务，不要重复启动。
+
+浏览器作品、本机或线上账号与作品数据独立于代码仓库，克隆仓库不会复制这些数据。代码归档和 checkpoint 均不等于作品备份。
+
+基础检查：`npm run typecheck`、`npm run check:prototype`、`npm run test:frontend`。完整后端测试可运行 `npm test`。
 
 ## 文档与目录
 
@@ -28,7 +38,7 @@ python3 -m http.server 4176 --bind 127.0.0.1 --directory shiye-editorial-prototy
 | [AI 与后端技术方案](./拾页-AI与后端技术方案.md) | 正式数据、服务与 AI 边界 |
 | [技术验证记录](./拾页-技术验证记录.md) | 区分旧版测试、新版状态与待验证能力 |
 | [当前原型](./shiye-editorial-prototype/README.md) | 4176 实际使用的界面与交互代码 |
-| [历史实验归档](./archive/2026-09-07-experiments/ARCHIVE.md) | 最早原型、另一版 UI 实验及旧版测试证据 |
+| [已清理：历史实验归档](archive/CLEANUP-20260911.md) | 已退役旧实验的清理记录 |
 
 ## 2026-09-07 归档说明
 

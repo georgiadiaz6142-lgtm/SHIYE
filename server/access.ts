@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 import { editJson } from './local-json.js';
 import { Fault } from '../shared/contracts.js';
+import type { ObjectDocumentGroup } from './object-documents.js';
+import { ObjectAttemptLimits } from './object-rate-limit.js';
 
 export const userSchema=z.object({id:z.string().uuid(),role:z.literal('user'),username:z.string(),salt:z.string(),passwordHash:z.string(),avatar:z.string().nullable().default(null),createdAt:z.number(),memberUntil:z.number().int().positive().optional(),inviteId:z.string().uuid()});
 export type UserAccount=z.infer<typeof userSchema>;
@@ -17,17 +19,27 @@ export function generateInvites(count:number){
 const duration=7*86400_000;
 export class InviteAccess {
   private attempts=new Map<string,{count:number;until:number}>();
-  constructor(readonly file:string,private now=()=>Date.now()){}
+  constructor(readonly file:string,private now=()=>Date.now(),readonly documents?:ObjectDocumentGroup){}
+  private get cell(){return this.documents?.cell('invites',v=>configSchema.parse(v));}
   private async config(){
-    try{return configSchema.parse(JSON.parse(await readFile(this.file,'utf8')));}
+    try{return this.cell?await this.cell.read():configSchema.parse(JSON.parse(await readFile(this.file,'utf8')));}
     catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw new Fault(503,'ACCESS_UNAVAILABLE','邀请验证暂不可用，请稍后重试。');}
   }
   async snapshot(){return this.config();}
-  async update<T>(change:(data:InviteConfig)=>T|Promise<T>){return editJson(this.file,v=>configSchema.parse(v),change);}
+  async update<T>(change:(data:InviteConfig)=>T|Promise<T>){return this.cell?this.cell.update(change):editJson(this.file,v=>configSchema.parse(v),change);}
   private valid(record:InviteConfig['invites'][number]){return record.status==='unbound'&&(record.expiresAt===null||record.expiresAt>this.now());}
   async status(token?:string){
     const config=await this.config();if(!config)return {available:false,authorized:false};
     return this.checkToken(token,config);
+  }
+  async taskGrant(token?:string){
+    const status=await this.status(token);if(!status.authorized||!token)throw new Fault(401,'INVITE_REQUIRED','邀请资格已失效，请重新登录。');
+    const data=JSON.parse(Buffer.from(token.split('.')[0],'base64url').toString());
+    return {type:'invite' as const,inviteId:String(data.inviteId),version:Number(data.grantVersion||0),expiresAt:Number(data.expiresAt)};
+  }
+  async resolveTaskGrant(grant:{inviteId:string;version:number;expiresAt:number}){
+    const config=await this.config(),record=config?.invites.find(i=>i.id===grant.inviteId);
+    return !!record&&this.valid(record)&&(record.grantVersion||0)===grant.version&&grant.expiresAt>this.now()&&grant.expiresAt<=this.now()+duration;
   }
   private checkToken(token:string|undefined,config:InviteConfig){
     if(!token||token.length>1024)return {available:config.invites.length>0,authorized:false};
@@ -50,11 +62,15 @@ export class InviteAccess {
   }
   async verify(code:unknown,client:string,ip:string){
     const config=await this.config();if(!config||!config.invites.length)throw new Fault(503,'ACCESS_UNAVAILABLE','邀请码通道尚未配置，请联系邀请人。');
+    if(this.documents){
+      if(!await new ObjectAttemptLimits(this.documents,'invite-limits').take([[`client:${client}`,10],[`ip:${ip}`,60]],this.now()))throw new Fault(429,'ACCESS_RATE_LIMIT','尝试次数较多，请 15 分钟后再试。');
+    }else{
     for(const [key,bucket] of this.attempts)if(bucket.until<=this.now())this.attempts.delete(key);
     for(const [key,limit] of [[`client:${client}`,10],[`ip:${ip}`,60]] as const){
       const bucket=this.attempts.get(key)||{count:0,until:this.now()+15*60_000};
       if(bucket.count>=limit)throw new Fault(429,'ACCESS_RATE_LIMIT','尝试次数较多，请 15 分钟后再试。');
       bucket.count++;this.attempts.set(key,bucket);
+    }
     }
     if(typeof code!=='string'||code.length>128||!code.trim())throw new Fault(422,'INVALID_INVITE','请输入有效的邀请码。');
     const hash=inviteHash(code),record=config.invites.find(i=>timingSafeEqual(Buffer.from(i.hash,'hex'),Buffer.from(hash,'hex')));

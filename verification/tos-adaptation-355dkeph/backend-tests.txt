@@ -1,0 +1,466 @@
+TAP version 13
+# Subtest: invite grant survives restart, hides code, rejects tampering and expires
+ok 1 - invite grant survives restart, hides code, rejects tampering and expires
+  ---
+  duration_ms: 32.841833
+  type: 'test'
+  ...
+# Subtest: disabled, bound and expired invite records revoke existing grants immediately
+ok 2 - disabled, bound and expired invite records revoke existing grants immediately
+  ---
+  duration_ms: 28.739292
+  type: 'test'
+  ...
+# Subtest: bad codes cannot pass; client and IP throttles reject repeated guesses
+ok 3 - bad codes cannot pass; client and IP throttles reject repeated guesses
+  ---
+  duration_ms: 23.224167
+  type: 'test'
+  ...
+# Subtest: missing or damaged configuration fails closed
+ok 4 - missing or damaged configuration fails closed
+  ---
+  duration_ms: 5.19475
+  type: 'test'
+  ...
+# Subtest: HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+ok 5 - HTTP invite gate requires real verification, protects jobs, and does not expose phone login or config
+  ---
+  duration_ms: 167.366375
+  type: 'test'
+  ...
+# Subtest: invite registration atomically binds a single ordinary account; credentials and profile persist with unique names
+ok 6 - invite registration atomically binds a single ordinary account; credentials and profile persist with unique names
+  ---
+  duration_ms: 2404.717583
+  type: 'test'
+  ...
+# Subtest: ordinary accounts cannot use administrator endpoints; profile updates reject foreign IDs and avatar scripts
+ok 7 - ordinary accounts cannot use administrator endpoints; profile updates reject foreign IDs and avatar scripts
+  ---
+  duration_ms: 1091.218125
+  type: 'test'
+  ...
+# Subtest: administrator profile edits preserve administrator ID and allow the new username and password at both login entry points
+ok 8 - administrator profile edits preserve administrator ID and allow the new username and password at both login entry points
+  ---
+  duration_ms: 519.447583
+  type: 'test'
+  ...
+# Subtest: admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+ok 9 - admin login is separate, invite history and revocation persist, sensitive records remain encrypted
+  ---
+  duration_ms: 782.885417
+  type: 'test'
+  ...
+# Subtest: API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+ok 10 - API changes require a matching successful test, retain old configuration on failure, and reject stale saves
+  ---
+  duration_ms: 1099.983125
+  type: 'test'
+  ...
+# Subtest: HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+ok 11 - HTTP administrator permissions, cookie protection, CSRF and logout are enforced by server
+  ---
+  duration_ms: 769.608875
+  type: 'test'
+  ...
+# Subtest: entering with an invitation revokes the previous administrator session instead of inheriting its role
+ok 12 - entering with an invitation revokes the previous administrator session instead of inheriting its role
+  ---
+  duration_ms: 263.247708
+  type: 'test'
+  ...
+# Subtest: persisted Chinese administrator username replaces the old login without changing the password or API credentials
+ok 13 - persisted Chinese administrator username replaces the old login without changing the password or API credentials
+  ---
+  duration_ms: 230.076416
+  type: 'test'
+  ...
+# Subtest: legacy administrator receives a stable account ID that survives renaming and restart without resetting credentials
+ok 14 - legacy administrator receives a stable account ID that survives renaming and restart without resetting credentials
+  ---
+  duration_ms: 157.239083
+  type: 'test'
+  ...
+# Subtest: homepage password login needs no invitation and resolves the same account in independent browsers and the dedicated entry
+ok 15 - homepage password login needs no invitation and resolves the same account in independent browsers and the dedicated entry
+  ---
+  duration_ms: 583.461958
+  type: 'test'
+  ...
+# Subtest: copy configuration is disabled by default, encrypted, revision guarded and independent of provider calls
+ok 16 - copy configuration is disabled by default, encrypted, revision guarded and independent of provider calls
+  ---
+  duration_ms: 51.410167
+  type: 'test'
+  ...
+# Subtest: Ark adapter sends only explicit context and thumbnail, validates JSON and sanitizes supplier failures
+ok 17 - Ark adapter sends only explicit context and thumbnail, validates JSON and sanitizes supplier failures
+  ---
+  duration_ms: 25.533583
+  type: 'test'
+  ...
+# Subtest: concurrent retry reserves once, invitation quota is shared and success previews consume exactly one
+ok 18 - concurrent retry reserves once, invitation quota is shared and success previews consume exactly one
+  ---
+  duration_ms: 180.284666
+  type: 'test'
+  ...
+# Subtest: account month, inherited invitation usage, membership total and Shanghai rollover agree
+ok 19 - account month, inherited invitation usage, membership total and Shanghai rollover agree
+  ---
+  duration_ms: 926.71975
+  type: 'test'
+  ...
+# Subtest: failure, timeout and interrupted process release user quota while retaining supplier attempts
+ok 20 - failure, timeout and interrupted process release user quota while retaining supplier attempts
+  ---
+  duration_ms: 437.625916
+  type: 'test'
+  ...
+# Subtest: cumulative supplier cap includes failed attempts, expired previews stay charged, authorization can change before dispatch
+ok 21 - cumulative supplier cap includes failed attempts, expired previews stay charged, authorization can change before dispatch
+  ---
+  duration_ms: 128.026583
+  type: 'test'
+  ...
+# Subtest: copy HTTP routes enforce identity, admin permissions, strict input and CSRF without calling real provider
+ok 22 - copy HTTP routes enforce identity, admin permissions, strict input and CSRF without calling real provider
+  ---
+  duration_ms: 1049.279708
+  type: 'test'
+  ...
+# Subtest: Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+ok 23 - Baidu adapter sends JSON auto/control masks, caches token, preserves uint64 request ID
+  ---
+  duration_ms: 91.755834
+  type: 'test'
+  ...
+# Subtest: Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+ok 24 - Baidu invalid credentials, provider errors and network errors never echo upstream secrets or retry
+  ---
+  duration_ms: 17.661833
+  type: 'test'
+  ...
+# Subtest: Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+ok 25 - Baidu invalid base64, wrong dimensions, colored masks and oversized response fail closed
+  ---
+  duration_ms: 46.490459
+  type: 'test'
+  ...
+# Subtest: Baidu timeout fails without retry and image/box validation precedes credential transmission
+ok 26 - Baidu timeout fails without retry and image/box validation precedes credential transmission
+  ---
+  duration_ms: 24.404167
+  type: 'test'
+  ...
+# Subtest: Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+ok 27 - Baidu jobs keep real provenance, enforce box-only correction, preserve other candidates and cap attempts
+  ---
+  duration_ms: 798.296666
+  type: 'test'
+  ...
+# Subtest: Baidu cancelled late response never commits; restart never resubmits live tasks
+ok 28 - Baidu cancelled late response never commits; restart never resubmits live tasks
+  ---
+  duration_ms: 378.762208
+  type: 'test'
+  ...
+# Subtest: HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+ok 29 - HTTP live photo gate, explicit upload, ownership, result PNG, session recovery and default mock denial
+  ---
+  duration_ms: 954.210625
+  type: 'test'
+  ...
+# Subtest: explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+ok 30 - explicit unlimited mode keeps accounting and TTL; first job can directly use a box
+  ---
+  duration_ms: 1050.436125
+  type: 'test'
+  ...
+# Subtest: Cutout diagnostics distinguish response timeout, HTTP status and safe provider rejection codes
+ok 31 - Cutout diagnostics distinguish response timeout, HTTP status and safe provider rejection codes
+  ---
+  duration_ms: 37.235667
+  type: 'test'
+  ...
+# Subtest: Oversize original and encoded image are rejected before provider submission
+ok 32 - Oversize original and encoded image are rejected before provider submission
+  ---
+  duration_ms: 863.037458
+  type: 'test'
+  ...
+# Subtest: admin prompt supports default, revision-guarded save, reload and reset independently of API configuration
+ok 33 - admin prompt supports default, revision-guarded save, reload and reset independently of API configuration
+  ---
+  duration_ms: 37.612958
+  type: 'test'
+  ...
+# Subtest: new provider requests use saved prompt; an already prepared request retains its prompt snapshot
+ok 34 - new provider requests use saved prompt; an already prepared request retains its prompt snapshot
+  ---
+  duration_ms: 43.666584
+  type: 'test'
+  ...
+# Subtest: three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+ok 35 - three synthetic shapes produce two independently selectable initial candidates, metadata has no image bytes
+  ---
+  duration_ms: 152.49575
+  type: 'test'
+  ...
+# Subtest: a repeated operation reuses the job; conflicting content cannot reuse its ID
+ok 36 - a repeated operation reuses the job; conflicting content cannot reuse its ID
+  ---
+  duration_ms: 138.545959
+  type: 'test'
+  ...
+# Subtest: refine preserves successful candidates and rejects stale versions
+ok 37 - refine preserves successful candidates and rejects stale versions
+  ---
+  duration_ms: 218.227
+  type: 'test'
+  ...
+# Subtest: cancelled job never commits late candidates
+ok 38 - cancelled job never commits late candidates
+  ---
+  duration_ms: 394.928875
+  type: 'test'
+  ...
+# Subtest: synthetic-only running jobs recover after restart without a second job record
+ok 39 - synthetic-only running jobs recover after restart without a second job record
+  ---
+  duration_ms: 510.183334
+  type: 'test'
+  ...
+# Subtest: expired synthetic files become inaccessible and cleanup touches only managed media
+ok 40 - expired synthetic files become inaccessible and cleanup touches only managed media
+  ---
+  duration_ms: 90.83625
+  type: 'test'
+  ...
+# Subtest: failed atomic transaction leaves both memory and disk unchanged
+ok 41 - failed atomic transaction leaves both memory and disk unchanged
+  ---
+  duration_ms: 39.297
+  type: 'test'
+  ...
+# Subtest: malformed store fails closed instead of resetting state
+ok 42 - malformed store fails closed instead of resetting state
+  ---
+  duration_ms: 5.731084
+  type: 'test'
+  ...
+# Subtest: mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+ok 43 - mask composition preserves original RGB and real alpha and rejects empty/misaligned masks
+  ---
+  duration_ms: 147.652625
+  type: 'test'
+  ...
+# Subtest: invalid coordinates, missing foreground and unsupported prompt fields fail validation
+ok 44 - invalid coordinates, missing foreground and unsupported prompt fields fail validation
+  ---
+  duration_ms: 6.493042
+  type: 'test'
+  ...
+# Subtest: actual image decoder rejects disguised or malformed input
+ok 45 - actual image decoder rejects disguised or malformed input
+  ---
+  duration_ms: 59.583542
+  type: 'test'
+  ...
+# Subtest: HTTP limits origins, session ownership, personal uploads and static files
+ok 46 - HTTP limits origins, session ownership, personal uploads and static files
+  ---
+  duration_ms: 892.328125
+  type: 'test'
+  ...
+# Subtest: live mode cannot silently fall back to simulated output
+ok 47 - live mode cannot silently fall back to simulated output
+  ---
+  duration_ms: 5.108625
+  type: 'test'
+  ...
+# Subtest: cover-only image and archived sticker survive workspace save/restart and book export
+ok 48 - cover-only image and archived sticker survive workspace save/restart and book export
+  ---
+  duration_ms: 99.426375
+  type: 'test'
+  ...
+# Subtest: cover references reject invalid crossings, duplicates, missing assets, and unsafe crop values
+ok 49 - cover references reject invalid crossings, duplicates, missing assets, and unsafe crop values
+  ---
+  duration_ms: 3.086417
+  type: 'test'
+  ...
+# Subtest: deployment configuration fails closed and preserves local defaults
+ok 50 - deployment configuration fails closed and preserves local defaults
+  ---
+  duration_ms: 5.29775
+  type: 'test'
+  ...
+# Subtest: deployment administrator initialization writes no plaintext receipt and does not overwrite an existing identity
+ok 51 - deployment administrator initialization writes no plaintext receipt and does not overwrite an existing identity
+  ---
+  duration_ms: 243.693709
+  type: 'test'
+  ...
+# Subtest: gateway-style requests enforce public Host/Origin, secure cookies, authorization and revocation
+ok 52 - gateway-style requests enforce public Host/Origin, secure cookies, authorization and revocation
+  ---
+  duration_ms: 1944.516625
+  type: 'test'
+  ...
+# Subtest: Baidu naming uses recognition endpoint, selects confident label and does not retry
+ok 53 - Baidu naming uses recognition endpoint, selects confident label and does not retry
+  ---
+  duration_ms: 107.909959
+  type: 'test'
+  ...
+# Subtest: final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+ok 54 - final thumbnail naming: owner/version checks, dedupe, persistent accounting, failures and expiry
+  ---
+  duration_ms: 1428.000333
+  type: 'test'
+  ...
+# Subtest: independent document writers retry definite conflicts; nested changes commit together or roll back
+ok 55 - independent document writers retry definite conflicts; nested changes commit together or roll back
+  ---
+  duration_ms: 61.645459
+  type: 'test'
+  ...
+# Subtest: document bounds, corruption and unknown write outcomes preserve explicit recovery semantics
+ok 56 - document bounds, corruption and unknown write outcomes preserve explicit recovery semantics
+  ---
+  duration_ms: 2.048709
+  type: 'test'
+  ...
+# Subtest: TOS adapter sends target preconditions, distinguishes missing keys from errors and redacts provider errors
+ok 57 - TOS adapter sends target preconditions, distinguishes missing keys from errors and redacts provider errors
+  ---
+  duration_ms: 7.492292
+  type: 'test'
+  ...
+# Subtest: two application instances atomically bind one invitation and reject duplicate usernames
+ok 58 - two application instances atomically bind one invitation and reject duplicate usernames
+  ---
+  duration_ms: 1090.920708
+  type: 'test'
+  ...
+# Subtest: stored sessions survive rebuilding instances; logout and password changes invalidate all other instances
+ok 59 - stored sessions survive rebuilding instances; logout and password changes invalidate all other instances
+  ---
+  duration_ms: 1233.765917
+  type: 'test'
+  ...
+# Subtest: administrator rename racing registration cannot claim the same username
+ok 60 - administrator rename racing registration cannot claim the same username
+  ---
+  duration_ms: 224.530834
+  type: 'test'
+  ...
+# Subtest: password and invitation guessing limits survive instance changes, and failed logins remain audited
+ok 61 - password and invitation guessing limits survive instance changes, and failed logins remain audited
+  ---
+  duration_ms: 662.615875
+  type: 'test'
+  ...
+# Subtest: object work repositories preserve editable content, isolate owners and reject stale saves; lost replies remain idempotent
+ok 62 - object work repositories preserve editable content, isolate owners and reject stale saves; lost replies remain idempotent
+  ---
+  duration_ms: 62.233625
+  type: 'test'
+  ...
+# Subtest: HTTP routes resolve shared sessions across two servers and enforce logout, roles and work ownership
+ok 63 - HTTP routes resolve shared sessions across two servers and enforce logout, roles and work ownership
+  ---
+  duration_ms: 519.814125
+  type: 'test'
+  ...
+# Subtest: Qwen sends only intended text and image to the Beijing allowlisted endpoint, disables thinking and enforces the JSON schema
+ok 64 - Qwen sends only intended text and image to the Beijing allowlisted endpoint, disables thinking and enforces the JSON schema
+  ---
+  duration_ms: 80.30375
+  type: 'test'
+  ...
+# Subtest: Qwen never retries or exposes supplier errors; invalid and truncated replies retain reported billing usage
+ok 65 - Qwen never retries or exposes supplier errors; invalid and truncated replies retain reported billing usage
+  ---
+  duration_ms: 21.551541
+  type: 'test'
+  ...
+# Subtest: Qwen settings default disabled, legacy Ark configuration remains readable and switching cannot reuse another provider key
+ok 66 - Qwen settings default disabled, legacy Ark configuration remains readable and switching cannot reuse another provider key
+  ---
+  duration_ms: 461.792375
+  type: 'test'
+  ...
+# Subtest: Qwen successful preview persists its provider and cost, while polling and reopening do not call again
+ok 67 - Qwen successful preview persists its provider and cost, while polling and reopening do not call again
+  ---
+  duration_ms: 196.973625
+  type: 'test'
+  ...
+# Subtest: local works survive restart with editable cross-page content, archived images and private immutable files
+ok 68 - local works survive restart with editable cross-page content, archived images and private immutable files
+  ---
+  duration_ms: 151.966583
+  type: 'test'
+  ...
+# Subtest: save and image retries are idempotent, conflicting writers and re-used operation IDs cannot overwrite
+ok 69 - save and image retries are idempotent, conflicting writers and re-used operation IDs cannot overwrite
+  ---
+  duration_ms: 145.539041
+  type: 'test'
+  ...
+# Subtest: missing, foreign and corrupt image files cannot publish a book; failed object writes leave no visible metadata
+ok 70 - missing, foreign and corrupt image files cannot publish a book; failed object writes leave no visible metadata
+  ---
+  duration_ms: 123.102541
+  type: 'test'
+  ...
+# Subtest: failed metadata transaction preserves prior book; corrupted metadata is never reset
+ok 71 - failed metadata transaction preserves prior book; corrupted metadata is never reset
+  ---
+  duration_ms: 67.400916
+  type: 'test'
+  ...
+# Subtest: work contracts reject owner injection, ephemeral URLs, missing asset references and broken spreads
+ok 72 - work contracts reject owner injection, ephemeral URLs, missing asset references and broken spreads
+  ---
+  duration_ms: 4.882541
+  type: 'test'
+  ...
+# Subtest: works HTTP APIs enforce account ownership, CSRF, body limits, logout and authenticated restart recovery
+ok 73 - works HTTP APIs enforce account ownership, CSRF, body limits, logout and authenticated restart recovery
+  ---
+  duration_ms: 951.582417
+  type: 'test'
+  ...
+# Subtest: automatic workspace saves independent assets, deletions and conflicts without changing old receipts
+ok 74 - automatic workspace saves independent assets, deletions and conflicts without changing old receipts
+  ---
+  duration_ms: 74.094375
+  type: 'test'
+  ...
+# Subtest: workspace cannot publish a missing standalone image, foreign asset, or duplicate ID
+ok 75 - workspace cannot publish a missing standalone image, foreign asset, or duplicate ID
+  ---
+  duration_ms: 52.998875
+  type: 'test'
+  ...
+# Subtest: migration from per-book saves rejects an intervening legacy write
+ok 76 - migration from per-book saves rejects an intervening legacy write
+  ---
+  duration_ms: 62.692334
+  type: 'test'
+  ...
+1..76
+# tests 76
+# suites 0
+# pass 76
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4594.42775

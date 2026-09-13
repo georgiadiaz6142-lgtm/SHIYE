@@ -3,14 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.22.0 <23" },
+  "engines": {
+    "node": ">=22.22.0 <23"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env.local dist/server/index.js",
     "test": "npm run build && node --test dist/server/tests/*.test.js",
-    "check:prototype": "node --check shiye-editorial-prototype/app.js && node verification/cream-20260908/merge-unit.cjs"
+    "check:prototype": "npm run check:frontend && node verification/cream-20260908/merge-unit.cjs",
+    "check:frontend": "node scripts/check-frontend.mjs && tsc -p tsconfig.frontend.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.frontend.json",
+    "test:frontend": "node --test verification/frontend-hardening-20260910/api-client.test.cjs"
   },
   "dependencies": {
+    "@volcengine/tos-sdk": "2.9.1",
     "express": "5.2.1",
     "sharp": "0.34.5",
     "zod": "4.3.6"

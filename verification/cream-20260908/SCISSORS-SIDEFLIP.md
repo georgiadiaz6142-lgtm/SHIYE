@@ -15,7 +15,7 @@
 - [scissors-sideflip-02/results.json](scissors-sideflip-02/results.json)：7/7，通过首页中部侧拖、用户书回弹与背面、编辑侧翻且内容不变、小剪刀自动透明预览、分段点选与撤销、矩形备选、手机触控点选与翻页。第一次同组也为 7/7；之后调整连续阴影与透视并复验。
 - [sideflip-guards-01/results.json](sideflip-guards-01/results.json)：2/2，最后新增的编辑翻页取消令牌与窗口变化保护、保存失败保护分别实测。前一组之后仅加入该取消保护，未声称再全量运行前一组。
 - JavaScript 语法通过；数据合并单测 10/10。浏览器检查无未处理 JS 异常、无第三方请求；隔离 Chrome，不影响用户作品。
-- 人工查看[侧翻背面](scissors-sideflip-02/book-side-backface.png)、[首页侧翻](scissors-sideflip-02/home-side-midturn.png)、[放大镜圈选](scissors-sideflip-02/scissors-loupe.png)、[剪出结果](scissors-sideflip-02/scissors-result.png)。触控是 Chrome 模拟，不等于 Safari/手机真机或大规模性能验收。
+- 人工查看[侧翻背面](scissors-sideflip-02/book-side-backface.png)、[首页侧翻](scissors-sideflip-02/home-side-midturn.png)、[放大镜圈选](paper-regression-01/scissors-loupe.png)、[剪出结果](paper-regression-01/scissors-result.png)。触控是 Chrome 模拟，不等于 Safari/手机真机或大规模性能验收。
 
 最终 app.js SHA-256：`b912360af6fa67dcdb59cb24b9b69cb2c10630cf6762541c87f994553e6be3ad`。
 最终 styles.css SHA-256：`2f69c2f5b067e33163dd3d35b764c984bb710b4ed4581d63e0851a711d9cf7de`。

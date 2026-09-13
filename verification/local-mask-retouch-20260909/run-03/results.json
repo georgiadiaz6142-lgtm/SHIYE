@@ -1,0 +1,18 @@
+{
+  "layer": "isolated local HTTP and browser, deterministic provider fixture; zero actual Baidu calls",
+  "checks": [
+    {
+      "width": 1440,
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(await p.locator('.read-mode img').first().evaluate(i=>i.complete&&i.naturalWidth>0))\n\n    at /Users/song/Documents/拾页/verification/local-mask-retouch-20260909/browser.cjs:42:232\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)"
+    },
+    {
+      "width": 390,
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(await p.locator('.read-mode img').first().evaluate(i=>i.complete&&i.naturalWidth>0))\n\n    at /Users/song/Documents/拾页/verification/local-mask-retouch-20260909/browser.cjs:42:232\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "fixtureCalls": 2
+}

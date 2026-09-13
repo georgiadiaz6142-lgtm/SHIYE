@@ -1,3 +1,80 @@
+/* Temporary, local-only page textures. The editable document remains the source of truth. */
+(()=>{
+ const cache=new Map();let owner=null;
+ const keyFor=(html,name,w,h)=>[Math.round(w*100),Math.round(h*100),devicePixelRatio,html,name].join('|');
+ const properties=('display position top right bottom left width height min-width min-height max-width max-height box-sizing margin-top margin-right margin-bottom margin-left padding-top padding-right padding-bottom padding-left border-top border-right border-bottom border-left border-radius background-color background-image background-size background-position background-repeat background-origin background-clip color opacity font-family font-size font-weight font-style font-variant line-height letter-spacing word-spacing white-space word-break overflow-wrap text-align text-indent text-transform text-decoration writing-mode text-orientation vertical-align transform transform-origin overflow overflow-x overflow-y box-shadow filter object-fit object-position z-index flex-direction flex-wrap flex-grow flex-shrink flex-basis align-items align-self justify-content gap grid-template-columns grid-template-rows').split(' ');
+ function dataURL(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);});}
+ function image(src){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src;});}
+ async function capture(source,w,h){
+  // Auto-height photos and SVG stickers have no usable dimensions before decoding.
+  // Never freeze that incomplete layout into a reusable turn texture.
+  let imageTimer;
+  try{
+   await Promise.race([
+    Promise.all([...source.querySelectorAll('img')].map(im=>im.decode())),
+    new Promise((_,reject)=>{imageTimer=setTimeout(()=>reject(new Error('Page images are not ready')),1200);})
+   ]);
+  }finally{clearTimeout(imageTimer);}
+  await document.fonts.ready;
+  if(!source.isConnected)throw new Error('Page preparation cancelled');
+  const resources=new Map(),jobs=[];
+  const embed=url=>{
+   if(url.startsWith('data:'))return Promise.resolve(url);
+   const absolute=new URL(url,location.href);
+   if(absolute.origin!==location.origin&&!url.startsWith('blob:'))return Promise.reject(new Error('Nonlocal page image'));
+   if(!resources.has(url))resources.set(url,fetch(absolute.href,{signal:AbortSignal.timeout(1200)}).then(r=>{if(!r.ok)throw new Error('Page image unavailable');return r.blob();}).then(dataURL));
+   return resources.get(url);
+  };
+  function styled(node,pseudo){
+   const computed=getComputedStyle(node,pseudo),el=document.createElement('div');
+   for(const prop of properties)el.style.setProperty(prop,computed.getPropertyValue(prop));
+   if(computed.backgroundImage.includes('url('))jobs.push((async()=>{
+    let background=computed.backgroundImage;
+    for(const m of [...background.matchAll(/url\(["']?(.*?)["']?\)/g)])background=background.replace(m[0],`url("${await embed(m[1])}")`);
+    el.style.backgroundImage=background;
+   })());
+   return el;
+  }
+  function copy(node){
+   if(node.nodeType===Node.TEXT_NODE)return document.createTextNode(node.textContent);
+   if(node.nodeType!==Node.ELEMENT_NODE)return document.createTextNode('');
+   const box=styled(node),el=node.tagName==='IMG'?document.createElement('img'):box;
+   if(el!==box){el.style.cssText=box.style.cssText;jobs.push(embed(node.currentSrc||node.src).then(src=>el.src=src));}
+   else{
+    for(const pseudo of ['::before','::after']){
+     const style=getComputedStyle(node,pseudo),content=style.content;
+     if(content&&content!=='none'&&content!=='normal'&&style.display!=='none'){
+      const part=styled(node,pseudo);part.textContent=content.replace(/^["']|["']$/g,'');
+      if(pseudo==='::before')el.append(part);else el._after=part;
+     }
+    }
+    for(const child of node.childNodes)el.append(copy(child));
+    if(el._after){el.append(el._after);delete el._after;}
+   }
+   return el;
+  }
+  const snapshotRoot=copy(source);snapshotRoot.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
+  Object.assign(snapshotRoot.style,{position:'relative',left:'0px',top:'0px',right:'auto',bottom:'auto',width:w+'px',height:h+'px',margin:'0px',transform:'none',overflow:'hidden'});
+  await Promise.all(jobs);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(snapshotRoot)}</foreignObject></svg>`;
+  const im=await image('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
+  const scale=Math.min(devicePixelRatio||1,2,1600/Math.max(w,h)),canvas=document.createElement('canvas');canvas.width=Math.ceil(w*scale);canvas.height=Math.ceil(h*scale);
+  canvas.getContext('2d').drawImage(im,0,0,canvas.width,canvas.height);
+  const url=canvas.toDataURL('image/png');await image(url);return url;
+ }
+ window.ShiyePageTextures={
+  clear(){cache.clear();owner=null;},
+  has(html,name,w,h,workspace){return owner===workspace&&cache.has(keyFor(html,name,w,h));},
+  get(source,w,h,workspace){
+   if(owner!==workspace){cache.clear();owner=workspace;}
+   const key=keyFor(source.innerHTML,source.className,w,h);
+   if(cache.has(key)){const entry=cache.get(key);cache.delete(key);cache.set(key,entry);return entry;}
+   const pending=capture(source,w,h).catch(error=>{if(cache.get(key)===pending)cache.delete(key);throw error;});
+   cache.set(key,pending);while(cache.size>6)cache.delete(cache.keys().next().value);return pending;
+  }
+ };
+})();
+
 'use strict';
 
 const $ = (s, root=document) => root.querySelector(s);
@@ -12,11 +89,13 @@ const textFonts=[
  {id:'fangsong',name:'仿宋',family:"FangSong,STFangsong,'FangSong SC',var(--serif)"},
  {id:'rounded',name:'圆体',family:"'Yuanti SC',STYuanti,YouYuan,var(--sans)"}
 ];
-let newTextFont='serif',newTextSize=23;
+let newTextFont='serif',newTextSize=23,newTextBold=false,newTextColor='#505b46';
 const textFont=id=>textFonts.find(f=>f.id===id)||textFonts[0];
 const textFontOptions=id=>textFonts.map(f=>`<option value="${f.id}" ${f.id===textFont(id).id?'selected':''}>${f.name}</option>`).join('');
 const textFontSelect=(id,value,label)=>`<label class="text-font-field"><span>${label}</span><select id="${id}">${textFontOptions(value)}</select></label>`;
 const textSizeControl=(id,value,label='字号')=>`<label class="text-size-field"><span>${label}</span><div><input id="${id}" type="number" min="1" max="500" step="1" value="${value||23}" aria-label="${label}"><span>px</span></div></label>`;
+const textColorValue=color=>/^#[\da-f]{6}$/i.test(color||'')?color:/^#[\da-f]{3}$/i.test(color||'')?'#'+color.slice(1).split('').map(c=>c+c).join(''):/^#[\da-f]{8}$/i.test(color||'')?color.slice(0,7):'#4c5341';
+function textStyleControls(prefix,bold,color){return `<div class="text-style-controls"><label class="text-bold-field"><input id="${prefix}-bold" type="checkbox" ${bold?'checked':''}><span><b>B</b> 加粗</span></label><label class="text-color-field"><span>颜色</span><input id="${prefix}-color" type="color" value="${textColorValue(color)}" aria-label="文字颜色"></label></div>`;}
 const paths={book:'M3 4h7c1.5 0 2 1 2 2v15c0-2-2-3-4-3H3z M21 4h-7c-1.5 0-2 1-2 2v15c0-2 2-3 4-3h5z',spark:'m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3z',sticker:'M20 13V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h8z M13 20v-5a2 2 0 0 1 2-2h5',plus:'M12 5v14M5 12h14',arrow:'M4 12h16m-6-6 6 6-6 6',left:'m15 6-6 6 6 6',right:'m9 6 6 6-6 6',up:'m6 15 6-6 6 6',down:'m6 9 6 6 6-6',close:'m6 6 12 12M6 18 18 6',more:'M5 12h.01M12 12h.01M19 12h.01',lock:'M6 10h12v10H6zM8 10V7a4 4 0 0 1 8 0v3',info:'M12 11v6m0-10v.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',grid:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',list:'M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01',search:'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',image:'M3 3h18v18H3zM3 17l6-6 4 4 3-3 5 5M7 7h.01',text:'M4 5V3h16v2M12 3v18M8 21h8',paper:'M5 3h11l3 3v15H5zM15 3v5h4M8 12h8M8 16h6',undo:'M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12',redo:'m16 4 5 5-5 5M21 9H10a6 6 0 0 0 0 12',copy:'M8 8h13v13H8zM16 8V3H3v13h5',trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',rotate:'M3 10a9 9 0 1 1 2 8M3 4v6h6',minus:'M5 12h14',layers:'m12 3 10 6-10 6L2 9zM2 13l10 6 10-6M2 17l10 6 10-6',check:'m5 12 4 4L19 6',upload:'M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6',download:'M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3',flip:'M12 3v18M8 5 3 19h5zM16 5l5 14h-5z',pen:'m3 21 1-5L16 4l4 4L8 20zM14 6l4 4'};
 const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name]||paths.spark}"/></svg>`;
 const ib = (action,name,title,extra='') => `<button class="icon-button" data-action="${action}" aria-label="${title}" title="${title}" ${extra}>${icon(name)}</button>`;
@@ -60,11 +139,11 @@ function paperDrawerHTML(){
 }
 function refreshPaperDrawer(action,value,scroll=0){
  const panel=$('.paper-drawer');if(!panel)return;
- panel.outerHTML=paperDrawerHTML();$('.paper-panel-body').scrollTop=scroll;
+ panel.outerHTML=paperDrawerHTML();$('.editor-tools-content').scrollTop=scroll;
  const target=$(`[data-action="${action}"][data-value="${value}"]`,$('.paper-drawer'))||$('.paper-category.active');
  target?.focus({preventScroll:true});
 }
-window.addEventListener('storage',e=>{if((e.key===null||e.key.startsWith('shiye-paper-preference-v1:'))&&currentView==='editor'&&editing&&drawer==='paper')refreshPaperDrawer('paper-category',paperCategory,$('.paper-panel-body')?.scrollTop||0);});
+window.addEventListener('storage',e=>{if((e.key===null||e.key.startsWith('shiye-paper-preference-v1:'))&&currentView==='editor'&&editing&&drawer==='paper')refreshPaperDrawer('paper-category',paperCategory,$('.editor-tools-content')?.scrollTop||0);});
 
 const samplePage = kind => {
  const p=blankPage();
@@ -81,6 +160,7 @@ const identityChannel=typeof BroadcastChannel==='function'?new BroadcastChannel(
 let state,db,currentView='home',activeBookId=null,editing=false,selectedId=null,drawer=null,filter='全部',collectionTab='mine',search='',bookFilter='all',bookView='grid',sort='recent',saveStatus='已保存到本机',saveTimer,savePromise=Promise.resolve(),toastTimer,history=[],future=[],dragState=null,resizeObserver;
 let workshop={step:0,selected:['coffee','flower'],preview:0,border:4,source:null,crops:[],results:[],demo:true};
 let workshopReturn=null;
+let elementClipboard=null,elementMenu=null;
 let workshopOrigin=null,pendingUseIds=[],savingStickers=false;
 const pendingAssetBlobs=new Map(),assetURLs=new Map();
 let segmentedWorkshop=null;
@@ -111,7 +191,7 @@ function mergeWorkspace(base,local,remote){
    if(!same(old,latest)&&!same(next,latest)){
     if(key==='books'&&next){
      const copy={...clone(next),id:uid(),title:`${next.title}（冲突副本）`,sample:false};
-     rows.set(copy.id,copy);copies.set(id,copy.id);continue;
+     const title=copy.coverDesign?.elements.find(e=>e.id===copy.coverDesign.titleId&&e.type==='text');if(title)title.text=copy.title;rows.set(copy.id,copy);copies.set(id,copy.id);continue;
     }
     throw new Error('workspace-conflict');
    }
@@ -148,7 +228,8 @@ function rebasePending(snapshot,current,committed,copies){
  return {state:result,baseline,copies:remapped};
 }
 const currentBook = ()=>state.books.find(b=>b.id===activeBookId);
-const currentPage = ()=>currentBook()?.pages[currentBook().page||0];
+const documentPages = b=>b?[...(b.coverDesign?[b.coverDesign]:[]),...b.pages]:[];
+const currentPage = ()=>isCoverEditing()?currentBook().coverDesign:currentBook()?.pages[currentBook().page||0];
 const currentElement = ()=>elementPage()?.elements.find(e=>e.id===selectedId);
 // Physical spreads retain page IDs when reordered. Legacy books keep their original pairing.
 function bookSpreads(b=currentBook()){
@@ -163,8 +244,8 @@ function bookSpreads(b=currentBook()){
 const spreadPages=g=>[g?.left,g?.right].filter(Boolean);
 const pageSpread=(p=currentPage(),b=currentBook())=>bookSpreads(b).find(g=>spreadPages(g).some(pg=>pg.id===p?.id));
 function ensurePagePairs(){for(const g of bookSpreads()){const key=g.key.startsWith('legacy-')?uid():g.key;for(const side of ['left','right'])if(g[side]){g[side].spreadKey=key;g[side].spreadSide=side;}}}
-const spreadEditing=()=>currentBook()?.editorLayout==='spread';
-const elementPage=(id=selectedId)=>currentBook()?.pages.find(p=>p.elements.some(e=>e.id===id));
+const spreadEditing=()=>!isCoverEditing()&&currentBook()?.editorLayout==='spread';
+const elementPage=(id=selectedId)=>documentPages(currentBook()).find(p=>p.elements.some(e=>e.id===id));
 const matePage=p=>spreadPages(pageSpread(p)).find(pg=>pg.id!==p.id);
 function paperLayer(p){
  if(!p.paperSpread)return '';
@@ -177,10 +258,11 @@ function pageElements(p){
 }
 function chooseEditorPage(p){
  if(!p||p.id===currentPage()?.id)return;
- finishInlineText();$('#canvas-page')?.removeAttribute('id');currentBook().page=currentBook().pages.findIndex(pg=>pg.id===p.id);selectedId=null;
+ closeElementMenu();finishInlineText();$('#canvas-page')?.removeAttribute('id');currentBook().page=currentBook().pages.findIndex(pg=>pg.id===p.id);selectedId=null;
  const canvas=$(`[data-edit-page="${p.id}"]`);if(canvas)canvas.id='canvas-page';
  $$('.edit-leaf').forEach(el=>el.classList.toggle('active-leaf',el.dataset.editPage===p.id));
- $$('.page-thumb').forEach(el=>el.classList.toggle('active',el.dataset.pageId===p.id));
+ $$('.page-thumb').forEach(el=>{el.classList.toggle('active',el.dataset.pageId===p.id);el.setAttribute('aria-current',el.dataset.pageId===p.id?'page':'false');});
+ const counter=$('.page-count');if(counter)counter.textContent=`共 ${currentBook().pages.length} 页 · 当前第 ${currentBook().page+1} 页`;
  const label=$('.active-page-label');if(label)label.textContent=`正在编辑第 ${currentBook().page+1} 页`;
  dirty();refreshSelection();if(drawer==='paper')refreshPaperDrawer('paper-category',paperCategory);
 }
@@ -191,7 +273,7 @@ function spreadStageHTML(){
 }
 function layoutControlsHTML(){return `<div class="layout-controls"><div class="mode-switch" role="group" aria-label="编辑页数"><button data-action="editor-layout" data-value="single" aria-pressed="${!spreadEditing()}" class="${!spreadEditing()?'active':''}">单页</button><button data-action="editor-layout" data-value="spread" aria-pressed="${spreadEditing()}" class="${spreadEditing()?'active':''}">双页</button></div><span class="active-page-label">正在编辑第 ${currentBook().page+1} 页</span>${spreadEditing()?'<span class="layout-hint">点击左页或右页直接编辑</span>':''}</div>`;}
 function paperScopeHTML(){const g=pageSpread(),both=g?.left&&g?.right;return `<div class="paper-scope"><div class="mode-switch" role="group" aria-label="纸张铺法"><button data-action="paper-scope" data-value="page" aria-pressed="${!currentPage().paperSpread}" class="${!currentPage().paperSpread?'active':''}">左右分别选纸</button><button data-action="paper-scope" data-value="spread" ${both?'':'disabled'} aria-pressed="${!!currentPage().paperSpread}" class="${currentPage().paperSpread?'active':''}">一张铺满双页</button></div><small>${both?`当前第 ${currentBook().page+1} 页 · ${currentPage().paperSpread?'整幅背景，单页显示对应半幅':'点另一页，可为它选择不同的纸'}`:'需要完整双页才可铺满，可在双页视图中添加'}</small></div>`;}
-function stickerScopeHTML(item=null){const cross=item?!!item.spreadWith:currentBook().stickerPlacement==='spread';return `<label class="sticker-scope"><span>${item?'这枚贴纸':'新贴纸放置范围'}</span><select id="${item?'selected-sticker-scope':'new-sticker-scope'}"><option value="page" ${cross?'':'selected'}>只在一页内</option><option value="spread" ${cross?'selected':''} ${matePage(item?elementPage(item.id):currentPage())?'':'disabled'}>允许跨书缝</option></select></label>`;}
+function stickerScopeHTML(item=null){if(isCoverEditing())return '';const cross=item?!!item.spreadWith:currentBook().stickerPlacement==='spread';return `<label class="sticker-scope"><span>${item?'这枚贴纸':'新贴纸放置范围'}</span><select id="${item?'selected-sticker-scope':'new-sticker-scope'}"><option value="page" ${cross?'':'selected'}>只在一页内</option><option value="spread" ${cross?'selected':''} ${matePage(item?elementPage(item.id):currentPage())?'':'disabled'}>允许跨书缝</option></select></label>`;}
 function setSpreadPaper(paper){const g=pageSpread();if(!g?.left||!g?.right)return;for(const side of ['left','right'])g[side].paperSpread={paper,side};}
 function clearSpreadPaper(){for(const p of spreadPages(pageSpread()))delete p.paperSpread;}
 function setStickerScope(item,value){
@@ -201,7 +283,7 @@ function setStickerScope(item,value){
 }
 function constrainSticker(item,owner=elementPage(item.id)){
  if(item.type!=='sticker'||!owner)return;
- const mate=matePage(owner),cross=mate&&item.spreadWith===mate.id,side=pageSpread(owner).left?.id===owner.id?'left':'right';
+ const mate=matePage(owner),cross=mate&&item.spreadWith===mate.id,side=pageSpread(owner)?.left?.id===owner.id?'left':'right';
  const min=cross&&side==='right'?-100:0,max=cross&&side==='left'?200:100;
  const img=$(`[data-element="${item.id}"] img`),ratio=img?.naturalWidth?img.naturalHeight/img.naturalWidth:1;
  const angle=(item.rotation||0)*Math.PI/180,c=Math.abs(Math.cos(angle)),s=Math.abs(Math.sin(angle));
@@ -250,7 +332,7 @@ function saveNow(){
   const pending=rebasePending(snapshot,state,merged,copies);state=pending.state;savedWorkspace=pending.baseline;
   for(const [key,value] of blobSnapshot)if(pendingAssetBlobs.get(key)===value)pendingAssetBlobs.delete(key);
   await hydrateBlobAssets(state);
-  if(pending.copies.has(activeBookId)){if(inlineText?.bookId===activeBookId)inlineText.bookId=pending.copies.get(activeBookId);activeBookId=pending.copies.get(activeBookId);if($('#book-title'))$('#book-title').value=currentBook().title;}
+  if(pending.copies.has(activeBookId)){if(coverEditingBookId===activeBookId)coverEditingBookId=pending.copies.get(activeBookId);if(inlineText?.bookId===activeBookId)inlineText.bookId=pending.copies.get(activeBookId);activeBookId=pending.copies.get(activeBookId);if($('#book-title'))$('#book-title').value=currentBook().title;}
   saveStatus=mutationVersion===version?'已保存到本机':'正在保存…';updateStatus();
   if(pending.copies.size)toast(saveStatus==='已保存到本机'?'检测到另一页面的修改，两个版本均已保留；当前版本已另存为冲突副本。':'检测到另一页面的修改，正在保存当前冲突副本，请保持页面打开。');
   workSync?.changed();
@@ -258,24 +340,24 @@ function saveNow(){
  }).catch(error=>{saveStatus='保存失败，请重试';updateStatus();toast(error?.message==='workspace-conflict'?'另一页面修改了相同内容，已阻止覆盖。当前改动仍在本页，请勿刷新或关闭。':'未能保存到本机，请保持当前页面打开并重试。');return false;});
  return savePromise;
 }
-function dirty(){mutationVersion++;if(currentBook()&&currentView==='editor')currentBook().updated=Date.now();saveStatus='正在保存…';updateStatus();clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,500);}
-function checkpoint(){history.push(JSON.stringify(currentBook()?.pages||[]));if(history.length>30)history.shift();future=[];}
+function dirty(){syncCoverTitle();schedulePageWarm();mutationVersion++;if(currentBook()&&currentView==='editor')currentBook().updated=Date.now();saveStatus='正在保存…';updateStatus();clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,500);}
+function checkpoint(){if(pageRemovalUndo){pageRemovalUndo=null;$('#toast').classList.remove('show');}history.push(editorSnapshot());if(history.length>30)history.shift();future=[];}
 function change(fn){checkpoint();fn();dirty();renderEditor();}
 const statusHTML=()=>`<span class="local-status ${saveStatus.startsWith('保存失败')?'save-error':''}" role="status">${saveStatus}</span>${workSync?'<button class="work-sync-status" type="button" data-action="retry-work-sync" title="'+esc(workSync.error||'自动同步到当前服务')+'">'+esc(workSync.label)+'</button>':''}`;
 function sidebar(){return `<aside class="sidebar"><button class="brand" data-action="nav" data-view="home" aria-label="拾页首页"><span class="brand-mark"></span><span class="brand-word">拾页<small>SHIYE</small></span></button><div class="sidebar-tagline">把日子，慢慢收好。</div><nav class="nav" aria-label="主导航">${[['shelf','book','我的书架'],['workshop','spark','贴纸工坊'],['collection','sticker','贴纸仓库'],...(adminUser?[['admin','grid','管理工具']]:[])].map(([v,i,t])=>`<button data-action="nav" data-view="${v}" class="${currentView===v||currentView==='editor'&&v==='shelf'?'active':''}">${icon(i)}<span>${t}</span></button>`).join('')}</nav><div class="side-note"><div class="asterisk">✳</div>留住那些<br>舍不得忘记的小事。</div><button class="profile" data-action="account-open" aria-label="账户信息"><span class="avatar">${profileAvatar()}</span><span class="profile-name">${esc(currentIdentity?.username||'我的私人角落')}<small>${adminUser?'管理员':currentIdentity?.accountId?'个人账号':'受邀体验 · 本机保存'}</small></span></button></aside>`;}
-function topbar(name){return `<header class="topbar"><div class="breadcrumb">我的空间 <span style="margin:0 11px;color:#b6b5a7">/</span> <b>${name}</b></div><div class="top-right">${statusHTML()}<button class="prototype-tag" data-action="about">交互原型</button>${ib('about','info','原型使用说明')}</div></header>`;}
-function coverHTML(book){return `<div class="cover ${book.cover}"><div class="cover-inner"><div class="cover-kicker">A PERSONAL COLLECTION</div><h3>${book.cover==='coral'&&book.sample?'Slow<br>days.':esc(book.title)}</h3><div class="cover-sub">${esc(book.subtitle||'MOMENTS TO KEEP')}</div>${book.cover==='olive'||book.cover==='blue'?`<img class="cover-photo" src="assets/${book.cover==='olive'?'lake':'forest'}.jpg" alt="风景封面"/>`:book.cover==='cream'?`<img class="cover-plant" src="${art('flower')}" alt="野花插画"/>`:'<div class="cover-star">✳</div>'}<div class="cover-foot">SHIYE &nbsp; · &nbsp; VOL. ${String(state.books.indexOf(book)+1||1).padStart(2,'0')}</div></div></div>`;}
+function topbar(name){return `<header class="topbar"><div class="breadcrumb">我的空间 <span style="margin:0 11px;color:#b6b5a7">/</span> <b>${name}</b></div><div class="top-right">${ib('about','info','使用说明')}</div></header>`;}
+function coverHTML(book){if(book.coverDesign)return customCoverHTML(book);return `<div class="cover ${book.cover}"><div class="cover-inner"><div class="cover-kicker">A PERSONAL COLLECTION</div><h3>${book.cover==='coral'&&book.sample?'Slow<br>days.':esc(book.title)}</h3><div class="cover-sub">${esc(book.subtitle||'MOMENTS TO KEEP')}</div>${book.cover==='olive'||book.cover==='blue'?`<img class="cover-photo" src="assets/${book.cover==='olive'?'lake':'forest'}.jpg" alt="风景封面"/>`:book.cover==='cream'?`<img class="cover-plant" src="${art('flower')}" alt="野花插画"/>`:'<div class="cover-star">✳</div>'}<div class="cover-foot">SHIYE &nbsp; · &nbsp; VOL. ${String(state.books.indexOf(book)+1||1).padStart(2,'0')}</div></div></div>`;}
 function footer(){return `<footer class="footer-note"><span>${icon('lock')} 只属于你的记忆，安静地保存在这里。</span><span>MADE OF LITTLE MOMENTS &nbsp; © SHIYE</span></footer>`;}
 function shell(content,name){if(name==='贴纸工坊')content=workshopBackHTML()+content;$('#app').innerHTML=`<div class="shell">${sidebar()}${topbar(name)}<main class="content">${content}</main></div>`;}
-function render(){window.ShiyeEdge?.beforeRender();stickerDragCleanup?.();resizeObserver?.disconnect();if(currentView==='home')renderHome();else if(currentView==='editor')renderEditor();else if(currentView==='collection')renderCollection();else if(currentView==='workshop')renderWorkshop();else renderShelf();}
+function render(){if(currentView!=='home')ShiyeRoomHome.unmount();pageSortCleanup?.();cancelPageWarm();closeElementMenu();window.ShiyeEdge?.beforeRender();stickerDragCleanup?.();resizeObserver?.disconnect();if(currentView==='home')renderHome();else if(currentView==='editor')renderEditor();else if(currentView==='collection')renderCollection();else if(currentView==='workshop')renderWorkshop();else renderShelf();}
 function renderShelf(){
  let books=state.books.filter(b=>bookFilter==='all'||!b.sample);books=[...books].sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||(sort==='name'?a.title.localeCompare(b.title,'zh'):b.updated-a.updated));
- shell(`<div class="page-heading"><div><h1>我的书架<span style="color:var(--accent)">.</span></h1><p>日子一页一页，慢慢有了形状。</p></div><div class="shelf-create-actions"><button class="button primary small" data-action="new-book">${icon('plus')} 新建手帐</button><button class="button outline small" data-action="nav" data-view="workshop" data-shelf-create-sticker>${icon('sticker')} 创建贴纸</button></div></div><section class="hero"><div class="hero-copy"><div class="eyebrow">A HOME FOR YOUR MEMORIES</div><h2>值得记住的，<br>不必是大事。</h2><p>一杯咖啡，一段旅途，一朵路边的小花。<br>把生活拾起来，收进自己的书里。</p><button class="text-link" data-action="nav" data-view="workshop">拾起今天的小事 ${icon('arrow')}</button></div><div class="hero-art" aria-hidden="true"><div class="hero-star">✳</div><div class="mini-spread"><div><div class="mini-title">Dear little days,</div><img class="spread-photo" src="assets/lake.jpg" alt=""><div class="mini-writing">把脚步放慢，<br>好风景就在身边。</div></div><div><img class="mini-sticker" src="${art('coffee')}" alt=""><img class="mini-flower" src="${art('flower')}" alt=""></div></div><div class="hero-caption handwritten">a little piece of life ↗</div></div></section><div class="section-bar"><div class="tabs"><button class="tab ${bookFilter==='all'?'active':''}" data-action="book-filter" data-filter="all">全部手帐 <span class="count">${state.books.length}</span></button><button class="tab ${bookFilter==='mine'?'active':''}" data-action="book-filter" data-filter="mine">我的创作 <span class="count">${state.books.filter(b=>!b.sample).length}</span></button></div><div class="view-tools"><select class="select-clean" id="book-sort" aria-label="手帐排序"><option value="recent" ${sort==='recent'?'selected':''}>最近编辑优先</option><option value="name" ${sort==='name'?'selected':''}>按书名排列</option></select><div class="view-toggle"><button data-action="book-view" data-value="grid" class="${bookView==='grid'?'active':''}" aria-label="封面视图">${icon('grid')}</button><button data-action="book-view" data-value="list" class="${bookView==='list'?'active':''}" aria-label="列表视图">${icon('list')}</button></div></div></div><div class="books-grid ${bookView==='list'?'list':''}">${books.map(b=>`<article class="book-item"><button class="book-open" data-action="open-book" data-id="${b.id}" aria-label="打开${esc(b.title)}">${coverHTML(b)}</button><div class="book-meta"><div class="book-name"><h3>${b.pinned?'<span class="book-pin-mark" title="已置顶" aria-label="已置顶"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 8 0-1 6 3 4v2H6v-2l3-4zM12 15v7"/></svg></span>':''}${esc(b.title)}</h3><p>${b.pages.length} 页 &nbsp;·&nbsp; ${b.sample?'示例作品':'我的创作'} &nbsp;·&nbsp; ${relativeDate(b.updated)}</p></div><button class="icon-button book-more" popovertarget="book-menu-${b.id}" data-book-more="${b.id}" aria-label="${esc(b.title)}的更多操作" aria-expanded="false"><span aria-hidden="true">⋯</span></button><div class="book-popover" id="book-menu-${b.id}" popover="auto" role="group" aria-label="${esc(b.title)}的操作"><button data-action="pin-book" data-id="${b.id}">${icon('up')} ${b.pinned?'取消置顶':'置顶'}</button><button data-action="book-menu" data-id="${b.id}">${icon('pen')} 重命名</button><button class="book-menu-delete" data-action="delete-book-confirm" data-id="${b.id}">${icon('trash')} 删除</button></div></div></article>`).join('')}<article class="book-item new-book"><button class="new-cover" data-action="new-book"><span class="plus">${icon('plus')}</span><span>下一段故事</span><small>从一本空白手帐开始</small></button><div class="book-meta"><div><h3 class="muted">给新的回忆，留个位置</h3></div></div></article></div>${footer()}`,'我的书架');
+ shell(`<div class="page-heading"><div><h1>我的书架<span style="color:var(--accent)">.</span></h1><p>日子一页一页，慢慢有了形状。</p></div><div class="shelf-create-actions"><button class="button primary small" data-action="new-book">${icon('plus')} 新建手帐</button><button class="button outline small" data-action="nav" data-view="workshop" data-shelf-create-sticker>${icon('sticker')} 创建贴纸</button></div></div><section class="hero"><div class="hero-copy"><div class="eyebrow">A HOME FOR YOUR MEMORIES</div><h2>值得记住的，<br>不必是大事。</h2><p>一杯咖啡，一段旅途，一朵路边的小花。<br>把生活拾起来，收进自己的书里。</p><button class="text-link" data-action="nav" data-view="workshop">拾起今天的小事 ${icon('arrow')}</button></div><div class="hero-art" aria-hidden="true"><div class="hero-star">✳</div><div class="mini-spread"><div class="mini-page"><div class="mini-title">Collected moments.</div><img class="spread-photo" src="assets/lake.jpg" alt=""><div class="mini-writing">把脚步放慢，<br>好风景就在身边。</div><span class="mini-folio">01 · JOURNEY</span></div><div class="mini-page"><span class="mini-kicker">THE ART OF EVERYDAY</span><div class="mini-note-title">慢一点，<br>也很好。</div><img class="mini-sticker" src="${art('coffee')}" alt=""><img class="mini-flower" src="${art('flower')}" alt=""><span class="mini-note">一杯热咖啡，一段好时光。</span><span class="mini-folio">02 · LITTLE JOYS</span></div></div><div class="hero-caption handwritten">a little piece of life ↗</div></div></section><div class="section-bar"><div class="tabs"><button class="tab ${bookFilter==='all'?'active':''}" data-action="book-filter" data-filter="all">全部手帐 <span class="count">${state.books.length}</span></button><button class="tab ${bookFilter==='mine'?'active':''}" data-action="book-filter" data-filter="mine">我的创作 <span class="count">${state.books.filter(b=>!b.sample).length}</span></button></div><div class="view-tools"><select class="select-clean" id="book-sort" aria-label="手帐排序"><option value="recent" ${sort==='recent'?'selected':''}>最近编辑优先</option><option value="name" ${sort==='name'?'selected':''}>按书名排列</option></select><div class="view-toggle"><button data-action="book-view" data-value="grid" class="${bookView==='grid'?'active':''}" aria-label="封面视图">${icon('grid')}</button><button data-action="book-view" data-value="list" class="${bookView==='list'?'active':''}" aria-label="列表视图">${icon('list')}</button></div></div></div><div class="books-grid ${bookView==='list'?'list':''}">${books.map(b=>`<article class="book-item"><button class="book-open" data-action="open-book" data-id="${b.id}" aria-label="打开${esc(b.title)}">${coverHTML(b)}</button><div class="book-meta"><div class="book-name"><h3>${b.pinned?'<span class="book-pin-mark" title="已置顶" aria-label="已置顶"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 8 0-1 6 3 4v2H6v-2l3-4zM12 15v7"/></svg></span>':''}${esc(b.title)}</h3><p>${b.pages.length} 页 &nbsp;·&nbsp; ${b.sample?'示例作品':'我的创作'} &nbsp;·&nbsp; ${relativeDate(b.updated)}</p></div><button class="icon-button book-more" popovertarget="book-menu-${b.id}" data-book-more="${b.id}" aria-label="${esc(b.title)}的更多操作" aria-expanded="false"><span aria-hidden="true">⋯</span></button><div class="book-popover" id="book-menu-${b.id}" popover="auto" role="group" aria-label="${esc(b.title)}的操作"><button data-action="pin-book" data-id="${b.id}">${icon('up')} ${b.pinned?'取消置顶':'置顶'}</button><button data-action="book-menu" data-id="${b.id}">${icon('pen')} 重命名</button><button class="book-menu-delete" data-action="delete-book-confirm" data-id="${b.id}">${icon('trash')} 删除</button></div></div></article>`).join('')}<article class="book-item new-book"><button class="new-cover" data-action="new-book"><span class="plus">${icon('plus')}</span><span>下一段故事</span><small>从一本空白手帐开始</small></button><div class="book-meta"><div><h3 class="muted">给新的回忆，留个位置</h3></div></div></article></div>${footer()}`,'我的书架');
 }
 function relativeDate(time){let d=Date.now()-time;return d<86400000?'今天':d<172800000?'昨天':new Date(time).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});}
 function stickerCard(a,mode='library'){
  const ownedAsset=state.assets.find(s=>s.id===a.id),owned=!!ownedAsset;
- return `<article class="sticker-card" data-asset-id="${a.id}"><button class="sticker-display" data-action="${mode==='editor'?'insert-sticker':'sticker-detail'}" data-id="${a.id}" aria-label="${mode==='editor'?'添加':'查看'}${esc(a.name)}"><img src="${assetSource(a)}" alt="${esc(a.name)}" loading="lazy" draggable="false"><span class="add-badge">${icon(mode==='editor'?'plus':owned?'check':'plus')}</span></button><div class="sticker-label"><span>${ownedAsset?.pinned?'<small class="asset-pin" title="已置顶">'+icon('up')+'</small>':''}${esc(a.name)}</span><small>${esc(a.category)}</small></div>${mode==='library'&&owned?`<div class="sticker-card-actions"><button class="button outline small sticker-use" data-action="use-collected" data-id="${a.id}">用于创作</button><button class="icon-button sticker-more" popovertarget="sticker-menu-${a.id}" aria-label="${esc(a.name)}的更多操作" aria-expanded="false">⋯</button><div class="book-popover" id="sticker-menu-${a.id}" popover="auto" role="group" aria-label="${esc(a.name)}的操作"><button data-action="pin-sticker" data-id="${a.id}">${icon('up')} ${ownedAsset.pinned?'取消置顶':'置顶'}</button><button data-action="favorite-sticker" data-id="${a.id}">${icon('sticker')} ${ownedAsset.favorite?'取消收藏':'收藏'}</button><button data-action="open-sticker-rename" data-id="${a.id}">${icon('pen')} 重命名</button><button class="book-menu-delete" data-action="delete-sticker-confirm" data-id="${a.id}">${icon('trash')} 删除</button></div></div>`:''}</article>`;
+ return `<article class="sticker-card" data-asset-id="${a.id}" data-category="${esc(a.category)}"><button class="sticker-display" data-action="${mode==='editor'?'insert-sticker':'sticker-detail'}" data-id="${a.id}" aria-label="${mode==='editor'?'添加':'查看'}${esc(a.name)}"><span class="sticker-preview-frame"><img data-sticker-preview src="${assetSource(a)}" alt="${esc(a.name)}" loading="lazy" draggable="false"></span><span class="add-badge">${icon(mode==='editor'?'plus':owned?'check':'plus')}</span></button><div class="sticker-label"><span>${ownedAsset?.pinned?'<small class="asset-pin" title="已置顶">'+icon('up')+'</small>':''}${esc(a.name)}</span><small>${esc(a.category)}</small></div>${mode==='library'&&owned?`<div class="sticker-card-actions"><button class="button outline small sticker-use" data-action="use-collected" data-id="${a.id}">用于创作</button><button class="icon-button sticker-more" popovertarget="sticker-menu-${a.id}" aria-label="${esc(a.name)}的更多操作" aria-expanded="false">⋯</button><div class="book-popover" id="sticker-menu-${a.id}" popover="auto" role="group" aria-label="${esc(a.name)}的操作"><button data-action="pin-sticker" data-id="${a.id}">${icon('up')} ${ownedAsset.pinned?'取消置顶':'置顶'}</button><button data-action="favorite-sticker" data-id="${a.id}">${icon('sticker')} ${ownedAsset.favorite?'取消收藏':'收藏'}</button><button data-action="open-sticker-rename" data-id="${a.id}">${icon('pen')} 重命名</button><button class="book-menu-delete" data-action="delete-sticker-confirm" data-id="${a.id}">${icon('trash')} 删除</button></div></div>`:''}</article>`;
 }
 function filteredAssets(){
  const rows=collectionTab==='builtin'?builtin:state.assets;
@@ -316,38 +398,67 @@ function renderWorkshop(){window.ShiyeEdge?.beforeRender();if(segmentedWorkshop?
 }
 function borderStyle(n){return `filter:drop-shadow(${n/2}px 0 0 #fffdf6) drop-shadow(-${n/2}px 0 0 #fffdf6) drop-shadow(0 ${n/2}px 0 #fffdf6) drop-shadow(0 -${n/2}px 0 #fffdf6) drop-shadow(2px 5px 3px #0002)`;}
 function transformHandles(){return `<span class="selection-handles" aria-hidden="true">${['nw','ne','sw','se'].map(c=>`<span class="transform-handle handle-${c}" data-transform="resize" data-corner="${c}"></span>`).join('')}<span class="rotation-stem"></span><span class="transform-handle handle-rotate" data-transform="rotate">${icon('rotate')}</span></span>`;}
-function elementsHTML(page,read=false,mini=false){return paperLayer(page)+pageElements(page).map(e=>`<div class="element ${e.type==='text'?'text':''} ${selectedId===e.id&&!read?'selected':''} ${read?'readonly':''} ${e.direction==='vertical'?'vertical-text':''}" data-element="${e.id}" ${!read?`tabindex="0" role="button" aria-label="${esc(e.type==='text'?e.text:'页面贴纸')}"`:''} style="left:${e.x}%;top:${e.y}%;width:${e.w}%;transform:rotate(${e.rotation||0}deg);${e.type==='text'?`font-size:calc(${e.size||18}px * var(--scale,1));color:${e.color||'#4c5341'};font-family:${textFont(e.font).family};font-style:${e.italic?'italic':'normal'};${e.direction==='vertical'?`height:${e.h||60}%;writing-mode:vertical-rl;text-orientation:mixed;`:''}`:''}">${e.type==='text'?`<span class="text-content">${esc(e.text)}</span>`:`<img src="${e.type==='sticker'?asset(e.assetId)?.src||'':e.src}" alt="${esc(e.type==='sticker'?asset(e.assetId)?.name:'相片')}" draggable="false" style="${e.frame?'border:calc(7px * var(--scale,1)) solid #fffdf8;box-shadow:0 2px 5px #0002;':''}${e.flip?'transform:scaleX(-1);':''}${e.type==='sticker'?borderStyle(asset(e.assetId)?.borderBaked?0:asset(e.assetId)?.border||0):''}">`}${!read&&e.id===selectedId?transformHandles():''}</div>`).join('')+(mini?'':`<div class="page-number">${String(Math.max(0,currentBook()?.pages.findIndex(p=>p.id===page.id)??0)+1).padStart(2,'0')} &nbsp; / &nbsp; SHIYE</div>`);}
+function elementsHTML(page,read=false,mini=false){if(page?.material!==undefined)return coverElementsHTML(page,read);return paperLayer(page)+pageElements(page).map(e=>`<div class="element ${e.type==='text'?'text':''} ${selectedId===e.id&&!read?'selected':''} ${read?'readonly':''} ${e.direction==='vertical'?'vertical-text':''}" data-element="${e.id}" ${!read?`tabindex="0" role="button" aria-label="${esc(e.type==='text'?e.text:'页面贴纸')}"`:''} style="left:${e.x}%;top:${e.y}%;width:${e.w}%;transform:rotate(${e.rotation||0}deg);${e.type==='text'?`font-size:calc(${e.size||18}px * var(--scale,1));color:${e.color||'#4c5341'};font-family:${textFont(e.font).family};font-style:${e.italic?'italic':'normal'};font-weight:${e.bold?'700':'400'};${e.direction==='vertical'?`height:${e.h||60}%;writing-mode:vertical-rl;text-orientation:mixed;`:''}`:''}">${e.type==='text'?`<span class="text-content">${esc(e.text)}</span>`:e.type==='photo'&&e.crop?croppedPhotoHTML(e):`<img src="${e.type==='sticker'?asset(e.assetId)?.src||'':e.src}" alt="${esc(e.type==='sticker'?asset(e.assetId)?.name:'相片')}" draggable="false" style="${e.frame?'border:calc(7px * var(--scale,1)) solid #fffdf8;box-shadow:0 2px 5px #0002;':''}${e.flip?'transform:scaleX(-1);':''}${e.type==='sticker'?borderStyle(asset(e.assetId)?.borderBaked?0:asset(e.assetId)?.border||0):''}">`}${!read&&e.id===selectedId?transformHandles():''}</div>`).join('')+(mini?'':`<div class="page-number">${String(Math.max(0,currentBook()?.pages.findIndex(p=>p.id===page.id)??0)+1).padStart(2,'0')} &nbsp; / &nbsp; SHIYE</div>`);}
 
-function renderEditor(){
- finishInlineText();
- stickerDragCleanup?.();cancelEditingTurn();cancelReaderTurn();
+function renderEditor(decodedImages=null){
+ const previousStrip=$('.page-manager .page-strip'),stripScroll=previousStrip?.scrollLeft||0;
+ const previousTools=$('.editor-tools-content'),toolScroll=previousTools?.scrollTop||0,toolKey=previousTools?.dataset.toolKey;
+ closeElementMenu();finishInlineText();
+ stickerDragCleanup?.();pageSortCleanup?.();cancelEditingTurn();cancelReaderTurn();
  if(!editing&&currentBook()){renderReading();return;}
- const b=currentBook();if(!b){currentView='shelf';render();return;}b.page=Math.max(0,Math.min(b.page||0,b.pages.length-1));const p=currentPage();
- $('#app').innerHTML=`<div class="shell editor-mode">${sidebar()}<header class="editor-top"><div class="editor-title">${ib('shelve','left','放回书架')}<input id="book-title" aria-label="手帐名称" maxlength="40" value="${esc(b.title)}"></div><div class="editor-top-actions">${statusHTML()}<div class="mode-switch"><button data-action="mode" data-value="read" class="${!editing?'active':''}">翻阅</button><button data-action="mode" data-value="edit" class="${editing?'active':''}">编辑</button></div><button class="button dark small" data-action="shelve">${icon('book')} 放回书架</button></div></header><main class="editor-workspace ${!editing?'read-mode':''}"><div class="workspace-meta"><span>${b.sample?'示例手帐 · 可自由编辑':'我的手帐'} &nbsp; / &nbsp; ${String(b.page+1).padStart(2,'0')} — ${String(b.pages.length).padStart(2,'0')}</span>${editing?`<div class="undo-bar">${ib('undo','undo','撤销',history.length?'':'disabled')}${ib('redo','redo','重做',future.length?'':'disabled')}<span class="no-selection">${selectedId?'正在编辑选中元素':'点击空白处写字 · 双击文字修改'}</span></div>`:'<span>给回忆，一点慢慢翻阅的时间。</span>'}</div>${layoutControlsHTML()}${spreadEditing()?spreadStageHTML():`<div class="stage-wrap"> <button class="page-arrow prev" data-action="page-prev" aria-label="上一页" ${b.page===0?'disabled':''}>${icon('left')}</button><div class="page-frame"><div id="canvas-page" class="canvas-page ${p.paper}">${elementsHTML(p,!editing)}</div></div><button class="page-arrow next" data-action="page-next" aria-label="下一页" ${b.page===b.pages.length-1?'disabled':''}>${icon('right')}</button></div>`}${editing?`<div class="editor-dock" role="toolbar" aria-label="页面工具">${[['sticker','sticker','贴纸'],['text','text','文字'],['paper','paper','纸张'],['pages','book','页面']].map(([a,i,t])=>`<button class="tool ${drawer===a?'active':''}" data-action="drawer" data-value="${a}">${icon(i)}<span>${t}</span></button>`).join('')}<div class="dock-divider"></div><button class="tool" data-action="workshop-from-editor">${icon('spark')}<span>制贴纸</span></button></div>`:'<div class="read-caption">日子被认真收藏，就有了不一样的分量。</div>'}<div class="page-strip" aria-label="页面缩略图">${b.pages.map((pg,i)=>`<button class="page-thumb ${i===b.page?'active':''}" data-action="page-goto" data-value="${i}" draggable="${editing}" data-page-id="${pg.id}" aria-label="第${i+1}页"><div class="thumb-content canvas-page ${pg.paper}" style="--scale:1">${elementsHTML(pg,true,true)}</div><small>${i+1}</small></button>`).join('')}${editing?`<button class="page-add" data-action="page-add" aria-label="新增一页">${icon('plus')}</button>`:''}</div>${editing&&drawer?drawerHTML():''}${editing&&selectedId?contextHTML():''}</main></div>`;
- fitPage();resizeObserver?.disconnect();resizeObserver=new ResizeObserver(fitPage);resizeObserver.observe($('.stage-wrap'));if(editing){if(spreadEditing())$$('.edit-leaf').forEach(bindDrag);else bindDrag();bindPageSort();bindStickerDrag();}
+ const b=currentBook();if(!b){currentView='shelf';render();return;}if(isCoverEditing()){renderCoverEditor();return;}b.page=Math.max(0,Math.min(b.page||0,b.pages.length-1));const p=currentPage();
+ $('#app').innerHTML=`<div class="shell editor-mode">${sidebar()}<header class="editor-top"><div class="editor-title">${ib('shelve','left','放回书架')}<input id="book-title" aria-label="手帐名称" maxlength="40" value="${esc(b.title)}"></div><div class="editor-top-actions">${statusHTML()}<div class="mode-switch"><button data-action="mode" data-value="read" class="${!editing?'active':''}">翻阅</button><button data-action="mode" data-value="edit" class="${editing?'active':''}">编辑</button></div><button class="button dark small" data-action="shelve">${icon('book')} 放回书架</button></div></header><main class="editor-workspace ${!editing?'read-mode':'has-editor-tools'} ${drawer?'tools-open':''}"><div class="workspace-meta"><span>${b.sample?'示例手帐 · 可自由编辑':'我的手帐'} &nbsp; / &nbsp; ${String(b.page+1).padStart(2,'0')} — ${String(b.pages.length).padStart(2,'0')}</span>${editing?`<div class="undo-bar">${ib('undo','undo','撤销',history.length?'':'disabled')}${ib('redo','redo','重做',future.length?'':'disabled')}<span class="no-selection">${selectedId?'正在编辑选中元素':'点击空白处写字 · 双击元素显示菜单'}</span></div>`:'<span>给回忆，一点慢慢翻阅的时间。</span>'}</div>${layoutControlsHTML()}${spreadEditing()?spreadStageHTML():`<div class="stage-wrap"> <button class="page-arrow prev" data-action="page-prev" aria-label="上一页" ${b.page===0?'disabled':''}>${icon('left')}</button><div class="page-frame"><div id="canvas-page" class="canvas-page ${p.paper}">${elementsHTML(p,!editing)}</div></div><button class="page-arrow next" data-action="page-next" aria-label="下一页" ${b.page===b.pages.length-1?'disabled':''}>${icon('right')}</button></div>`}${editing?`<div class="editor-dock" role="toolbar" aria-label="页面工具">${[['sticker','sticker','贴纸'],['text','text','文字'],['paper','paper','纸张'],['pages','book','页面']].map(([a,i,t])=>`<button class="tool ${drawer===a?'active':''}" data-action="drawer" data-value="${a}">${icon(i)}<span>${t}</span></button>`).join('')}<div class="dock-divider"></div><button class="tool" data-action="workshop-from-editor">${icon('spark')}<span>制贴纸</span></button></div>`:'<div class="read-caption">日子被认真收藏，就有了不一样的分量。</div>'}${pageManagerHTML()}${editorToolsHTML()}</main></div>`;
+ // Both halves may show the same spanning sticker; consume one decoded node per image.
+ if(decodedImages instanceof Map)for(const img of $$('.page-frame .element img')){
+  const previous=decodedImages.get(JSON.stringify([img.closest('[data-element]').dataset.element,img.src]))?.shift();
+  if(previous&&previous.src===img.src){for(const attr of [...img.attributes])previous.setAttribute(attr.name,attr.value);img.replaceWith(previous);}
+ }
+ const nextStrip=$('.page-manager .page-strip');if(nextStrip)nextStrip.scrollLeft=stripScroll;revealPageThumb();
+ const nextTools=$('.editor-tools-content');if(nextTools&&nextTools.dataset.toolKey===toolKey)nextTools.scrollTop=toolScroll;
+ fitPage();resizeObserver?.disconnect();resizeObserver=new ResizeObserver(fitPage);resizeObserver.observe($('.stage-wrap'));if(editing){if(spreadEditing())$$('.edit-leaf').forEach(bindDrag);else bindDrag();bindPageSort();bindStickerDrag();bindPageWheel();}
 }
-function fitPage(){const wrap=$('.stage-wrap'),frame=$('.page-frame');if(!wrap||!frame)return;if(spreadEditing()){const w=Math.max(100,Math.min(420,(wrap.clientWidth-(innerWidth<560?54:120))/2,(wrap.clientHeight-55)*420/540));frame.style.width=w*2+'px';frame.style.height=w*540/420+'px';frame.style.setProperty('--scale',w/420);return;}const mobile=window.innerWidth<560;let availableWidth=wrap.clientWidth-(mobile?38:window.innerWidth<800?100:window.innerWidth<1150&&editing?260:145);const availableHeight=wrap.clientHeight-(editing?52:36);let width=Math.max(170,Math.min(440,availableWidth,availableHeight*420/540));frame.style.width=width+'px';frame.style.height=(width*540/420)+'px';frame.style.setProperty('--scale',width/420);}
-function contextHTML(){let e=currentElement();if(!e)return '';return `<div class="context-toolbar" role="toolbar" aria-label="选中元素操作"><span class="label">${e.type==='text'?'文字设置':'贴纸设置'}</span><div class="context-row">${ib('smaller','minus','缩小')}<span>${Math.round(e.w)}%</span>${ib('larger','plus','放大')}</div><div class="context-row">${ib('rotate-left','rotate','向左旋转')}<span>${Math.round(e.rotation||0)}°</span>${ib('rotate-right','redo','向右旋转')}</div><div class="separator"></div>${e.type==='text'?`${textFontSelect('selected-text-font',e.font,'字体')}${textSizeControl('selected-text-size',e.size)}<button class="small-action" data-action="edit-text">${icon('pen')} 编辑文字</button><button class="small-action" data-action="ai-copy-open">${icon('spark')} 帮我润色</button>${e.aiSource?'<span class="ai-copy-source">AI 辅助</span>':''}`:` ${e.type==='sticker'?stickerScopeHTML(e):''}<button class="small-action" data-action="flip">${icon('flip')} 水平翻转</button>`}<button class="small-action" data-action="duplicate">${icon('copy')} 复制</button><button class="small-action" data-action="layer-up">${icon('layers')} 上移一层</button><button class="small-action" data-action="layer-down">${icon('down')} 下移一层</button><button class="small-action" data-action="delete-element" style="color:var(--accent)">${icon('trash')} 删除</button></div>`;}
-function drawerHTML(){let inner='';if(drawer==='sticker')inner=`${stickerScopeHTML()}<p class="muted" style="font-size:10px;line-height:1.7">拖到纸页放置，或点击添加。手机可长按拖入；拾页素材同时收入收藏。</p><div class="sticker-grid">${[...state.assets,...builtin.filter(b=>!state.assets.some(a=>a.id===b.id))].map(a=>stickerCard(a,'editor')).join('')}</div>`;
- if(drawer==='text'){const selected=currentElement(),text=selected?.type==='text'?selected:null;inner=`<div class="mode-switch" aria-label="写作方式"><button class="active" data-action="add-text">自己写</button><button data-action="ai-copy-open">AI 帮我</button></div><p class="muted" style="font-size:11px">点击纸面任意空白处，直接输入文字。</p>${textFontSelect(text?'drawer-text-font':'new-text-font',text?.font||newTextFont,text?'字体':'新文字字体')}${textSizeControl(text?'drawer-text-size':'new-text-size',text?.size||newTextSize,text?'字号':'新文字字号')}<div class="text-font-preview" aria-hidden="true" style="font-family:${textFont(text?.font||newTextFont).family};font-size:${text?.size||newTextSize}px">把日子，慢慢收好。</div><button class="button outline" data-action="add-text" style="width:100%">${icon('plus')} 添加文字</button><p class="muted" style="font-size:10px">双击文字可原位输入；选中后可拖动或调整样式。</p>`;}
+function fitPage(){
+ const wrap=$('.stage-wrap'),frame=$('.page-frame');if(!wrap||!frame)return;
+ const css=getComputedStyle(wrap),cols=spreadEditing()?2:1;
+ const arrows=$$('.page-arrow',wrap).filter(el=>getComputedStyle(el).position!=='absolute');
+ const availableWidth=wrap.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-arrows.reduce((sum,el)=>sum+el.getBoundingClientRect().width,0)-arrows.length*parseFloat(css.gap||0);
+ const availableHeight=wrap.clientHeight-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom)-8;
+ const width=Math.max(60,Math.min(availableWidth/cols,availableHeight*420/540));
+ frame.style.width=width*cols+'px';frame.style.height=width*540/420+'px';frame.style.setProperty('--scale',width/420);schedulePageWarm();
+}
+function contextHTML(compact=false){let e=currentElement();if(!e)return '';return `<div class="context-toolbar" role="toolbar" aria-label="选中元素操作"><span class="label">${e.type==='text'?'文字设置':e.type==='photo'?'照片设置':'贴纸设置'}</span><div class="context-row">${ib('smaller','minus','缩小')}<span>${Math.round(e.w)}%</span>${ib('larger','plus','放大')}</div><div class="context-row">${ib('rotate-left','rotate','向左旋转')}<span>${Math.round(e.rotation||0)}°</span>${ib('rotate-right','redo','向右旋转')}</div><div class="separator"></div>${e.type==='text'?`${compact?'':`${textFontSelect('selected-text-font',e.font,'字体')}${textSizeControl('selected-text-size',e.size)}${textStyleControls('selected-text',e.bold,e.color)}`}<button class="small-action" data-action="edit-text">${icon('pen')} 编辑文字</button>${isCoverEditing()?'':`<button class="small-action" data-action="ai-copy-open">${icon('spark')} 帮我润色</button>`}${e.aiSource?'<span class="ai-copy-source">AI 辅助</span>':''}`:` ${e.type==='sticker'?stickerScopeHTML(e):isCoverEditing()?coverPhotoControls(e):''}<button class="small-action" data-action="flip">${icon('flip')} 水平翻转</button>`}<button class="small-action" data-action="duplicate">${icon('copy')} 复制</button><button class="small-action" data-action="layer-up">${icon('layers')} 上移一层</button><button class="small-action" data-action="layer-down">${icon('down')} 下移一层</button><button class="small-action" data-action="delete-element" style="color:var(--accent)">${icon('trash')} 删除</button></div>`;}
+function drawerHTML(){if(drawer==='cover')return coverDrawerHTML();let inner='';if(drawer==='sticker')inner=`${stickerScopeHTML()}<p class="muted" style="font-size:10px;line-height:1.7">拖到纸页放置，或点击添加。手机可长按拖入；拾页素材同时收入收藏。</p><div class="sticker-grid">${[...state.assets,...builtin.filter(b=>!state.assets.some(a=>a.id===b.id))].map(a=>stickerCard(a,'editor')).join('')}</div>`;
+ if(drawer==='text'){const selected=currentElement(),text=selected?.type==='text'?selected:null;inner=`<div class="mode-switch" aria-label="写作方式"><button class="active" data-action="add-text">自己写</button>${isCoverEditing()?'':'<button data-action="ai-copy-open">AI 帮我</button>'}</div><p class="muted" style="font-size:11px">点击纸面任意空白处，直接输入文字。</p>${textFontSelect(text?'drawer-text-font':'new-text-font',text?.font||newTextFont,text?'字体':'新文字字体')}${textSizeControl(text?'drawer-text-size':'new-text-size',text?.size||newTextSize,text?'字号':'新文字字号')}${textStyleControls(text?'drawer-text':'new-text',text?text.bold:newTextBold,text?text.color:newTextColor)}<button class="button outline" data-action="add-text" style="width:100%">${icon('plus')} 添加文字</button><p class="muted" style="font-size:10px">双击文字打开菜单，选择“编辑文字”可原位输入。</p>`;}
  if(drawer==='paper')return paperDrawerHTML();
- if(drawer==='pages')inner=`<p class="muted" style="font-size:11px">左右页固定配对，调整顺序时整组移动。</p><button class="button outline small" data-action="add-spread">${icon('plus')} 新增双页</button><div>${currentBook().pages.map((p,i)=>`<div class="page-list"><button data-action="page-goto" data-value="${i}">第 ${i+1} 页 ${i===currentBook().page?'· 当前':''}</button><div>${ib('move-page-up','up','页面前移',`data-value="${i}" ${i===0?'disabled':''}`)}${ib('move-page-down','down','页面后移',`data-value="${i}" ${i===currentBook().pages.length-1?'disabled':''}`)}</div></div>`).join('')}</div><div style="display:flex;gap:6px;margin-top:13px"><button class="button soft small" data-action="page-add">${icon('plus')} 新增</button><button class="button soft small" data-action="duplicate-page">${icon('copy')} ${spreadPages(pageSpread()).length>1?'复制双页':'复制页'}</button>${ib('delete-page','trash','删除当前页',pagesToDelete().length>=currentBook().pages.length?'disabled':'')}</div>`;
+ if(drawer==='pages')inner=`<p class="muted" style="font-size:11px">选择页面查看，用箭头调整顺序；跨页内容一起移动。</p><button class="button outline small" data-action="add-spread">${icon('plus')} 新增双页</button><div>${currentBook().pages.map((p,i)=>`<div class="page-list"><button class="page-list-preview" data-action="page-goto" data-value="${i}"><span class="page-preview-mini"><span class="canvas-page ${p.paper}">${elementsHTML(p,true,true)}</span></span><span>第 ${i+1} 页 ${i===currentBook().page?'· 当前':''}</span></button><div>${ib('move-page-up','up','页面前移',`data-value="${i}" ${i===0?'disabled':''}`)}${ib('move-page-down','down','页面后移',`data-value="${i}" ${i===currentBook().pages.length-1?'disabled':''}`)}</div></div>`).join('')}</div><div style="display:flex;gap:6px;margin-top:13px"><button class="button soft small" data-action="page-add">${icon('plus')} 新增</button><button class="button soft small" data-action="duplicate-page">${icon('copy')} ${spreadPages(pageSpread()).length>1?'复制双页':'复制页'}</button>${ib('delete-page','trash','删除当前页',pagesToDelete().length>=currentBook().pages.length?'disabled':'')}</div>`;
  return `<section class="drawer ${drawer==='paper'?'paper-drawer':''}"><div class="drawer-head"><h3>${{sticker:'我的贴纸匣',text:'写下这一刻',paper:'挑一张纸',pages:'整理页面'}[drawer]}</h3>${ib('close-drawer','close','关闭工具面板')}</div>${inner}</section>`;
+}
+function editorToolsContentHTML(){
+ const selected=currentElement();
+ if(drawer)return drawerHTML()+((drawer==='text'&&selected?.type==='text')||(drawer==='sticker'&&selected?.type==='sticker')||(drawer==='cover'&&selected)?contextHTML(drawer==='text'):'');
+ return '';
+}
+function editorToolsKey(){return `${activeBookId}:${drawer||'selection'}:${selectedId||''}`;}
+function editorToolsHTML(){if(!drawer)return '';return `<aside class="editor-tools-panel" aria-label="编辑工具面板"><div class="editor-tools-content" data-tool-key="${esc(editorToolsKey())}">${editorToolsContentHTML()}</div></aside>`;}
+function refreshEditorTools(){
+ const content=$('.editor-tools-content');if(!content)return;
+ const scroll=content.dataset.toolKey===editorToolsKey()?content.scrollTop:0;content.innerHTML=editorToolsContentHTML();content.dataset.toolKey=editorToolsKey();content.scrollTop=scroll;
+ $$('.editor-dock [data-action="drawer"]').forEach(button=>button.classList.toggle('active',button.dataset.value===drawer));
+ $('.editor-workspace').classList.toggle('tools-open',!!drawer);
+ bindStickerDrag();
 }
 function refreshSelection(){
  const undo=$('[data-action="undo"]'),redo=$('[data-action="redo"]');if(undo)undo.disabled=!history.length;if(redo)redo.disabled=!future.length;
  const canvas=spreadEditing()?$('.edit-spread'):$('#canvas-page');if(!canvas)return;
  $$('.element',canvas).forEach(el=>{const selected=el.dataset.element===selectedId;el.classList.toggle('selected',selected);if(!selected)el.querySelector('.selection-handles')?.remove();else if(!el.querySelector('.selection-handles'))el.insertAdjacentHTML('beforeend',transformHandles());});
- $('.context-toolbar')?.remove();
- if(selectedId&&currentElement())$('.editor-workspace').insertAdjacentHTML('beforeend',contextHTML());
- if(drawer==='text'&&$('.drawer'))$('.drawer').outerHTML=drawerHTML();
- if($('.no-selection'))$('.no-selection').textContent=selectedId?'拖动角点缩放 · 上方圆柄旋转':'点击空白处写字 · 双击文字修改';
+ refreshEditorTools();
+ if($('.no-selection'))$('.no-selection').textContent=selectedId?'拖动角点缩放 · 上方圆柄旋转':'点击空白处写字 · 双击元素显示菜单';
 }
 // Inline text stays a normal structured page element; the input is only its editor.
 let inlineText=null;
 function syncInlineText(){
  const s=inlineText;if(!s)return;
- const book=state.books.find(b=>b.id===s.bookId),page=book?.pages.find(p=>p.id===s.pageId);if(!page)return;
+ const book=state.books.find(b=>b.id===s.bookId),page=documentPages(book).find(p=>p.id===s.pageId);if(!page)return;
  const text=s.input.value.slice(0,800),existing=page.elements.find(e=>e.id===s.item.id);
  if((existing?.text||'')===text)return;
  if(!s.checkpointed){checkpoint();s.checkpointed=true;}
@@ -356,7 +467,7 @@ function syncInlineText(){
 }
 function finishInlineText(){
  const s=inlineText;if(!s)return;syncInlineText();inlineText=null;
- const page=state.books.find(b=>b.id===s.bookId)?.pages.find(p=>p.id===s.pageId),item=page?.elements.find(e=>e.id===s.item.id);
+ const page=documentPages(state.books.find(b=>b.id===s.bookId)).find(p=>p.id===s.pageId),item=page?.elements.find(e=>e.id===s.item.id);
  if(item&&!item.text.trim()){
   if(!s.checkpointed)checkpoint();page.elements=page.elements.filter(e=>e.id!==item.id);dirty();
  }
@@ -364,18 +475,18 @@ function finishInlineText(){
  s.input.remove();s.host.classList.remove('inline-text-editing');
  if(kept){const text=s.host.querySelector('.text-content');if(text)text.textContent=kept.text;s.host.setAttribute('aria-label',kept.text);}
  else{s.host.remove();if(selectedId===s.item.id)selectedId=null;}
- if(currentView==='editor'&&editing){refreshSelection();const thumb=$(`[data-page-id="${s.pageId}"] .thumb-content`);if(thumb&&page)thumb.innerHTML=elementsHTML(page,true,true);}
+ if(currentView==='editor'&&editing){refreshSelection();if(isCoverEditing()&&$('.cover-thumb-art'))$('.cover-thumb-art').innerHTML=coverHTML(currentBook());const thumb=$(`[data-page-id="${s.pageId}"] .thumb-content`);if(thumb&&page)thumb.innerHTML=elementsHTML(page,true,true);}
 }
 function startInlineText(existing=null,x=15,y=20){
  if(currentView!=='editor'||!editing||editingPageTurn||!currentPage())return;
  finishInlineText();
- const item=existing?currentPage().elements.find(e=>e.id===existing.id):node('text',{text:'',font:newTextFont,direction:'horizontal',x:Math.max(0,Math.min(95,x)),y:Math.max(0,Math.min(95,y)),w:Math.max(5,Math.min(70,100-x)),size:newTextSize,color:'#505b46'});
+ const item=existing?currentPage().elements.find(e=>e.id===existing.id):node('text',{text:'',font:newTextFont,direction:'horizontal',x:Math.max(0,Math.min(95,x)),y:Math.max(0,Math.min(95,y)),w:Math.max(5,Math.min(70,100-x)),size:newTextSize,bold:newTextBold,color:newTextColor});
  if(!item||item.type!=='text')return;
- selectedId=item.id;drawer=null;$('.drawer')?.remove();refreshSelection();
+ selectedId=item.id;refreshSelection();
  let host=$(`[data-element="${item.id}"]`,$('#canvas-page'));
  if(!host){const temp=document.createElement('div');temp.innerHTML=elementsHTML({elements:[item]},false,true);host=temp.firstElementChild;$('#canvas-page').appendChild(host);}
  host.classList.add('inline-text-editing');host.querySelector('.selection-handles')?.remove();
- const input=document.createElement('textarea');input.className='inline-text-input';input.setAttribute('aria-label','在纸面输入文字');input.maxLength=800;input.value=item.text;input.spellcheck=false;input.rows=1;host.appendChild(input);
+ const input=document.createElement('textarea');input.className='inline-text-input';input.setAttribute('aria-label','在纸面输入文字');input.maxLength=isCoverEditing()&&item.id===currentBook().coverDesign.titleId?40:800;input.value=item.text;input.spellcheck=false;input.rows=1;host.appendChild(input);
  inlineText={bookId:activeBookId,pageId:currentPage().id,item:clone(item),host,input,checkpointed:false,composing:false};
  const size=()=>{if(item.direction==='vertical'){input.style.height='100%';return;}input.style.height='0px';input.style.height=Math.max(input.scrollHeight,parseFloat(getComputedStyle(input).lineHeight)||24)+'px';};
  input.addEventListener('compositionstart',()=>{if(inlineText?.input===input)inlineText.composing=true;});
@@ -399,18 +510,18 @@ function bindDrag(target=null){
   else gesture.angle=Math.atan2(event.clientY-gesture.center.y,event.clientX-gesture.center.x);
  };
  canvas.onpointerdown=e=>{
-  if(e.target.closest('.inline-text-input'))return;
+  if(editingPageTurn||e.target.closest('.inline-text-input'))return;
   if(canvas.dataset.editPage)chooseEditorPage(currentBook().pages.find(p=>p.id===canvas.dataset.editPage));
-  if(e.isPrimary===false&&blankTap){blankTap=null;return;}
+  if(e.isPrimary===false&&!points.size){blankTap=null;return;}
   if(e.button!==0||points.size>=2)return;
   const el=e.target.closest('[data-element]');
   if(points.size){points.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);begin('pinch',e);e.preventDefault();return;}
-  if(!el){selectedId=null;refreshSelection();blankTap={id:e.pointerId,x:e.clientX,y:e.clientY};return;}
+  if(!el){selectedId=null;refreshSelection();blankTap={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);return;}
   selectedId=el.dataset.element;refreshSelection();changed=false;started=false;
   points.set(e.pointerId,{x:e.clientX,y:e.clientY});el.setPointerCapture(e.pointerId);begin(e.target.closest('[data-transform]')?.dataset.transform||'drag',e);e.preventDefault();
  };
  canvas.onpointermove=e=>{
-  if(blankTap&&Math.hypot(e.clientX-blankTap.x,e.clientY-blankTap.y)>6)blankTap=null;
+  if(blankTap?.id===e.pointerId){if(Math.hypot(e.clientX-blankTap.x,e.clientY-blankTap.y)>6)blankTap.moved=true;if(blankTap.moved)e.preventDefault();return;}
   if(!points.has(e.pointerId)||!gesture)return;
   points.set(e.pointerId,{x:e.clientX,y:e.clientY});
   const g=gesture,b=g.base,item=currentElement(),p=[...points.values()],r=g.rect;if(!item)return;
@@ -429,34 +540,71 @@ function bindDrag(target=null){
   constrainSticker(item);paint();e.preventDefault();
  };
  const end=e=>{
-  if(blankTap?.id===e.pointerId){const tap=blankTap;blankTap=null;if(e.type==='pointerup'){const r=canvas.getBoundingClientRect();startInlineText(null,(tap.x-r.left)/r.width*100,(tap.y-r.top)/r.height*100);}return;}
+  if(blankTap?.id===e.pointerId){const tap=blankTap;blankTap=null;if(e.type==='pointerup'){const r=canvas.getBoundingClientRect(),dx=e.clientX-tap.x,dy=e.clientY-tap.y;if(isPageSwipe(dx,dy,r.width))void turnEditingPage(dx<0?1:-1);else if(!tap.moved)startInlineText(null,(tap.x-r.left)/r.width*100,(tap.y-r.top)/r.height*100);}return;}
   if(!points.has(e.pointerId))return;points.delete(e.pointerId);
   if(points.size){const p=[...points.values()][0];begin('drag',{clientX:p.x,clientY:p.y});return;}
   gesture=null;if(changed){dirty();renderEditor();}else refreshSelection();
  };
  canvas.onpointerup=end;canvas.onpointercancel=end;canvas.onlostpointercapture=end;
- canvas.ondblclick=e=>{const el=e.target.closest('[data-element]');if(el&&!e.target.closest('[data-transform]')){selectedId=el.dataset.element;if(currentElement()?.type==='text')startInlineText(currentElement());}};
+ canvas.ondblclick=e=>{const el=e.target.closest('[data-element]');if(el&&!e.target.closest('[data-transform],.inline-text-input')){e.preventDefault();openElementMenu(canvas,el.dataset.element,e.clientX,e.clientY);}};
+ canvas.oncontextmenu=e=>{if(e.target.closest('.inline-text-input'))return;e.preventDefault();openElementMenu(canvas,e.target.closest('[data-element]')?.dataset.element||null,e.clientX,e.clientY);};
 }
+function closeElementMenu(){const menu=elementMenu;elementMenu=null;menu?.node.remove();}
+function canPasteElement(){return elementClipboard?.workspace===workspaceKey&&!document.body.classList.contains('identity-checking')&&(elementClipboard.item.type!=='sticker'||!!asset(elementClipboard.item.assetId));}
+function openElementMenu(canvas,id,x,y){
+ if(currentView!=='editor'||!editing||editingPageTurn||!currentPage()||document.body.classList.contains('identity-checking'))return;
+ finishInlineText();closeElementMenu();
+ if(canvas.dataset.editPage)chooseEditorPage(currentBook().pages.find(p=>p.id===canvas.dataset.editPage));
+ const item=id?documentPages(currentBook()).flatMap(p=>p.elements).find(e=>e.id===id):null;
+ if(id&&!['text','sticker','photo'].includes(item?.type))return;
+ selectedId=item?.id||null;refreshSelection();
+ const rect=canvas.getBoundingClientRect(),menu=document.createElement('div');menu.className='element-popover';menu.setAttribute('popover','manual');menu.setAttribute('role','menu');menu.setAttribute('aria-label',item?.type==='text'?'文字操作':item?.type==='photo'?'照片操作':item?'贴纸操作':'页面操作');
+ const button=(command,label,iconName,disabled=false)=>`<button type="button" role="menuitem" data-element-command="${command}" ${disabled?'disabled':''}>${icon(iconName)}<span>${label}</span></button>`;
+ menu.innerHTML=(item?button('copy','复制','copy'):'')+button('paste','粘贴','plus',!canPasteElement())+(item?.type==='text'?button('edit','编辑文字','pen'):'')+(item?button('delete','删除','trash'):'');
+ document.body.appendChild(menu);const context={node:menu,workspace:workspaceKey,bookId:activeBookId,pageId:currentPage().id,id:item?.id||null,x:(x-rect.left)/rect.width*100,y:(y-rect.top)/rect.height*100};elementMenu=context;
+ menu.showPopover();const bounds=menu.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(x+8,innerWidth-bounds.width-8))+'px';menu.style.top=Math.max(8,Math.min(y+8,innerHeight-bounds.height-8))+'px';
+ menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
+ menu.addEventListener('toggle',event=>{if(event.newState==='closed'&&elementMenu===context)closeElementMenu();});
+ menu.onclick=event=>{
+  const command=event.target.closest('[data-element-command]');if(!command||command.disabled)return;event.stopPropagation();
+  if(context.workspace!==workspaceKey||context.bookId!==activeBookId||context.pageId!==currentPage()?.id||!editing||currentView!=='editor'||document.body.classList.contains('identity-checking')){closeElementMenu();return;}
+  const source=context.id?documentPages(currentBook()).flatMap(p=>p.elements).find(e=>e.id===context.id):null,a=command.dataset.elementCommand;closeElementMenu();
+  if(a==='copy'&&source){elementClipboard={workspace:workspaceKey,item:clone(source)};toast('已复制，可双击元素或右键空白处粘贴');return;}
+  if(a==='paste'){
+   if(!canPasteElement()){toast('请先复制贴纸、照片或文字');return;}
+   const copy=clone(elementClipboard.item),page=currentPage();copy.id=uid();copy.x=Math.max(0,Math.min(Math.max(0,100-copy.w),context.x+3));copy.y=Math.max(0,Math.min(85,context.y+3));
+   if(copy.spreadWith){const mate=matePage(page);if(mate&&copy.type==='sticker')copy.spreadWith=mate.id;else delete copy.spreadWith;}
+   change(()=>{page.elements.push(copy);selectedId=copy.id;constrainSticker(copy,page);});toast('已粘贴');return;
+  }
+  if(!source)return;selectedId=source.id;
+  if(a==='edit'){startInlineText(source);return;}
+  if(a==='delete'){change(()=>{const page=elementPage(source.id);page.elements=page.elements.filter(e=>e.id!==source.id);selectedId=null;});toast('已从页面删除，可撤销');}
+ };
+ menu.onkeydown=event=>{if(['Escape','ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();event.stopPropagation();if(event.key==='Escape'){closeElementMenu();canvas.focus({preventScroll:true});return;}const buttons=[...menu.querySelectorAll('button:not(:disabled)')],index=buttons.indexOf(document.activeElement),next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length;buttons[next]?.focus();}};
+}
+document.addEventListener('pointerdown',event=>{if(elementMenu&&!elementMenu.node.contains(event.target))closeElementMenu();},true);
+window.addEventListener('resize',closeElementMenu);
+document.addEventListener('wheel',event=>{if(elementMenu&&!elementMenu.node.contains(event.target))closeElementMenu();},{capture:true,passive:true});
 let stickerDragCleanup=null,suppressStickerClickUntil=0;
 function bindStickerDrag(){
  stickerDragCleanup?.();const buttons=$$('.drawer [data-action="insert-sticker"]');let drag=null,timer;
  const clear=()=>{clearTimeout(timer);drag?.ghost?.remove();document.body.classList.remove('sticker-dragging');drag=null;};
  const activate=()=>{if(!drag)return;drag.active=true;const ghost=document.createElement('img');ghost.src=asset(drag.id).src;ghost.className='sticker-drag-ghost';ghost.alt='';document.body.classList.add('sticker-dragging');document.body.appendChild(ghost);drag.ghost=ghost;position();};
  const position=()=>{if(drag?.ghost){drag.ghost.style.left=drag.x+'px';drag.ghost.style.top=drag.y+'px';}};
- const move=e=>{if(!drag||drag.pointer!==e.pointerId)return;drag.x=e.clientX;drag.y=e.clientY;const distance=Math.hypot(drag.x-drag.sx,drag.y-drag.sy);if(!drag.active&&distance>7){if(drag.touch){clearTimeout(timer);drag.scrolling=true;suppressStickerClickUntil=Date.now()+500;$('.drawer').scrollTop=drag.scrollTop+drag.sy-drag.y;e.preventDefault();return;}activate();}if(drag.active){position();e.preventDefault();}};
+ const move=e=>{if(!drag||drag.pointer!==e.pointerId)return;const dx=e.clientX-drag.x;drag.x=e.clientX;drag.y=e.clientY;if(drag.scrolling){strip.scrollLeft-=dx;e.preventDefault();return;}const distance=Math.hypot(drag.x-drag.sx,drag.y-drag.sy);if(!drag.active&&distance>7){if(drag.touch){clearTimeout(timer);drag.scrolling=true;suppressStickerClickUntil=Date.now()+500;$('.editor-tools-content').scrollTop=drag.scrollTop+drag.sy-drag.y;e.preventDefault();return;}activate();}if(drag.active){position();e.preventDefault();}};
  const up=e=>{if(!drag||drag.pointer!==e.pointerId)return;const d=drag;clear();if(!d.active)return;suppressStickerClickUntil=Date.now()+500;const leaf=(spreadEditing()?$$('.edit-leaf'):[$('#canvas-page')]).find(el=>{const r=el?.getBoundingClientRect();return r&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;});if(leaf?.dataset.editPage)chooseEditorPage(currentBook().pages.find(p=>p.id===leaf.dataset.editPage));const r=leaf?.getBoundingClientRect();if(r&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)insertStickers([d.id],{x:Math.max(currentBook().stickerPlacement==='spread'&&matePage(currentPage())?-16:0,Math.min(currentBook().stickerPlacement==='spread'&&matePage(currentPage())?84:68,(e.clientX-r.left)/r.width*100-16)),y:Math.max(0,Math.min(75,(e.clientY-r.top)/r.height*100-12))});else toast('未放入纸页，贴纸仍在收藏中');};
- buttons.forEach(button=>{button.ondragstart=e=>e.preventDefault();button.onpointerdown=e=>{if(e.button!==0)return;drag={id:button.dataset.id,pointer:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,scrollTop:$('.drawer').scrollTop,touch:e.pointerType==='touch',active:false};if(drag.touch)timer=setTimeout(activate,300);};});
+ buttons.forEach(button=>{button.ondragstart=e=>e.preventDefault();button.onpointerdown=e=>{if(e.button!==0)return;drag={id:button.dataset.id,pointer:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,scrollTop:$('.editor-tools-content').scrollTop,touch:e.pointerType==='touch',active:false};if(drag.touch)timer=setTimeout(activate,300);};});
  document.addEventListener('pointermove',move,{passive:false});document.addEventListener('pointerup',up);document.addEventListener('pointercancel',clear);
  stickerDragCleanup=()=>{clear();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',clear);stickerDragCleanup=null;};
 }
 
-function bindPageSort(){$$('.page-thumb').forEach(t=>{t.ondragstart=e=>e.dataTransfer.setData('text/plain',t.dataset.pageId);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain'),from=currentBook().pages.findIndex(p=>p.id===id),to=Number(t.dataset.value);if(from<0||from===to)return;change(()=>moveSpread(from,to));};});}
-function showDialog(title,html,actions=''){const d=$('#dialog');d.classList.remove('access-dialog');d.innerHTML=`<div class="dialog-heading"><h2>${title}</h2>${ib('close-dialog','close','关闭对话框')}</div>${html}${actions?`<div class="dialog-actions">${actions}</div>`:''}`;if(!d.open)d.showModal();}
+
+function showDialog(title,html,actions=''){const d=$('#dialog');d.setAttribute('aria-labelledby','dialog-title');d.classList.remove('access-dialog');d.innerHTML=`<div class="dialog-heading"><h2 id="dialog-title">${title}</h2>${ib('close-dialog','close','关闭对话框')}</div>${html}${actions?`<div class="dialog-actions">${actions}</div>`:''}`;if(!d.open)d.showModal();}
 function closeDialog(){accessController?.abort();$('#dialog').close();}
 function newBookDialog(){showDialog('给回忆，取个名字',`<p class="dialog-description">挑一张封面。从这里，开始下一段故事。</p><label class="field"><span>手帐名称</span><input id="new-title" placeholder="例如：山风与周末" maxlength="40" value=""></label><div class="cover-options">${['olive','cream','coral','blue'].map((c,i)=>`<button class="cover-choice ${c} ${i===0?'active':''}" data-action="choose-cover" data-value="${c}" aria-label="${['苔绿','奶油','陶红','雾蓝'][i]}封面" aria-pressed="${i===0}">拾页</button>`).join('')}</div><p class="muted" style="font-size:10px">从一页空白开始，随时都可以续写。</p>`,`<button class="button outline" data-action="close-dialog">再想想</button><button class="button primary" data-action="create-book">打开这本书 ${icon('arrow')}</button>`);setTimeout(()=>$('#new-title')?.focus(),50);}
 function bookMenu(id){const b=state.books.find(a=>a.id===id);if(!b)return;showDialog('修改手帐名称',`<label class="field"><span>手帐名称</span><input id="rename-title" value="${esc(b.title)}" maxlength="40"></label>`,`<button class="button outline" data-action="close-dialog">取消</button><button class="button primary" data-action="rename-book" data-id="${id}">保存名称</button>`);}
-function textDialog(existing=false){const e=existing?currentElement():null;showDialog(existing?'再写一点':'写下这一刻',`<label class="field"><span>文字内容</span><textarea id="text-content" maxlength="800" placeholder="有些小事，值得被记下来。">${esc(e?.text||'')}</textarea></label><label class="field"><span>排列方向</span><select id="text-direction"><option value="horizontal" ${e?.direction!=='vertical'?'selected':''}>横排 · 从左向右</option><option value="vertical" ${e?.direction==='vertical'?'selected':''}>竖排 · 从上向下，列从右向左</option></select></label><label class="field"><span>文字风格</span><select id="text-font">${textFontOptions(e?.font||newTextFont)}</select></label>${textSizeControl('dialog-text-size',e?.size||newTextSize)}`,`<button class="button outline" data-action="close-dialog">取消</button><button class="button primary" data-action="save-text" data-id="${e?.id||''}">${existing?'保存文字':'添加到这一页'}</button>`);setTimeout(()=>$('#text-content')?.focus(),50);}
-function about(){showDialog('一点使用说明',`<p class="dialog-description">拾页 · 高保真交互原型<br>把日子，慢慢收好。</p><ul class="about-list"><li><b>可以真正操作</b>创建手帐、翻页、拖动贴纸、缩放旋转、编辑文字、切换纸张、整理页面、撤销重做与本机保存。</li><li><b>贴纸工坊</b>示例使用预制透明素材体验多主体选择。上传个人照片后可框选或轮廓裁切。正式流程为自动提取所有主要物体，再圈选纠错并自动贴边；真实 AI 分割尚未接入。</li><li><b>你的内容留在本机</b>使用浏览器 IndexedDB 保存，清理网站数据会移除作品。原型没有账号、云同步或后台服务。</li><li><b>先从一本示例书开始</b>书架前三本为可编辑示例。点击封面翻阅，再切换到“编辑”；双击文字可以修改。</li></ul>`,`<button class="button primary" data-action="close-dialog">知道了，开始拾页</button>`);}
+function textDialog(existing=false){const e=existing?currentElement():null;showDialog(existing?'再写一点':'写下这一刻',`<label class="field"><span>文字内容</span><textarea id="text-content" maxlength="800" placeholder="有些小事，值得被记下来。">${esc(e?.text||'')}</textarea></label><label class="field"><span>排列方向</span><select id="text-direction"><option value="horizontal" ${e?.direction!=='vertical'?'selected':''}>横排 · 从左向右</option><option value="vertical" ${e?.direction==='vertical'?'selected':''}>竖排 · 从上向下，列从右向左</option></select></label><label class="field"><span>文字风格</span><select id="text-font">${textFontOptions(e?.font||newTextFont)}</select></label>${textSizeControl('dialog-text-size',e?.size||newTextSize)}${textStyleControls('dialog-text',e?e.bold:newTextBold,e?e.color:newTextColor)}`,`<button class="button outline" data-action="close-dialog">取消</button><button class="button primary" data-action="save-text" data-id="${e?.id||''}">${existing?'保存文字':'添加到这一页'}</button>`);setTimeout(()=>$('#text-content')?.focus(),50);}
+function about(){showDialog('一点使用说明',`<p class="dialog-description">拾页<br>把日子，慢慢收好。</p><ul class="about-list"><li><b>创作你的手账</b>创建手账，自定义封面，添加贴纸与文字，搭配喜欢的纸张。拖动、缩放、旋转素材，调整页面顺序，把生活里的片刻收进书里。</li><li><b>贴纸工坊</b>上传照片，使用自动抠图或手工裁切，留下喜欢的部分。还可以手动修边、调整白边，将做好的贴纸收入“我的素材”，随时用于创作。</li><li><b>从一本手账开始</b>点击书架上的封面即可翻阅，切换到“编辑”开始创作。点击书页空白处输入文字，双击已有文字并选择“编辑文字”即可修改。也可以新建一本手账，写下自己的故事。</li></ul>`,`<button class="button primary" data-action="close-dialog">知道了，开始拾页</button>`);}
 let accessDestination='shelf',accessRequest=0,accessPending=false,accessController=null;
 $('#dialog').addEventListener('cancel',()=>accessController?.abort());
 $('#dialog').addEventListener('close',()=>$('#account-form')?.reset());
@@ -471,9 +619,9 @@ function openAccess(destination='shelf',tab='invite'){
   const button=form.querySelector('[type="submit"]'),error=$('#access-error');accessPending=true;button.disabled=true;button.textContent='正在验证…';error.textContent='';
   try{
    if(savedWorkspace&&!(await saveNow()))throw Error('请先完成本机保存再切换身份。');
-   const session=await fetch('/api/access/session',{credentials:'same-origin',cache:'no-store',signal});if(!session.ok)throw Error('邀请验证暂不可用，请稍后重试。');
-   const response=await fetch('/api/access/invite/verify',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal});
-   const result=await response.json();if(!response.ok||result.authorized!==true)throw Error(result.error?.message||'邀请码未通过验证，请重试。');
+   await ShiyeAPI.json('/api/access/session',{signal});
+   const result=await ShiyeAPI.json('/api/access/invite/verify',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal});
+   if(result.authorized!==true)throw Error(result.error?.message||'邀请码未通过验证，请重试。');
    identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
    if(attempt!==accessRequest||!$('#dialog').open)return;
    input.value='';closeDialog();reloadIdentity('shelf',true);
@@ -490,8 +638,8 @@ function bindAccountLogin(attempt){
   accessPending=true;button.disabled=true;button.textContent='正在登录…';error.textContent='';
   try{
    if(savedWorkspace&&!(await saveNow()))throw Error('请先完成本机保存再登录。');
-   const response=await fetch('/api/access/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username.value.trim(),password:password.value}),signal:controller.signal});
-   const result=await response.json();if(!response.ok||result.authenticated!==true)throw Error(result.error?.message||'登录未完成，请重试。');
+   const result=await ShiyeAPI.json('/api/access/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username.value.trim(),password:password.value}),signal:controller.signal});
+   if(result.authenticated!==true)throw Error(result.error?.message||'登录未完成，请重试。');
    identityVersion++;applyIdentity(null);identityChannel?.postMessage('changed');
    if(attempt!==accessRequest||!$('#dialog').open)return;
    form.reset();closeDialog();reloadIdentity('shelf');
@@ -500,8 +648,9 @@ function bindAccountLogin(attempt){
  };
 }
 function applyIdentity(session){
+ if(!session||session.accountId!==currentIdentity?.accountId||session.inviteId!==currentIdentity?.inviteId||session.authorized!==currentIdentity?.authorized){elementClipboard=null;closeElementMenu();window.ShiyePageTextures?.clear();window.ShiyeStickerPreview?.clear();cancelPageWarm();}
  if(workSync&&session?.accountId!==workSync.owner)workSync.stop();
- currentIdentity=session;adminUser=session?.authorized===true&&session.role==='admin'?session.username:null;
+ currentIdentity=session;ShiyeRoomHome.update(session);adminUser=session?.authorized===true&&session.role==='admin'?session.username:null;
  const nav=$('.sidebar .nav'),entry=nav?.querySelector('[data-view="admin"]');
  if(!adminUser)entry?.remove();
  else if(nav&&!entry)nav.insertAdjacentHTML('beforeend',`<button data-action="nav" data-view="admin">${icon('grid')}<span>管理工具</span></button>`);
@@ -523,8 +672,8 @@ window.addEventListener('pageshow',e=>{if(e.persisted){applyIdentity(null);docum
 
 
 async function navigate(view,origin=null){if(view!=='home'&&currentView==='home'&&!(await inviteGranted())){openAccess(view);return;}const version=++navigationVersion;if(currentView==='editor'&&!(await saveNow()))return;if(version!==navigationVersion)return;photoTaskVersion++;stopHomeDemo();cancelEditingTurn();cancelReaderTurn();if(view==='workshop'&&currentView!=='workshop'){workshopReturn={view:currentView,bookId:activeBookId,pageId:currentPage()?.id,editing,selectedId,drawer};workshopOrigin=origin;}currentView=view;selectedId=null;drawer=null;render();window.scrollTo(0,0);}
-async function openBook(id,edit=false){cancelReaderTurn();readerCover=null;activeBookId=id;currentView='editor';editing=edit;selectedId=null;drawer=null;history=[];future=[];render();window.scrollTo(0,0);}
-function selectPage(i){const b=currentBook();b.page=Math.max(0,Math.min(b.pages.length-1,i));selectedId=null;dirty();renderEditor();$('#canvas-page')?.classList.add('flip-in');}
+async function openBook(id,edit=false){coverEditingBookId=null;cancelReaderTurn();readerCover=null;activeBookId=id;currentView='editor';editing=edit;selectedId=null;drawer=null;history=[];future=[];render();window.scrollTo(0,0);}
+function selectPage(i,{animate=true,decodedImages=null}={}){finishInlineText();coverEditingBookId=null;const b=currentBook();b.page=Math.max(0,Math.min(b.pages.length-1,i));selectedId=null;dirty();renderEditor(decodedImages);if(animate)$('#canvas-page')?.classList.add('flip-in');}
 // Homepage demo is presentation-only: never write it into the user's books or assets.
 const homeDemo={open:false,spread:0,busy:false,frame:0,timer:0};
 const homeSticker='assets/home-landscape-sticker.png';
@@ -542,12 +691,9 @@ function homePageHTML(index){
  return `<article class="demo-page-content page-${p.kind}"><div class="demo-page-label">${p.label}</div><h2>${esc(p.title).replace(/\n/g,'<br>')}</h2>${picture}<p>${esc(p.copy).replace(/\n/g,'<br>')}</p>${p.kind==='intro'?'<div class="demo-date"><span>SEP</span><b>07</b><span>山风 / 晴</span></div>':''}${p.kind==='ending'?`<img class="demo-ending-sticker" src="${homeSticker}" alt="白边山湖贴纸" draggable="false">`:''}<footer><span>${p.foot}</span><span>${String(index+1).padStart(2,'0')}</span></footer></article>`;
 }
 function renderHome(){
- Object.assign(homeDemo,{open:false,spread:0,busy:false});
- $('#app').innerHTML=`<div class="home-shell"><header class="home-header"><a class="home-wordmark" href="#" data-action="nav" data-view="home" aria-label="拾页首页">拾页<span>SHIYE</span></a><nav aria-label="首页导航"><button data-action="access-open">登录/注册 ${icon('arrow')}</button></nav></header><main class="home-main"><section class="home-copy" aria-labelledby="home-title"><div class="home-brand"><span class="brand-mark" aria-hidden="true"></span><span>拾页<small>SHIYE</small></span></div><div class="home-kicker">A HOME FOR YOUR LITTLE MOMENTS</div><h1 id="home-title">把日子，<br>慢慢<span>收好。</span></h1><p class="home-description">从照片里拾起一点喜欢，<br>做成贴纸，收进只属于你的手帐。</p><div class="home-actions"><button class="button primary" data-action="home-create-sticker">${icon('sticker')} 开始创作 ${icon('arrow')}</button><button class="home-watch" data-action="home-demo" aria-controls="home-book" aria-expanded="false"><span class="play-symbol" aria-hidden="true">▷</span><span>观看演示</span></button></div><div class="home-copy-foot"><span></span>一张照片 · 一枚贴纸 · 一本自己的书</div></section><section class="home-stage" aria-label="拾页手帐翻阅演示"><div class="home-stage-caption">LITTLE MOMENTS, BOUND TOGETHER.</div><div class="floating-stickers" aria-hidden="true"><img class="float-sticker float-landscape" src="${homeSticker}" alt="" draggable="false"><div class="float-photo float-forest"><img src="assets/forest.jpg" alt="" draggable="false"><span>去有风的地方</span></div><div class="float-photo float-coffee"><img src="assets/coffee.jpg" alt="" draggable="false"><span>a little pause.</span></div><span class="float-label">山风，已收藏。</span></div><div class="home-book-scene"><div id="home-book" class="home-book" role="group" aria-label="合上的示例手帐：山野来信"><div class="demo-book-board"></div><div class="demo-spread" aria-hidden="true"><div class="demo-left">${homePageHTML(0)}</div><div class="demo-right">${homePageHTML(1)}</div><div class="demo-binding"></div></div><div class="demo-turn-layer" aria-hidden="true"></div><button class="demo-cover" data-action="home-demo" aria-label="打开山野来信，观看演示"><span class="cover-front"><span class="home-cover-top">A PERSONAL COLLECTION<br>OF LITTLE MOMENTS</span><span class="home-cover-title">山野来信</span><span class="home-cover-subtitle">Letters from<br><i>the wild.</i></span><img src="assets/lake.jpg" alt="山野来信封面上的湖景" draggable="false"><span class="home-cover-bottom">拾页 SHIYE<span>VOL. 001</span></span></span><span class="cover-back" aria-hidden="true"></span></button></div></div><div class="home-demo-controls" hidden><button class="demo-prev icon-button" data-action="home-prev" aria-label="上一组页面" disabled>${icon('left')}</button><span class="demo-progress" role="status" aria-live="polite">01 — 02 / 06</span><button class="demo-next icon-button" data-action="home-next" aria-label="下一组页面">${icon('right')}</button><span class="demo-control-divider"></span><button class="demo-close" data-action="home-close">合上手帐</button></div><p class="home-stage-hint">有些瞬间，值得一页一页地翻。</p><p class="home-demo-disclosure" hidden>示例手帐 · 风景照片与预制贴纸</p></section></main><footer class="home-footer"><span>生活的碎片，在这里成书。</span><span>MADE OF LITTLE MOMENTS <i>✳</i> SHIYE</span></footer></div>`;
- $('.demo-book-board').insertAdjacentHTML('afterend','<div class="home-page-stack stack-left" aria-hidden="true"></div><div class="home-page-stack stack-right" aria-hidden="true"></div>');
- bindHomeBook();
+ ShiyeRoomHome.mount($('#app'),{identity:currentIdentity,onAccount:async()=>{if(await inviteGranted())await openAccountPanel();else openAccess('shelf');},onCreate:()=>navigate('shelf')});
 }
-function stopHomeDemo(){cancelAnimationFrame(homeDemo.frame);clearTimeout(homeDemo.timer);Object.assign(homeDemo,{frame:0,timer:0,busy:false});}
+function stopHomeDemo(){cancelPageWarm();cancelAnimationFrame(homeDemo.frame);clearTimeout(homeDemo.timer);Object.assign(homeDemo,{frame:0,timer:0,busy:false});}
 function updateHomeDemo(){
  const book=$('#home-book');if(!book)return;
  book.style.setProperty('--left-stack',`${2+homeDemo.spread*2}px`);
@@ -568,7 +714,7 @@ function updateHomeDemo(){
 function showHomeSpread(){
  $('.demo-left').innerHTML=homePageHTML(homeDemo.spread*2);
  $('.demo-right').innerHTML=homePageHTML(homeDemo.spread*2+1);
- $('.demo-turn-layer').innerHTML='';updateHomeDemo();
+ $('.demo-turn-layer').innerHTML='';updateHomeDemo();schedulePageWarm();
 }
 function openHomeDemo(){
  if(homeDemo.busy)return;
@@ -577,7 +723,7 @@ function openHomeDemo(){
  $('.home-stage').classList.add('is-open');$('#home-book').classList.add('is-open');
  $('.home-demo-controls').hidden=false;$('.home-demo-disclosure').hidden=false;
  $('.home-stage-hint').textContent='轻拖书页侧边翻页，也可以点击左右箭头。';updateHomeDemo();
- homeDemo.timer=setTimeout(()=>{if(currentView!=='home')return;homeDemo.busy=false;updateHomeDemo();$('.demo-next').focus({preventScroll:true});},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1250);
+ homeDemo.timer=setTimeout(()=>{if(currentView!=='home')return;homeDemo.busy=false;updateHomeDemo();schedulePageWarm();$('.demo-next').focus({preventScroll:true});},matchMedia('(prefers-reduced-motion: reduce)').matches?0:1250);
 }
 function closeHomeDemo(){
  if(homeDemo.busy)return;stopHomeDemo();homeDemo.open=false;homeDemo.spread=0;showHomeSpread();
@@ -596,48 +742,149 @@ function prepareHomeTurn(direction){
  homeDemo.busy=true;updateHomeDemo();
  return {direction,target,w:rect.width,h:rect.height,front:$('.demo-fold-front'),back:$('.demo-fold-back'),progress:0};
 }
+// Warm only adjacent turn faces, one per idle period. Input takes priority over this queue.
+let pageWarmTimer=0,pageWarmIdle=0,pageWarmVersion=0,pageWarmRunning=false;
+const pageWarmPointers=new Set();
+function cancelPageWarm(){
+ clearTimeout(pageWarmTimer);if(pageWarmIdle){if(window.cancelIdleCallback)cancelIdleCallback(pageWarmIdle);else clearTimeout(pageWarmIdle);}pageWarmIdle=0;pageWarmVersion++;
+}
+function canWarmPages(){return !document.hidden&&!pageWarmPointers.size&&!inlineText&&!readerTurn&&!editingPageTurn&&!$('#dialog').open&&!document.body.classList.contains('identity-checking')&&document.fonts.status==='loaded'&&((currentView==='editor'&&!readerCover&&workspaceKey===workspaceFor(currentIdentity))||(currentView==='home'&&homeDemo.open&&!homeDemo.busy));}
+function adjacentTurnFaces(){
+ const jobs=[];
+ function pair(host,w,h,front,back){
+  const markup=document.createElement('div');
+  for(const [html,side] of [[front,'demo-fold-front'],[back,'demo-fold-back-content']]){markup.innerHTML=html;jobs.push({host,w,h,html:markup.innerHTML,side});}
+ }
+ if(currentView==='home'){
+  const host=$('#home-book'),leaf=$('.demo-right');if(!host||!leaf)return jobs;
+  for(const direction of [1,-1]){const target=homeDemo.spread+direction;if(target<0||target>2)continue;pair(host,leaf.offsetWidth,leaf.offsetHeight,homePageHTML(direction>0?homeDemo.spread*2+1:homeDemo.spread*2),homePageHTML(direction>0?target*2:target*2+1));}
+  return jobs;
+ }
+ const book=currentBook(),host=editing?$('.page-frame'):$('.reader-spread');if(!book||!host)return jobs;
+ const single=editing?!spreadEditing():readerMobile(),w=editing&&spreadEditing()?host.clientWidth/2:host.getBoundingClientRect().width/(single?1:2),h=editing&&spreadEditing()?host.clientHeight:host.getBoundingClientRect().height;
+ const face=i=>editing&&single?`<div class="reader-leaf canvas-page ${book.pages[i].paper}">${elementsHTML(book.pages[i],true)}</div>`:readerFace(i);
+ for(const direction of [1,-1]){
+  if(single){const target=book.page+direction;if(target>=0&&target<book.pages.length)pair(host,w,h,face(book.page),face(target));}
+  else{const groups=bookSpreads(),at=groups.findIndex(g=>g.key===pageSpread().key),next=groups[at+direction];if(!next)continue;const front=groups[at][direction>0?'right':'left'],back=next[direction>0?'left':'right'];pair(host,w,h,readerFace(book.pages.indexOf(front)),readerFace(book.pages.indexOf(back)));}
+ }
+ return jobs;
+}
+function schedulePageWarm(){
+ cancelPageWarm();if(isCoverEditing())return;
+ if(currentView!=='editor'&&currentView!=='home')return;
+ const version=pageWarmVersion,owner=workspaceKey;
+ pageWarmTimer=setTimeout(()=>{
+  if(version!==pageWarmVersion||!canWarmPages())return;
+  const queue=adjacentTurnFaces();
+  function idle(){pageWarmIdle=window.requestIdleCallback?requestIdleCallback(step):setTimeout(()=>step(null),80);}
+  async function step(deadline){
+   pageWarmIdle=0;
+   if(version!==pageWarmVersion||owner!==workspaceKey||!canWarmPages())return;
+   if(pageWarmRunning||(deadline&&deadline.timeRemaining()<12)){idle();return;}
+   const job=queue.shift();if(!job)return;
+   if(!job.host.isConnected||!job.w||!job.h)return;
+   if(window.ShiyePageTextures.has(job.html,job.side,job.w,job.h,owner)){idle();return;}
+   pageWarmRunning=true;
+   const layer=document.createElement('div');layer.className='page-texture-prewarm';layer.inert=true;layer.setAttribute('aria-hidden','true');
+   layer.style.cssText=`position:absolute;left:0;top:0;width:${job.w}px;height:${job.h}px;visibility:hidden;pointer-events:none;overflow:hidden;contain:layout style paint;`;
+   layer.innerHTML=job.side==='demo-fold-front'?`<div class="demo-fold-front">${job.html}</div>`:`<div class="demo-fold-back"><div class="demo-fold-back-content">${job.html}</div></div>`;
+   layer.style.setProperty('--scale',getComputedStyle(job.host).getPropertyValue('--scale')||'1');
+   (currentView==='home'?job.host:job.host.parentElement).append(layer);
+   try{await window.ShiyePageTextures.get(layer.querySelector('.'+job.side),job.w,job.h,owner);}catch{/* The actual turn already has a visible fallback. */}
+   finally{layer.remove();pageWarmRunning=false;}
+   if(version===pageWarmVersion&&owner===workspaceKey)idle();
+  }
+  idle();
+ },500);
+}
+document.addEventListener('pointerdown',e=>{pageWarmPointers.add(e.pointerId);cancelPageWarm();},true);
+for(const event of ['pointerup','pointercancel'])document.addEventListener(event,e=>{pageWarmPointers.delete(e.pointerId);schedulePageWarm();},true);
+document.addEventListener('input',schedulePageWarm,true);
+document.addEventListener('wheel',schedulePageWarm,{passive:true,capture:true});
+document.addEventListener('visibilitychange',()=>{pageWarmPointers.clear();schedulePageWarm();});
+window.addEventListener('blur',()=>{pageWarmPointers.clear();cancelPageWarm();});
+window.addEventListener('focus',schedulePageWarm);
+window.addEventListener('resize',schedulePageWarm);
 // Song-approved soft-paper motion, shared by homepage, reader and editor.
 // Each tangent follows a continuous arc;
 // the free edge leads while the binding stays attached (no diagonal corner fold).
 function drawSideTurn(turn,progress){
- const p=Math.max(0,Math.min(1,progress)),n=40,dir=turn.direction,w=turn.w,h=turn.h;
- if(!turn.strips){
-  const layer=turn.front.parentElement,frontHTML=turn.front.innerHTML,backHTML=turn.back.querySelector('.demo-fold-back-content').innerHTML;
-  turn.front.hidden=true;turn.back.hidden=true;layer.classList.add('side-turn-layer','soft-home-turn');
-  layer.style.perspectiveOrigin=dir>0?'0 50%':'100% 50%';
-  const shadow=document.createElement('div');shadow.className='soft-paper-shadow';layer.appendChild(shadow);turn.shadow=shadow;
-  const root=document.createElement('div');root.className='side-sheet';root.style.cssText=`left:${dir>0?0:w}px;width:${w/n}px;height:${h}px;`;
-  layer.appendChild(root);turn.strips=[];let parent=root;
-  for(let i=0;i<n;i++){
-   const strip=document.createElement('div');strip.className='side-strip';
-   strip.style.cssText=`width:${w/n}px;left:${i?(dir>0?w/n:-w/n):(dir>0?0:-w/n)}px;transform-origin:${dir>0?'left':'right'} center;`;
-   const x=dir>0?i*w/n:w-(i+1)*w/n,bx=w-x-w/n;
-   strip.innerHTML=`<div class="side-face side-front"><div class="side-content" style="width:${w}px;left:${-x}px">${frontHTML}</div><i></i></div><div class="side-face side-back"><div class="side-content" style="width:${w}px;left:${-bx}px">${backHTML}</div><i></i></div>`;
-   parent.appendChild(strip);turn.strips.push(strip);parent=strip;
-  }
- }
- // Curvature grows and then relaxes. The entire sheet is never a rotating board:
- // at mid-turn its tangents span ~150 degrees, with an arched free edge.
- const base=180*p,bend=Math.min(base,180-base,76*Math.sin(Math.PI*p));
- let lastAngle=0,tipX=0,tipZ=0;
- turn.strips.forEach((strip,i)=>{
-  const s=(i+.5)/n,angle=base+bend*(2*s-1),radians=angle*Math.PI/180;
-  strip.style.transform=`rotateY(${-dir*(angle-lastAngle)}deg)`;lastAngle=angle;
-  tipX+=Math.cos(radians)*w/n;tipZ+=Math.sin(radians)*w/n;
-  const shade=.025+.19*Math.pow(Math.sin(radians),2);
-  strip.style.setProperty('--turn-shade',shade.toFixed(3));
- });
- const lift=Math.sin(Math.PI*p),shadow=turn.shadow;
- shadow.style.cssText=`width:${w*(.16+.65*lift)}px;left:${(dir>0?0:w)+dir*tipX*.4-w*(.16+.65*lift)/2}px;opacity:${.20*lift};filter:blur(${3+tipZ*.055}px);transform:skewY(${-dir*2*lift}deg);`;
+ if(!turn.textureStarted)cancelPageWarm();
+ const p=Math.max(0,Math.min(1,progress)),dir=turn.direction,w=turn.w,h=turn.h;
  turn.progress=p;
+ if(!turn.textureStarted){
+  turn.textureStarted=true;turn.ready=false;
+  const layer=turn.front.parentElement;layer.classList.add('side-turn-layer','soft-home-turn');
+  layer.style.perspectiveOrigin=dir>0?'0 50%':'100% 50%';
+  const back=turn.back.querySelector('.demo-fold-back-content');
+  // Keep the real front visible until both textures are decoded. Never show a blank loading face.
+  turn.back.style.visibility='hidden';
+  const timeout=new Promise((_,reject)=>{turn.textureTimer=setTimeout(()=>reject(new Error('Texture preparation timed out')),1800);});
+  Promise.race([Promise.all([window.ShiyePageTextures.get(turn.front,w,h,workspaceKey),window.ShiyePageTextures.get(back,w,h,workspaceKey),readyTurnImages(layer)]),timeout]).then(textures=>{
+   if(!layer.isConnected)return;
+   const n=matchMedia('(pointer: coarse)').matches?12:18;turn.strips=[];
+   const root=document.createElement('div');root.className='side-sheet';root.style.cssText=`left:${dir>0?0:w}px;width:${w/n}px;height:${h}px;`;layer.append(root);turn.sheet=root;let parent=root;
+   for(let i=0;i<n;i++){
+    const strip=document.createElement('div');strip.className='side-strip';strip.style.cssText=`width:${w/n}px;left:${i?(dir>0?w/n:-w/n):(dir>0?0:-w/n)}px;transform-origin:${dir>0?'left':'right'} center;--shade-direction:${dir>0?90:270}deg;`;
+    const x=dir>0?i*w/n:w-(i+1)*w/n,bx=w-x-w/n;
+    for(let side=0;side<2;side++){
+     const face=document.createElement('div');face.className='side-face '+(side?'side-back':'side-front');
+     face.style.backgroundImage=`url("${textures[side]}")`;face.style.backgroundSize=`${w}px ${h}px`;face.style.backgroundPosition=`${-(side?bx:x)}px 0`;face.append(document.createElement('i'));strip.append(face);
+    }
+    parent.append(strip);turn.strips.push(strip);parent=strip;
+   }
+   turn.front.hidden=true;turn.back.hidden=true;
+  }).catch(()=>{
+   // If a texture cannot be captured, animate the two original faces once, without DOM slicing.
+   if(!layer.isConnected)return;turn.simple=true;turn.back.style.visibility='';layer.classList.add('simple-page-turn');
+   for(const face of [turn.front,turn.back])face.style.transformOrigin=dir>0?'left center':'right center';
+   back.style.transform='none';
+  }).finally(()=>{
+   clearTimeout(turn.textureTimer);turn.ready=true;
+   if(!layer.isConnected)return;
+   const shadow=document.createElement('div');shadow.className='soft-paper-shadow';shadow.style.cssText=`width:${w}px;left:0;filter:blur(12px);`;layer.append(shadow);turn.shadow=shadow;
+   drawSideTurn(turn,turn.progress);
+   turn.onReady?.();
+  });
+  return;
+ }
+ if(!turn.ready)return;
+ const base=180*p,bend=Math.min(base,180-base,55*Math.sin(Math.PI*p));
+ let lastAngle=0,tipX=0;
+ if(turn.simple){positionTurnFaces(turn,base);tipX=Math.cos(base*Math.PI/180)*w;}
+ else turn.strips.forEach((strip,i)=>{
+  const n=turn.strips.length,angle=base+bend*(2*(i+.5)/n-1),radians=angle*Math.PI/180;
+  strip.style.transform=`rotateY(${-dir*(angle-lastAngle)}deg)`;lastAngle=angle;tipX+=Math.cos(radians)*w/n;
+  for(const edge of [0,1]){const edgeAngle=(base+bend*(2*(i+edge)/n-1))*Math.PI/180;strip.style.setProperty(edge?'--shade-end':'--shade-start',(.24*Math.sin(edgeAngle)**2).toFixed(3));}
+ });
+ if(!turn.simple){
+  // Hand off through the real DOM faces near rest, avoiding a one-frame raster swap.
+  const edge=Math.min(1,Math.min(p,1-p)/.06),mix=edge*edge*(3-2*edge);
+  turn.sheet.style.opacity=String(mix);
+  turn.front.hidden=p>=.06;turn.back.hidden=p<=.94;
+  if(!turn.front.hidden||!turn.back.hidden){turn.back.style.visibility='';positionTurnFaces(turn,base);}
+ }
+ const lift=Math.sin(Math.PI*p),spread=.12+.55*lift;
+ turn.shadow.style.opacity=String(.3*lift);
+ turn.shadow.style.transform=`translateX(${(dir>0?0:w)+dir*tipX*.35-w/2}px) scaleX(${spread})`;
+}
+
+function positionTurnFaces(turn,angle){
+ const dir=turn.direction;
+ turn.front.style.transformOrigin=dir>0?'left center':'right center';
+ turn.back.style.transformOrigin=dir>0?'right center':'left center';
+ turn.front.style.transform=angle===0?'none':`rotateY(${-dir*angle}deg)`;
+ turn.back.style.left=`${-dir*turn.w}px`;turn.back.style.right='auto';turn.back.style.width='100%';
+ turn.back.style.transform=angle===180?'none':`rotateY(${dir*(180-angle)}deg)`;
+ turn.back.querySelector('.demo-fold-back-content').style.transform='none';
 }
 
 function finishHomeTurn(turn,commit=true){
  if(commit)homeDemo.spread=turn.target;homeDemo.busy=false;showHomeSpread();
 }
 function animateHomeTurn(turn,commit=true){
- const from=turn.progress,to=commit?1:0,duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(240,1450*Math.abs(to-from));let start;
- const tick=now=>{if(currentView!=='home')return;if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1,ease=t*t*(3-2*t);drawSideTurn(turn,from+(to-from)*ease);if(t<1)homeDemo.frame=requestAnimationFrame(tick);else finishHomeTurn(turn,commit);};
+ const from=turn.progress,to=commit?1:0,duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(240,800*Math.abs(to-from));let start;
+ const tick=now=>{if(currentView!=='home')return;if(!turn.ready){drawSideTurn(turn,from);homeDemo.frame=requestAnimationFrame(tick);return;}if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1,ease=t*t*(3-2*t);drawSideTurn(turn,from+(to-from)*ease);if(t<1)homeDemo.frame=requestAnimationFrame(tick);else finishHomeTurn(turn,commit);};
  homeDemo.frame=requestAnimationFrame(tick);
 }
 function turnHomePage(direction){if(!homeDemo.open||homeDemo.busy)return;const turn=prepareHomeTurn(direction);if(turn)animateHomeTurn(turn);}
@@ -666,7 +913,11 @@ function bindHomeBook(){
 
 let readerCover=null,readerTurn=null,readerFrame=0;
 const readerMobile=()=>innerWidth<700;
-function cancelReaderTurn(){cancelAnimationFrame(readerFrame);readerFrame=0;readerTurn=null;$('.reader-turn-layer')?.remove();}
+function cancelReaderTurn(restore=true){
+ const turn=readerTurn;cancelAnimationFrame(readerFrame);readerFrame=0;readerTurn=null;
+ if(restore&&turn&&turn.underPage.parentElement===turn.root)turn.underPage.replaceWith(turn.replacedLeaf);
+ $('.reader-turn-layer')?.remove();
+}
 function readerFace(index,active=false){
  const b=currentBook(),p=b.pages[index];
  if(!p)return `<div class="reader-leaf reader-endpaper"><span>${index<0?'此间，收藏生活':'故事还在继续'}</span><small>拾页 · SHIYE</small></div>`;
@@ -676,16 +927,16 @@ function renderReading(){
  const b=currentBook();b.page=Math.max(0,Math.min(b.page||0,b.pages.length-1));
  const mobile=readerMobile(),group=pageSpread(),left=b.pages.indexOf(group.left),right=b.pages.indexOf(group.right);
  const pages=mobile?readerFace(b.page,true):readerFace(left,b.page===left)+readerFace(right,b.page===right);
- $('#app').innerHTML=`<div class="shell editor-mode">${sidebar()}<header class="editor-top"><div class="editor-title">${ib('shelve','left','放回书架')}<input id="book-title" aria-label="手帐名称" maxlength="40" value="${esc(b.title)}"></div><div class="editor-top-actions">${statusHTML()}<div class="mode-switch"><button data-action="mode" data-value="read" class="active">翻阅</button><button data-action="mode" data-value="edit">编辑</button></div><button class="button dark small" data-action="shelve">${icon('book')} 放回书架</button></div></header><main class="editor-workspace read-mode"><div class="workspace-meta"><span>${esc(b.title)} · ${readerCover?(readerCover==='front'?'封面':'封底'):`第 ${mobile?b.page+1:`${spreadPages(group).map(p=>b.pages.indexOf(p)+1).join(' — ')}`} 页 / ${b.pages.length}`}</span><button class="text-link" data-action="reader-cover">查看封面</button></div><div class="stage-wrap reader-stage"><button class="page-arrow prev" data-action="page-prev" aria-label="上一页" ${readerCover==='front'?'disabled':''}>${icon('left')}</button><div class="reader-spread ${mobile?'single':''} ${readerCover?'is-cover':''}" tabindex="0" aria-label="手帐翻阅，使用左右方向键或拖动书页侧边">${readerCover?`<button class="reader-cover-button" data-action="reader-open" data-value="${readerCover}" aria-label="打开手帐">${readerCover==='front'?coverHTML(b):`<div class="reader-back cover ${b.cover}"><h3>${esc(b.title)}</h3><p>把日子，慢慢收好。</p><small>拾页 SHIYE</small></div>`}</button>`:pages}${!mobile&&!readerCover?'<div class="reader-binding"></div>':''}</div><button class="page-arrow next" data-action="page-next" aria-label="下一页" ${readerCover==='back'?'disabled':''}>${icon('right')}</button></div><div class="read-caption">${readerCover?'点击封面，打开这本手帐。':'拖动书页侧边翻阅 · 点击页内空白选择要编辑的一页'}</div><div class="page-strip" aria-label="页面缩略图">${b.pages.map((p,i)=>`<button class="page-thumb ${i===b.page&&!readerCover?'active':''}" data-action="page-goto" data-value="${i}" aria-label="第${i+1}页"><div class="thumb-content canvas-page ${p.paper}" style="--scale:1">${elementsHTML(p,true,true)}</div><small>${i+1}</small></button>`).join('')}</div></main></div>`;
- fitReading();resizeObserver?.disconnect();resizeObserver=new ResizeObserver(()=>{if(readerMobile()!==mobile){cancelReaderTurn();renderEditor();}else fitReading();});resizeObserver.observe($('.reader-stage'));bindReading();
+ $('#app').innerHTML=`<div class="shell editor-mode">${sidebar()}<header class="editor-top"><div class="editor-title">${ib('shelve','left','放回书架')}<input id="book-title" aria-label="手帐名称" maxlength="40" value="${esc(b.title)}"></div><div class="editor-top-actions">${statusHTML()}<div class="mode-switch"><button data-action="mode" data-value="read" class="active">翻阅</button><button data-action="mode" data-value="edit">编辑</button></div><button class="button dark small" data-action="shelve">${icon('book')} 放回书架</button></div></header><main class="editor-workspace read-mode"><div class="workspace-meta"><span>${esc(b.title)} · ${readerCover?(readerCover==='front'?'封面':'封底'):`第 ${mobile?b.page+1:`${spreadPages(group).map(p=>b.pages.indexOf(p)+1).join(' — ')}`} 页 / ${b.pages.length}`}</span><button class="text-link" data-action="reader-cover">查看封面</button></div><div class="stage-wrap reader-stage"><button class="page-arrow prev" data-action="page-prev" aria-label="上一页" ${readerCover==='front'?'disabled':''}>${icon('left')}</button><div class="reader-spread ${mobile?'single':''} ${readerCover?'is-cover':''}" tabindex="0" aria-label="手帐翻阅，使用左右方向键或横向滑动">${readerCover?`<button class="reader-cover-button" data-action="reader-open" data-value="${readerCover}" aria-label="打开手帐">${readerCover==='front'?coverHTML(b):`<div class="reader-back cover ${b.cover}"><h3>${esc(b.title)}</h3><p>把日子，慢慢收好。</p><small>拾页 SHIYE</small></div>`}</button>`:pages}${!mobile&&!readerCover?'<div class="reader-binding"></div>':''}</div><button class="page-arrow next" data-action="page-next" aria-label="下一页" ${readerCover==='back'?'disabled':''}>${icon('right')}</button></div><div class="read-caption">${readerCover?'点击封面，打开这本手帐。':'横向滑动翻页 · 点击页内空白选择要编辑的一页'}</div><div class="page-strip" aria-label="页面缩略图">${b.pages.map((p,i)=>`<button class="page-thumb ${i===b.page&&!readerCover?'active':''}" data-action="page-goto" data-value="${i}" aria-label="第${i+1}页"><div class="thumb-content canvas-page ${p.paper}" style="--scale:1">${elementsHTML(p,true,true)}</div><small>${i+1}</small></button>`).join('')}</div></main></div>`;
+ fitReading();resizeObserver?.disconnect();resizeObserver=new ResizeObserver(()=>{if(readerMobile()!==mobile){cancelReaderTurn();renderEditor();}else fitReading();});resizeObserver.observe($('.reader-stage'));bindReading();bindPageWheel();
 }
 function fitReading(){
  const wrap=$('.reader-stage'),spread=$('.reader-spread');if(!wrap||!spread)return;
  const cols=spread.classList.contains('single')||readerCover?1:2;
  const css=getComputedStyle(wrap),arrows=$$('.page-arrow',wrap).reduce((n,e)=>n+e.getBoundingClientRect().width,0);
  const available=wrap.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-arrows-2*parseFloat(css.gap||0);
- const w=Math.max(120,Math.min(420,available/cols,(wrap.clientHeight-42)*420/540));
- spread.style.width=w*cols+'px';spread.style.height=w*540/420+'px';spread.style.setProperty('--scale',w/420);
+ const w=Math.max(120,Math.min(available/cols,(wrap.clientHeight-42)*420/540));
+ spread.style.width=w*cols+'px';spread.style.height=w*540/420+'px';spread.style.setProperty('--scale',w/420);schedulePageWarm();
 }
 function prepareReaderTurn(direction){
  if(readerTurn||readerCover)return null;
@@ -694,21 +945,40 @@ function prepareReaderTurn(direction){
  if(target<0||target>limit){readerCover=direction>0?'back':'front';renderEditor();return null;}
  const root=$('.reader-spread'),faces=$$('.reader-leaf',root),forward=direction===1,frontIndex=mobile?b.page:b.pages.indexOf(groups[s][forward?'right':'left']),backIndex=mobile?target:b.pages.indexOf(groups[target][forward?'left':'right']);
  const face=mobile?faces[0]:faces[forward?1:0],r=face.getBoundingClientRect();
- const layer=document.createElement('div');layer.className='reader-turn-layer';
+ const layer=document.createElement('div');layer.className='reader-turn-layer';layer.style.visibility='hidden';
  layer.style.left=mobile||!forward?'0':'50%';layer.style.width=mobile?'100%':'50%';
- layer.innerHTML=`<div class="demo-fold-front">${readerFace(frontIndex)}</div><div class="demo-fold-back"><div class="demo-fold-back-content">${readerFace(backIndex)}</div><div class="demo-fold-light"></div></div>`;
  const under=mobile?target:b.pages.indexOf(groups[target][forward?'right':'left']);
- face.outerHTML=readerFace(under);root.appendChild(layer);
- readerTurn={direction,target,mobile,bookId:b.id,w:r.width,h:r.height,front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0,layer};
+ layer.innerHTML=`<div class="demo-fold-front">${readerFace(frontIndex)}</div><div class="demo-fold-back"><div class="demo-fold-back-content">${readerFace(backIndex)}</div></div><div class="turn-under-preload" style="position:absolute;inset:0;visibility:hidden">${readerFace(under)}</div>`;
+ root.appendChild(layer);
+ const turn={direction,target,mobile,bookId:b.id,w:r.width,h:r.height,root,replacedLeaf:face,stationaryLeaf:mobile?null:faces[forward?0:1],underPage:$('.turn-under-preload>.reader-leaf',layer),front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0,layer};
+ turn.onReady=()=>{if(readerTurn!==turn)return;face.replaceWith(turn.underPage);layer.style.visibility='';};
+ readerTurn=turn;
  return readerTurn;
 }
+function finishReaderTurn(turn,commit){
+ if(readerTurn!==turn)return;
+ if(!commit){cancelReaderTurn();schedulePageWarm();return;}
+ // Keep the actual landed paper (and its decoded/filter-composited images).
+ // Rebuilding the reader here would replace both visible pages on the final frame.
+ const landed=$('.demo-fold-back-content>.reader-leaf',turn.back),b=currentBook();
+ (turn.mobile?turn.underPage:turn.stationaryLeaf).replaceWith(landed);
+ b.page=turn.mobile?turn.target:b.pages.indexOf(spreadPages(bookSpreads()[turn.target])[0]);
+ cancelReaderTurn(false);
+ for(const leaf of $$(':scope>.reader-leaf',turn.root)){
+  leaf.removeAttribute('id');if(Number(leaf.dataset.readerPage)===b.page)leaf.id='canvas-page';
+ }
+ $('.workspace-meta>span').textContent=`${b.title} · 第 ${turn.mobile?b.page+1:spreadPages(pageSpread()).map(p=>b.pages.indexOf(p)+1).join(' — ')} 页 / ${b.pages.length}`;
+ for(const thumb of $$('.page-thumb'))thumb.classList.toggle('active',Number(thumb.dataset.value)===b.page);
+ dirty();
+}
 function animateReaderTurn(turn,commit=true){
- const from=turn.progress,to=commit?1:0,duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(240,1450*Math.abs(to-from));let start;
+ const from=turn.progress,to=commit?1:0,duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(240,800*Math.abs(to-from));let start;
  const tick=now=>{
   if(readerTurn!==turn||currentView!=='editor'||editing||activeBookId!==turn.bookId)return;
+  if(!turn.ready){drawSideTurn(turn,from);readerFrame=requestAnimationFrame(tick);return;}
   if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1;
   drawSideTurn(turn,from+(to-from)*t*t*(3-2*t));
-  if(t<1)readerFrame=requestAnimationFrame(tick);else{if(commit){const b=currentBook();b.page=turn.mobile?turn.target:b.pages.indexOf(spreadPages(bookSpreads()[turn.target])[0]);dirty();}renderEditor();}
+  if(t<1)readerFrame=requestAnimationFrame(tick);else finishReaderTurn(turn,commit);
  };readerFrame=requestAnimationFrame(tick);
 }
 function turnReader(direction){
@@ -716,53 +986,141 @@ function turnReader(direction){
  if(readerCover){if(readerCover==='front'&&direction>0){readerCover=null;selectPage(0);}else if(readerCover==='back'&&direction<0){readerCover=null;selectPage(currentBook().pages.length-1);}return;}
  const turn=prepareReaderTurn(direction);if(turn)animateReaderTurn(turn);
 }
+function isPageSwipe(dx,dy,width){return Math.abs(dx)>=Math.max(40,Math.min(80,width*.12))&&Math.abs(dx)>Math.abs(dy)*1.4;}
 function bindReading(){
  const root=$('.reader-spread');let gesture=null,blockClick=false;
  root.onpointerdown=e=>{
+  if(e.isPrimary===false){if(gesture?.turn)animateReaderTurn(gesture.turn,false);gesture=null;return;}
   if(e.button!==0||readerCover||readerTurn)return;
-  const r=root.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
-  if(y<0||y>1)return;const direction=x>.82?1:x<.18?-1:0;if(!direction)return;
-  const turn=prepareReaderTurn(direction);if(!turn)return;gesture={turn,x:e.clientX,y:e.clientY,pointer:e.pointerId};root.setPointerCapture(e.pointerId);drawSideTurn(turn,.001,1);e.preventDefault();
+  gesture={x:e.clientX,y:e.clientY,pointer:e.pointerId,width:root.getBoundingClientRect().width,turn:null,moved:false};
+  blockClick=false;
  };
- root.onpointermove=e=>{if(!gesture||gesture.pointer!==e.pointerId)return;const g=gesture;drawSideTurn(g.turn,Math.max(.001,Math.min(1,(g.x-e.clientX)*g.turn.direction/(2*g.turn.w))),g.y-e.clientY);e.preventDefault();};
- const release=(e,cancel=false)=>{if(!gesture||gesture.pointer!==e.pointerId)return;const {turn}=gesture;gesture=null;blockClick=true;animateReaderTurn(turn,!cancel&&turn.progress>.2);};
+ root.onpointermove=e=>{
+  if(!gesture||gesture.pointer!==e.pointerId)return;
+  const g=gesture,dx=e.clientX-g.x,dy=e.clientY-g.y;
+  if(Math.hypot(dx,dy)>6){g.moved=true;if(!root.hasPointerCapture(e.pointerId))root.setPointerCapture(e.pointerId);}
+  if(!g.turn&&!readerCover&&isPageSwipe(dx,dy,g.width))g.turn=prepareReaderTurn(dx<0?1:-1);
+  if(g.turn){drawSideTurn(g.turn,Math.max(.001,Math.min(1,-dx*g.turn.direction/(2*g.turn.w))),-dy);e.preventDefault();}
+ };
+ const release=(e,cancel=false)=>{
+  if(!gesture||gesture.pointer!==e.pointerId)return;
+  const g=gesture;gesture=null;blockClick=g.moved;
+  const dx=e.clientX-g.x,dy=e.clientY-g.y,commit=!cancel&&isPageSwipe(dx,dy,g.width);
+  if(g.turn)animateReaderTurn(g.turn,commit&&dx*g.turn.direction<0);
+  else if(commit)turnReader(dx<0?1:-1);
+ };
  root.onpointerup=e=>release(e);root.onpointercancel=e=>release(e,true);root.onlostpointercapture=e=>release(e,true);
- root.onclick=e=>{if(blockClick){blockClick=false;return;}if(readerTurn||readerCover||e.target.closest('[data-element]'))return;const leaf=e.target.closest('[data-reader-page]');if(leaf){const i=Number(leaf.dataset.readerPage);if(i!==currentBook().page)selectPage(i);}};
+ root.onclick=e=>{if(blockClick){blockClick=false;e.preventDefault();e.stopPropagation();return;}if(readerTurn||readerCover||e.target.closest('[data-element]'))return;const leaf=e.target.closest('[data-reader-page]');if(leaf){const i=Number(leaf.dataset.readerPage);if(i!==currentBook().page)selectPage(i);}};
+}
+// A trackpad produces horizontal wheel events. Keep inertia in one gesture even after rerendering.
+const pageWheelGesture={last:0,x:0,y:0,turned:false};
+function bindPageWheel(){
+ $('.stage-wrap')?.addEventListener('wheel',e=>{
+  if(currentView!=='editor'||$('#dialog').open||e.ctrlKey||e.metaKey||inlineText||e.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+  const now=performance.now(),g=pageWheelGesture,factor=e.deltaMode===1?16:e.deltaMode===2?window.innerWidth:1;
+  if(now-g.last>240){g.x=0;g.y=0;g.turned=false;}g.last=now;
+  g.x+=e.deltaX*factor;g.y+=e.deltaY*factor;
+  if(Math.abs(e.deltaX)>Math.abs(e.deltaY))e.preventDefault();
+  if(editingPageTurn||readerTurn){g.turned=true;return;}
+  if(g.turned||Math.abs(g.x)<75||Math.abs(g.x)<=Math.abs(g.y)*1.4)return;
+  g.turned=true;closeElementMenu();if(editing)void turnEditingPage(g.x>0?1:-1);else turnReader(g.x>0?1:-1);
+ },{passive:false});
 }
 document.addEventListener('keydown',e=>{if(currentView!=='editor'||editing||$('#dialog').open||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();turnReader(e.key==='ArrowRight'?1:-1);}});
 window.addEventListener('resize',()=>{if(readerTurn){cancelReaderTurn();if(currentView==='editor'&&!editing)renderEditor();}});
 
 let editingPageFrame=0,editingPageTurn=null;
-function cancelEditingTurn(){cancelAnimationFrame(editingPageFrame);editingPageFrame=0;editingPageTurn=null;$('.editing-turn-layer')?.remove();const f=$('.page-frame');if(f)f.inert=false;if(currentView==='editor'&&editing&&!spreadEditing()&&$('#canvas-page')&&currentPage()){$('#canvas-page').innerHTML=elementsHTML(currentPage());$('#canvas-page').className='canvas-page '+currentPage().paper;}}
+function collectTurnImages(...roots){
+ const result=new Map();
+ for(const root of roots)for(const img of $$('.element img',root)){
+  const key=JSON.stringify([img.closest('[data-element]').dataset.element,img.src]);
+  if(!result.has(key))result.set(key,[]);result.get(key).push(img);
+ }
+ return result;
+}
+function readyTurnImages(root){
+ const jobs=$$('img',root).map(img=>img.decode()),urls=new Set();
+ for(const page of $$('.canvas-page',root))for(const match of getComputedStyle(page).backgroundImage.matchAll(/url\(["']?(.*?)["']?\)/g))urls.add(match[1]);
+ for(const url of urls){const image=new Image();image.src=url;jobs.push(image.decode());}
+ return Promise.all(jobs);
+}
+function cancelEditingTurn(restore=true){
+ const turn=editingPageTurn;cancelAnimationFrame(editingPageFrame);editingPageFrame=0;editingPageTurn=null;
+ $('.single-turn-viewport')?.remove();$('.editing-turn-layer')?.remove();const f=$('.page-frame');if(f)f.inert=false;
+ if(turn?.single){
+  turn.frame?.classList.remove('single-book-turning');if(turn.frame)turn.frame.style.transform='';turn.frame?.parentElement?.classList.remove('single-turn-stage');
+  if(turn.originalCanvas)turn.originalCanvas.style.visibility='';
+ }else if(turn?.spread){if(restore&&turn.underPage?.isConnected&&turn.replacedLeaf)turn.underPage.replaceWith(turn.replacedLeaf);
+ }else if(turn&&currentView==='editor'&&editing&&!spreadEditing()&&$('#canvas-page')&&currentPage()){$('#canvas-page').innerHTML=elementsHTML(currentPage());$('#canvas-page').className='canvas-page '+currentPage().paper;}
+}
 async function turnEditingPage(direction){
+ finishInlineText();if(isCoverEditing()){if(direction>0){drawer=null;selectPage(0,{animate:false});}return;}
  if(spreadEditing()){await turnEditingSpread(direction);return;}
  if(editingPageTurn)return;const book=currentBook(),from=book.page,target=from+direction,version=navigationVersion;
  if(target<0||target>=book.pages.length)return;
- const pending={pending:true};editingPageTurn=pending;const saved=await saveNow();
+ const pending={pending:true,single:true};editingPageTurn=pending;const saved=await saveNow();
  if(editingPageTurn!==pending)return;
- if(!saved||currentView!=='editor'||!editing||navigationVersion!==version||currentBook()?.id!==book.id||currentBook().page!==from){cancelEditingTurn();return;}
- const frame=$('.page-frame'),r=frame.getBoundingClientRect(),layer=document.createElement('div');layer.className='reader-turn-layer editing-turn-layer';
- layer.style.cssText='left:0;width:100%';
- layer.innerHTML=`<div class="demo-fold-front"><div class="reader-leaf canvas-page ${currentPage().paper}">${elementsHTML(currentPage(),true,true)}</div></div><div class="demo-fold-back"><div class="demo-fold-back-content"><div class="reader-leaf canvas-page ${book.pages[target].paper}">${elementsHTML(book.pages[target],true,true)}</div></div><div class="demo-fold-light"></div></div>`;
- frame.appendChild(layer);frame.inert=true;$('#canvas-page').innerHTML=elementsHTML(book.pages[target],true,true);$('#canvas-page').className='canvas-page '+book.pages[target].paper;
- const turn={direction,w:r.width,h:r.height,front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0};editingPageTurn=turn;
- let start;const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1450;
- const tick=now=>{if(editingPageTurn!==turn)return;if(currentView!=='editor'||!editing||currentBook()?.id!==book.id){cancelEditingTurn();return;}if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1;drawSideTurn(turn,t*t*(3-2*t));if(t<1)editingPageFrame=requestAnimationFrame(tick);else{cancelEditingTurn();selectPage(target);}};editingPageFrame=requestAnimationFrame(tick);
+ if(!saved||currentView!=='editor'||!editing||spreadEditing()||navigationVersion!==version||currentBook()?.id!==book.id||currentBook().page!==from){cancelEditingTurn();return;}
+ const frame=$('.page-frame'),originalCanvas=$('#canvas-page'),r=frame.getBoundingClientRect();
+ const viewport=document.createElement('div');viewport.className='single-turn-viewport';viewport.style.visibility='hidden';viewport.style.setProperty('--turn-paper',getComputedStyle(originalCanvas).backgroundColor);viewport.style.setProperty('--base-left',direction>0?'-100%':'0%');viewport.style.setProperty('--hinge-left',direction>0?'0%':'100%');viewport.innerHTML='<div class="single-turn-base"></div><div class="single-turn-binding"></div>';
+ const layer=document.createElement('div');layer.className='reader-turn-layer editing-turn-layer';layer.style.cssText='left:0;width:100%';
+ layer.innerHTML=`<div class="demo-fold-front"><div class="reader-leaf canvas-page ${currentPage().paper}">${elementsHTML(currentPage(),true)}</div></div><div class="demo-fold-back"><div class="demo-fold-back-content"><div class="reader-leaf canvas-page ${book.pages[target].paper}">${elementsHTML(book.pages[target],true)}</div></div></div>`;
+ viewport.append(layer);frame.append(viewport);frame.inert=true;
+ const available=frame.parentElement.clientWidth-48,expandedScale=Math.min(1,available/(2*r.width));
+ const turn={single:true,frame,expandedScale:Math.max(.2,expandedScale),bookId:book.id,fromPageId:currentPage().id,originalCanvas,viewport,direction,w:r.width,h:r.height,front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0};editingPageTurn=turn;
+ let start;const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1320;
+ const tick=now=>{
+  if(editingPageTurn!==turn)return;
+  if(currentView!=='editor'||!editing||spreadEditing()||currentBook()?.id!==book.id||currentBook().page!==from){cancelEditingTurn();return;}
+  if(!turn.ready){drawSideTurn(turn,0);editingPageFrame=requestAnimationFrame(tick);return;}
+  if(!turn.activated){
+   turn.targetCanvas=turn.back.querySelector('.reader-leaf');turn.activated=true;
+   originalCanvas.style.visibility='hidden';frame.classList.add('single-book-turning');frame.parentElement.classList.add('single-turn-stage');viewport.style.visibility='';
+  }
+  if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1;drawSingleEditorTurn(turn,t*1320);
+  if(t<1)editingPageFrame=requestAnimationFrame(tick);
+  else{
+   const decodedImages=collectTurnImages(turn.targetCanvas);
+   cancelEditingTurn(false);selectPage(target,{animate:false,decodedImages});
+  }
+ };editingPageFrame=requestAnimationFrame(tick);
+}
+
+function drawSingleEditorTurn(turn,elapsed){
+ const ease=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+ const opening=ease(elapsed/240),progress=ease((elapsed-240)/800),closing=ease((elapsed-1040)/280);
+ const scale=1+(turn.expandedScale-1)*opening+(1-turn.expandedScale)*closing;
+ const shift=elapsed<1040?turn.direction*turn.w*scale*opening/2:turn.direction*turn.w*(scale-turn.expandedScale*(1-closing)/2);
+ turn.phase=elapsed<240?'opening':elapsed<1040?'turning':'centering';
+ turn.frame.style.transform=`translateX(${shift}px) scale(${scale})`;
+ turn.viewport.style.setProperty('--book-open',opening*(1-closing));
+ drawSideTurn(turn,progress);
 }
 
 async function turnEditingSpread(direction){
  if(editingPageTurn)return;finishInlineText();
- const b=currentBook(),groups=bookSpreads(),from=groups.findIndex(g=>g.key===pageSpread().key),to=from+direction;if(to<0||to>=groups.length)return;
- const pending={pending:true};editingPageTurn=pending;
- if(!(await saveNow())||editingPageTurn!==pending||currentBook()?.id!==b.id||!editing||!spreadEditing()){cancelEditingTurn();return;}
+ const b=currentBook(),groups=bookSpreads(),from=groups.findIndex(g=>g.key===pageSpread().key),to=from+direction,version=navigationVersion;if(to<0||to>=groups.length)return;
+ const pending={pending:true,spread:true};editingPageTurn=pending;
+ if(!(await saveNow())||editingPageTurn!==pending||currentBook()?.id!==b.id||currentView!=='editor'||navigationVersion!==version||!editing||!spreadEditing()){cancelEditingTurn();return;}
  const frame=$('.edit-spread');if(!frame){cancelEditingTurn();return;}
  const forward=direction===1,index=p=>b.pages.findIndex(pg=>pg.id===p?.id),target=spreadPages(groups[to])[0],width=frame.clientWidth/2;
- const layer=document.createElement('div');layer.className='reader-turn-layer editing-turn-layer';layer.style.left=forward?'50%':'0';layer.style.width='50%';
- layer.innerHTML=`<div class="demo-fold-front">${readerFace(index(groups[from][forward?'right':'left']))}</div><div class="demo-fold-back"><div class="demo-fold-back-content">${readerFace(index(groups[to][forward?'left':'right']))}</div><div class="demo-fold-light"></div></div>`;
- const leaves=$$('.edit-leaf,.edit-endpaper',frame);leaves[forward?1:0].outerHTML=readerFace(index(groups[to][forward?'right':'left']));frame.appendChild(layer);frame.inert=true;
- const turn={direction,w:width,h:frame.clientHeight,front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0};editingPageTurn=turn;
- let start;const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1450;
- const tick=now=>{if(editingPageTurn!==turn)return;if(currentBook()?.id!==b.id||!editing){cancelEditingTurn();return;}if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1;drawSideTurn(turn,t*t*(3-2*t));if(t<1)editingPageFrame=requestAnimationFrame(tick);else{cancelEditingTurn();selectPage(currentBook().pages.findIndex(p=>p.id===target.id));}};editingPageFrame=requestAnimationFrame(tick);
+ const layer=document.createElement('div');layer.className='reader-turn-layer editing-turn-layer';layer.style.left=forward?'50%':'0';layer.style.width='50%';layer.style.visibility='hidden';
+ layer.innerHTML=`<div class="demo-fold-front">${readerFace(index(groups[from][forward?'right':'left']))}</div><div class="demo-fold-back"><div class="demo-fold-back-content">${readerFace(index(groups[to][forward?'left':'right']))}</div></div><div class="turn-under-preload" style="position:absolute;inset:0;visibility:hidden">${readerFace(index(groups[to][forward?'right':'left']))}</div>`;
+ const replacedLeaf=$$('.edit-leaf,.edit-endpaper',frame)[forward?1:0];frame.appendChild(layer);frame.inert=true;
+ const turn={spread:true,direction,replacedLeaf,underPage:$('.turn-under-preload>.reader-leaf',layer),w:width,h:frame.clientHeight,front:$('.demo-fold-front',layer),back:$('.demo-fold-back',layer),progress:0};editingPageTurn=turn;
+ let start;const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:800;
+ const tick=now=>{
+  if(editingPageTurn!==turn)return;
+  if(currentBook()?.id!==b.id||currentView!=='editor'||navigationVersion!==version||!editing||!spreadEditing()){cancelEditingTurn();return;}
+  if(!turn.ready){drawSideTurn(turn,0);editingPageFrame=requestAnimationFrame(tick);return;}
+  if(!turn.activated){replacedLeaf.replaceWith(turn.underPage);layer.style.visibility='';turn.activated=true;}
+  if(start===undefined)start=now;const t=duration?Math.min(1,(now-start)/duration):1;drawSideTurn(turn,t*t*(3-2*t));
+  if(t<1)editingPageFrame=requestAnimationFrame(tick);
+  else{
+   const decodedImages=collectTurnImages(turn.back.querySelector('.reader-leaf'),turn.underPage);
+   cancelEditingTurn(false);selectPage(currentBook().pages.findIndex(p=>p.id===target.id),{animate:false,decodedImages});
+  }
+ };editingPageFrame=requestAnimationFrame(tick);
 }
 
 window.addEventListener('resize',()=>{if(editingPageTurn){cancelEditingTurn();if(currentView==='editor'&&editing)renderEditor();}});
@@ -776,7 +1134,7 @@ function insertStickers(ids,position=null){
   if(!state.assets.some(s=>s.id===id))state.assets.push({...asset(id),createdAt:Date.now()});
   const e=node('sticker',{assetId:id,x:position?position.x:24+(i%3)*13,y:position?position.y:22+Math.floor(i/3)*12,w:32});
   currentPage().elements.push(e);selectedId=e.id;if(currentBook().stickerPlacement==='spread'&&matePage(currentPage()))e.spreadWith=matePage(currentPage()).id;
- });drawer=null;});toast(`${valid.length} 枚贴纸已放进这一页`);
+ });});toast(`${valid.length} 枚贴纸已放进这一页`);
 }
 function insertSticker(id){insertStickers([id]);}
 
@@ -784,8 +1142,8 @@ function insertSticker(id){insertStickers([id]);}
 document.addEventListener('beforetoggle',event=>{
  const menu=event.target;if(!menu.matches?.('.book-popover')||event.newState!=='open')return;
  const trigger=$(`[popovertarget="${menu.id}"]`);if(!trigger)return;
- const r=trigger.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(innerWidth-176,r.right-168))+'px';
- const height=menu.querySelectorAll('button').length*(innerWidth<=560?44:42)+26;
+ const r=trigger.getBoundingClientRect(),width=menu.getBoundingClientRect().width||Math.min(innerWidth-16,menu.classList.contains('page-popover')?216:168);menu.style.left=Math.max(8,Math.min(innerWidth-width-8,r.right-width))+'px';
+ const height=menu.getBoundingClientRect().height||menu.querySelectorAll('button').length*(innerWidth<=560?44:42)+26+(menu.querySelector(':scope>small')?30:0);
  menu.style.top=(innerHeight-r.bottom>=height+6?r.bottom+6:Math.max(8,r.top-height-6))+'px';
 },true);
 document.addEventListener('toggle',event=>{
@@ -797,6 +1155,7 @@ document.addEventListener('scroll',event=>{if(!event.target.closest?.('.book-pop
 
 document.addEventListener('click',async event=>{
  const btn=event.target.closest('[data-action]');if(!btn||btn.disabled)return;const a=btn.dataset.action,id=btn.dataset.id,v=btn.dataset.value;
+ if(await handleCoverAction(a,id,v))return;
  if(a==='home-demo'){openHomeDemo();return;}if(a==='home-close'){closeHomeDemo();return;}
  if(a==='home-next'||a==='home-prev'){turnHomePage(a==='home-next'?1:-1);return;}
  if(a==='access-open'){openAccess();return;}if(a==='access-tab'){openAccess(accessDestination,v);return;}
@@ -807,7 +1166,7 @@ document.addEventListener('click',async event=>{
  if(a==='create-book'){let title=$('#new-title').value.trim()||'未命名的日子';const b={id:uid(),title,cover:$('.cover-choice.active').dataset.value,subtitle:'MOMENTS TO KEEP',sample:false,updated:Date.now(),page:0,pages:[blankPage()]};state.books.push(b);closeDialog();const ids=[...pendingUseIds];pendingUseIds=[];await openBook(b.id,true);insertStickers(ids);await saveNow();toast(saveStatus==='已保存到本机'?'新的一页，留给新的回忆':'手帐仍在当前页，请重试保存');return;}
  if(a==='open-book'){openBook(id);return;}if(a==='book-menu'){bookMenu(id);return;}
  if(a==='pin-book'){const b=state.books.find(b=>b.id===id);if(!b)return;b.pinned=!b.pinned;dirty();renderShelf();return;}
- if(a==='rename-book'){const b=state.books.find(b=>b.id===id);b.title=$('#rename-title').value.trim()||b.title;b.updated=Date.now();closeDialog();dirty();renderShelf();return;}
+ if(a==='rename-book'){const b=state.books.find(b=>b.id===id);b.title=$('#rename-title').value.trim()||b.title;updateCoverTitle(b);b.updated=Date.now();closeDialog();dirty();renderShelf();return;}
  if(a==='delete-book-confirm'){let b=state.books.find(b=>b.id===id);showDialog('删除这本手帐？',`<p class="dialog-description">将删除「${esc(b.title)}」及其中的 ${b.pages.length} 页内容。<br>删除后无法恢复；贴纸仓库会保留。</p>`,`<button class="button outline" data-action="close-dialog" autofocus>取消，保留手帐</button><button class="button danger" data-action="delete-book" data-id="${id}">确认删除</button>`);return;}
  if(a==='delete-book'){
   const index=state.books.findIndex(b=>b.id===id);if(index<0)return;const removed=state.books[index];btn.disabled=true;
@@ -836,37 +1195,42 @@ document.addEventListener('click',async event=>{
  if(a==='use-collected'||a==='enter-creation'){chooseCreation(id?[id]:[]);return;}
  if(a==='insert-into-book'){const ids=[...pendingUseIds];pendingUseIds=[];closeDialog();await openBook(btn.dataset.book,true);insertStickers(ids);return;}
  if(a==='shelve'){cancelReaderTurn();if(!(await saveNow()))return;$('.editor-workspace').classList.add('closing');setTimeout(()=>{currentView='shelf';selectedId=null;drawer=null;render();toast('已收好，随时回来翻一翻');},330);return;}
- if(a==='mode'){const bookId=activeBookId;if(v==='read'&&editing){if(!(await saveNow())||saveStatus!=='已保存到本机'||currentView!=='editor'||activeBookId!==bookId)return;}readerCover=null;editing=v==='edit';selectedId=null;drawer=null;renderEditor();return;}
+ if(a==='mode'){const bookId=activeBookId;if(v==='read'&&editing){if(!(await saveNow())||saveStatus!=='已保存到本机'||currentView!=='editor'||activeBookId!==bookId)return;}const wasCover=isCoverEditing()||readerCover==='front';editing=v==='edit';coverEditingBookId=editing&&wasCover?activeBookId:null;readerCover=!editing&&wasCover?'front':null;if(isCoverEditing())ensureCoverDesign();selectedId=null;drawer=null;renderEditor();return;}
  if(a==='editor-layout'){if(!editing)return;finishInlineText();currentBook().editorLayout=v==='spread'?'spread':'single';selectedId=null;dirty();renderEditor();return;}
  if(a==='paper-scope'){if(!editing)return;change(()=>{ensurePagePairs();if(v==='spread')setSpreadPaper(currentPage().paper);else clearSpreadPaper();});return;}
  if(a==='add-spread'||a==='add-mate'){if(!editing)return;change(()=>insertPages(a==='add-spread'));return;}
- if(a==='drawer'){drawer=drawer===v?null:v;if(v!=='text'||currentElement()?.type!=='text')selectedId=null;renderEditor();return;}if(a==='close-drawer'){drawer=null;renderEditor();return;}
+ if(a==='drawer'){drawer=drawer===v?null:v;renderEditor();return;}if(a==='close-drawer'||a==='close-tools'){drawer=null;selectedId=null;renderEditor();return;}
  if(a==='insert-sticker'){if(Date.now()>suppressStickerClickUntil)insertSticker(id);return;}if(a==='add-text'){startInlineText();return;}if(a==='edit-text'){textDialog(true);return;}
- if(a==='save-text'){const text=$('#text-content').value.trim(),font=$('#text-font').value,direction=$('#text-direction').value,size=$('#dialog-text-size').valueAsNumber;if(!Number.isFinite(size)||size<1||size>500){toast('字号请输入 1～500');$('#dialog-text-size').focus();return;}if(!text){$('#text-content').focus();toast('先写一点内容吧');return;}change(()=>{if(id){let e=elementPage(id).elements.find(e=>e.id===id);e.text=text;e.font=font;e.size=size;if((e.direction||'horizontal')!==direction){e.w=direction==='vertical'?28:70;e.h=60;}e.direction=direction;}else{let e=node('text',{text,font,direction,x:15,y:20,w:direction==='vertical'?28:70,h:60,size,color:'#505b46'});currentPage().elements.push(e);selectedId=e.id;}drawer=null;});closeDialog();return;}
+ if(a==='save-text'){const text=$('#text-content').value.trim(),font=$('#text-font').value,direction=$('#text-direction').value,size=$('#dialog-text-size').valueAsNumber,bold=$('#dialog-text-bold').checked,color=$('#dialog-text-color').value;if(!Number.isFinite(size)||size<1||size>500){toast('字号请输入 1～500');$('#dialog-text-size').focus();return;}if(!text){$('#text-content').focus();toast('先写一点内容吧');return;}change(()=>{if(id){let e=elementPage(id).elements.find(e=>e.id===id);e.text=text;e.font=font;e.size=size;e.bold=bold;if(color.toLowerCase()!==textColorValue(e.color).toLowerCase())e.color=color;if((e.direction||'horizontal')!==direction){e.w=direction==='vertical'?28:70;e.h=60;}e.direction=direction;}else{let e=node('text',{text,font,direction,x:15,y:20,w:direction==='vertical'?28:70,h:60,size,bold,color});currentPage().elements.push(e);selectedId=e.id;}});closeDialog();return;}
  if(a==='paper-category'){
   if(!editing||drawer!=='paper'||(v!=='favorites'&&!paperGroups.some((g,i)=>String(i)===v)))return;
   paperCategory=v;refreshPaperDrawer(a,v);return;
  }
  if(a==='paper-favorite'||a==='paper-pin'){
   if(!editing||drawer!=='paper'||!paperGroups.some(g=>g.items.some(p=>p[0]===v)))return;
-  const kind=a==='paper-favorite'?'favorite':'pin',scroll=$('.paper-panel-body')?.scrollTop||0;
+  const kind=a==='paper-favorite'?'favorite':'pin',scroll=$('.editor-tools-content')?.scrollTop||0;
   try{localStorage.setItem(paperPreferenceKey(kind,v),paperPreference(kind,v)?'0':'1');}
   catch{toast('纸张偏好保存失败，请重试');return;}
   refreshPaperDrawer(a==='paper-pin'?'paper':a,v,scroll);return;
  }
- if(a==='paper'){if(!editing||!paperGroups.some(g=>g.items.some(p=>p[0]===v))||(currentPage().paperSpread?.paper||currentPage().paper)===v)return;const scroll=$('.paper-panel-body')?.scrollTop||0;change(()=>{if(currentPage().paperSpread)setSpreadPaper(v);else currentPage().paper=v;});const panel=$('.paper-panel-body');if(panel){panel.scrollTop=scroll;$(`[data-action="paper"][data-value="${v}"]`,panel)?.focus({preventScroll:true});}return;}
+ if(a==='paper'){if(!editing||!paperGroups.some(g=>g.items.some(p=>p[0]===v))||(currentPage().paperSpread?.paper||currentPage().paper)===v)return;const scroll=$('.editor-tools-content')?.scrollTop||0;change(()=>{if(currentPage().paperSpread)setSpreadPaper(v);else currentPage().paper=v;});const panel=$('.paper-panel-body');if(panel){$('.editor-tools-content').scrollTop=scroll;$(`[data-action="paper"][data-value="${v}"]`,panel)?.focus({preventScroll:true});}return;}
  if(a==='page-goto'){readerCover=null;selectPage(Number(v));return;}if(a==='page-prev'||a==='page-next'){const dir=a==='page-next'?1:-1;if(editing)turnEditingPage(dir);else turnReader(dir);return;}
  if(a==='reader-cover'){readerCover='front';renderEditor();return;}
  if(a==='reader-open'){readerCover=null;selectPage(v==='back'?currentBook().pages.length-1:0);return;}
- if(a==='page-add'){change(()=>insertPages(false));toast('新的一页，慢慢写');return;}
- if(a==='duplicate-page'){change(duplicateSpread);return;}
- if(a==='move-page-up'||a==='move-page-down'){const groups=bookSpreads(),g=pageSpread(currentBook().pages[Number(v)]),to=groups.findIndex(x=>x.key===g.key)+(a==='move-page-up'?-1:1);if(!groups[to])return;change(()=>moveSpread(Number(v),currentBook().pages.indexOf(spreadPages(groups[to])[0])));return;}
- if(a==='delete-page'){
-  const pages=pagesToDelete();if(pages.length>=currentBook().pages.length)return;
-  showDialog(pages.length>1?'删除这组双页？':'删除这一页？',`<p class="dialog-description">将删除第 ${pages.map(p=>currentBook().pages.indexOf(p)+1).join('、')} 页。${pages.length>1?'<br>这两页使用了连续背景或跨页贴纸，将一起删除，避免留下另一半。':''}<br>贴纸仓库保留，删除后可撤销恢复。</p>`,`<button class="button outline" data-action="close-dialog" autofocus>保留</button><button class="button danger" data-action="confirm-delete-page">${pages.length>1?'删除这组双页':'删除这一页'}</button>`);return;
+ if(['page-insert-before','page-insert-after','page-remove','page-append','page-removal-undo'].includes(a)){
+  if(!editing||currentView!=='editor'||editingPageTurn)return;
+  if(a==='page-remove')removePageUnit(id);
+  else if(a==='page-removal-undo'){
+   const undo=pageRemovalUndo;if(!undo||undo.workspace!==workspaceKey||undo.bookId!==activeBookId||undo.after!==JSON.stringify(currentBook().pages)||JSON.stringify(JSON.parse(history.at(-1)||'{}').pages)!==undo.before){toast('请使用编辑栏的撤销逐步恢复');return;}
+   future.push(editorSnapshot());restoreEditorSnapshot(history.pop());currentBook().page=Math.max(0,currentBook().pages.findIndex(p=>p.id===undo.active));pageRemovalUndo=null;selectedId=null;dirty();renderEditor();toast('页面已恢复');revealPageThumb();
+  }else insertPageAt(a==='page-append'?currentBook().pages.at(-1).id:id,a!=='page-insert-before');
+  return;
  }
- if(a==='confirm-delete-page'){const ids=pagesToDelete().map(p=>p.id);if(ids.length>=currentBook().pages.length)return;change(()=>{ensurePagePairs();const b=currentBook();b.pages=b.pages.filter(p=>!ids.includes(p.id));b.page=Math.min(b.page,b.pages.length-1);selectedId=null;});closeDialog();return;}
- if(a==='undo'||a==='redo'){const source=a==='undo'?history:future,destination=a==='undo'?future:history;if(!source.length)return;destination.push(JSON.stringify(currentBook().pages));currentBook().pages=JSON.parse(source.pop());currentBook().page=Math.min(currentBook().page,currentBook().pages.length-1);selectedId=null;dirty();renderEditor();return;}
+ if(a==='page-add'){if(editing)insertPageAt(currentPage().id,true);return;}
+ if(a==='duplicate-page'){change(duplicateSpread);return;}
+ if(a==='move-page-up'||a==='move-page-down'){finishInlineText();const p=currentBook().pages[Number(v)],units=pageUnits(),index=units.findIndex(u=>u.includes(p)),after=a==='move-page-down',target=units[index+(after?1:-1)];if(target)movePageUnit(p.id,target[0].id,after);return;}
+ if(a==='delete-page'){if(editing)removePageUnit(currentPage().id);return;}
+ if(a==='undo'||a==='redo'){if(pageRemovalUndo){pageRemovalUndo=null;$('#toast').classList.remove('show');}const source=a==='undo'?history:future,destination=a==='undo'?future:history;if(!source.length)return;destination.push(editorSnapshot());restoreEditorSnapshot(source.pop());currentBook().page=Math.min(currentBook().page,currentBook().pages.length-1);selectedId=null;dirty();renderEditor();return;}
  if(['smaller','larger','rotate-left','rotate-right','flip','duplicate','layer-up','layer-down','delete-element'].includes(a)){if(!currentElement())return;change(()=>{let e=currentElement(),p=elementPage();if(a==='smaller'||a==='larger'){let old=e.w;e.w=Math.max(8,Math.min(110,e.w*(a==='larger'?1.1:1/1.1)));if(e.type==='text'){e.size=(e.size||18)*e.w/old;if(e.direction==='vertical')e.h=(e.h||60)*e.w/old;}}if(a==='rotate-left')e.rotation=(e.rotation||0)-5;if(a==='rotate-right')e.rotation=(e.rotation||0)+5;if(a==='flip')e.flip=!e.flip;if(a==='duplicate'){let copy={...e,id:uid(),x:Math.min(85,e.x+4),y:Math.min(85,e.y+4)};p.elements.push(copy);selectedId=copy.id;}if(a==='delete-element'){p.elements=p.elements.filter(n=>n.id!==e.id);selectedId=null;}if(a==='layer-up'||a==='layer-down'){let i=p.elements.indexOf(e),to=Math.max(0,Math.min(p.elements.length-1,i+(a==='layer-up'?1:-1)));p.elements.splice(i,1);p.elements.splice(to,0,e);}if(currentElement())constrainSticker(currentElement());});return;}
  if(a==='workshop-from-editor'){await navigate('workshop',{bookId:activeBookId,pageId:currentPage().id});return;}
  if(a==='upload'){$('#photo-input').click();return;}
@@ -929,9 +1293,17 @@ document.addEventListener('change',e=>{
  if(isNew){newTextSize=size;const preview=$('.text-font-preview');if(preview)preview.style.fontSize=size+'px';}
  else if(item?.type==='text'&&item.size!==size){const id=e.target.id;change(()=>{item.size=size;});$('#'+id)?.focus({preventScroll:true});}
 });
-document.addEventListener('change',e=>{if(e.target.id==='book-sort'){sort=e.target.value;renderShelf();}if(e.target.id==='book-title'){let b=currentBook();b.title=e.target.value.trim()||b.title;e.target.value=b.title;dirty();}if(e.target.id==='photo-input'&&e.target.files[0])loadPhoto(e.target.files[0]);if(e.target.id==='preview-name')workshop.results[workshop.preview].name=e.target.value.trim()||'我的贴纸';});
+document.addEventListener('change',e=>{
+ const match=/^(new|selected|drawer)-text-(bold|color)$/.exec(e.target.id);
+ if(!match||currentView!=='editor'||!editing)return;
+ const isNew=match[1]==='new',property=match[2],value=property==='bold'?e.target.checked:e.target.value;
+ if(property==='color'&&!/^#[\da-f]{6}$/i.test(value))return;
+ if(isNew){if(property==='bold')newTextBold=value;else newTextColor=value;const preview=$('.text-font-preview');if(preview){preview.style.fontWeight=newTextBold?'700':'400';preview.style.color=newTextColor;}}
+ else{const item=currentElement();if(item?.type!=='text'||item[property]===value)return;const id=e.target.id;change(()=>{item[property]=value;});$('#'+id)?.focus({preventScroll:true});}
+});
+document.addEventListener('change',e=>{if(e.target.id==='book-sort'){sort=e.target.value;renderShelf();}if(e.target.id==='book-title'){let b=currentBook();checkpoint();b.title=e.target.value.trim()||b.title;updateCoverTitle(b);e.target.value=b.title;dirty();if(isCoverEditing())renderEditor();}if(e.target.id==='photo-input'&&e.target.files[0])loadPhoto(e.target.files[0]);if(e.target.id==='preview-name')workshop.results[workshop.preview].name=e.target.value.trim()||'我的贴纸';});
 document.addEventListener('input',e=>{if(e.target.id==='sticker-search'){search=e.target.value;$('#collection-results').innerHTML=collectionResults();}if(e.target.id==='border-range'){workshop.border=Number(e.target.value);$('#border-value').textContent=workshop.border+'px';$('#sticker-preview').style.cssText=borderStyle(workshop.border);}});
-document.addEventListener('keydown',e=>{if($('#dialog').open||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(currentView!=='editor'||!editing)return;if(e.key==='Escape'){selectedId=null;drawer=null;renderEditor();}if(e.key==='Enter'&&e.target.dataset.element){selectedId=e.target.dataset.element;renderEditor();}if((e.key==='Delete'||e.key==='Backspace')&&selectedId){e.preventDefault();$('[data-action="delete-element"]')?.click();}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$(`[data-action="${e.shiftKey?'redo':'undo'}"]`)?.click();}if(e.key.startsWith('Arrow')&&selectedId){e.preventDefault();change(()=>{let el=currentElement(),step=e.shiftKey?2:.4;el.x=Math.max(el.spreadWith?-100:-el.w*.65,Math.min(el.spreadWith?195:95,el.x+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0)));el.y=Math.max(-8,Math.min(92,el.y+(e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0)));constrainSticker(el);});}});
+document.addEventListener('keydown',e=>{if($('#dialog').open||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(currentView!=='editor'||!editing)return;if(e.key==='Escape'){selectedId=null;drawer=null;renderEditor();}if(e.key==='Enter'&&e.target.dataset.element){selectedId=e.target.dataset.element;renderEditor();}if((e.key==='Delete'||e.key==='Backspace')&&selectedId){e.preventDefault();change(()=>{const p=elementPage();if(p)p.elements=p.elements.filter(item=>item.id!==selectedId);selectedId=null;});}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$(`[data-action="${e.shiftKey?'redo':'undo'}"]`)?.click();}if(e.key.startsWith('Arrow')&&selectedId){e.preventDefault();change(()=>{let el=currentElement(),step=e.shiftKey?2:.4;el.x=Math.max(el.spreadWith?-100:-el.w*.65,Math.min(el.spreadWith?195:95,el.x+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0)));el.y=Math.max(-8,Math.min(92,el.y+(e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0)));constrainSticker(el);});}});
 $('#dialog').addEventListener('click',e=>{if(e.target===$('#dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDialog();}});
 function readImage(src){return new Promise((resolve,reject)=>{let img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});}
 const photoIsCurrent=(task,version)=>task===photoTaskVersion&&version===navigationVersion&&currentView==='workshop';
@@ -1083,7 +1455,7 @@ function startWorkSync(){
    });
    if(!isCurrent())return;
    const pending=rebasePending(memory,state,next,copies);state=pending.state;savedWorkspace=pending.baseline;
-   if(pending.copies.has(activeBookId))activeBookId=pending.copies.get(activeBookId);
+   if(pending.copies.has(activeBookId)){if(coverEditingBookId===activeBookId)coverEditingBookId=pending.copies.get(activeBookId);activeBookId=pending.copies.get(activeBookId);}
    if(activeBookId&&!currentBook()){activeBookId=null;currentView='shelf';}
    await hydrateBlobAssets(state);
    if(isCurrent()&&!inlineText&&currentView!=='workshop'&&!(currentView==='editor'&&editing)&&!$('#dialog')?.open)render();

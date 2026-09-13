@@ -2,6 +2,7 @@
 // Account-scoped, resumable synchronization. IndexedDB remains the first commit.
 // No cookie, image data URL or temporary blob URL is sent as a durable reference.
 const WorkSync = (() => {
+ const bookPages = b=>[...(b.coverDesign?[b.coverDesign]:[]),...b.pages];
  const copy = value => structuredClone(value);
  const empty = () => ({schemaVersion:1,books:[],assets:[],archivedAssets:[]});
  function canonical(value) {
@@ -24,7 +25,7 @@ const WorkSync = (() => {
     // A delete cannot erase another browser's newer edits. Keep the edited version.
     if(!next)continue;
     const item=copy(next);item.id=crypto.randomUUID();
-    if(kind==='book'){item.title=item.title.slice(0,190)+'（冲突副本）';item.sample=false;copies.set(id,item.id);}
+    if(kind==='book'){item.title=item.title.slice(0,190)+'（冲突副本）';item.sample=false;const title=item.coverDesign?.elements.find(e=>e.id===item.coverDesign.titleId&&e.type==='text');if(title)title.text=item.title;copies.set(id,item.id);}
     else{item.name=item.name.slice(0,190)+'（冲突副本）';assetCopies.set(id,item.id);}
     r.set(item.id,item);
    }
@@ -32,7 +33,7 @@ const WorkSync = (() => {
   }
   const all=rows(assets(base),assets(local),assets(remote),'asset');
   const localBooks=copy(local.books);
-  for(const b of localBooks)for(const p of b.pages)for(const e of p.elements)if(e.type==='sticker'&&assetCopies.has(e.assetId))e.assetId=assetCopies.get(e.assetId);
+  for(const b of localBooks)for(const p of bookPages(b))for(const e of p.elements)if(e.type==='sticker'&&assetCopies.has(e.assetId))e.assetId=assetCopies.get(e.assetId);
   const books=rows(base.books,localBooks,remote.books,'book');
   return {content:ordered({schemaVersion:1,books,assets:all.filter(a=>!a.archived).map(({archived,...a})=>a),archivedAssets:all.filter(a=>a.archived).map(({archived,...a})=>a)}),copies};
  }
@@ -48,9 +49,8 @@ const WorkSync = (() => {
    if(!this.current())throw Error('identity-changed');
    const controller=new AbortController();this.controller=controller;const timer=setTimeout(()=>controller.abort(),45000);
    try{
-    const r=await fetch('/api/works'+path,{...options,credentials:'same-origin',cache:'no-store',headers:{...options.headers,'X-Shiye-Work-Account':this.owner},signal:controller.signal});
+    const r=await ShiyeAPI.response('/api/works'+path,{...options,headers:{...options.headers,'X-Shiye-Work-Account':this.owner},signal:controller.signal,timeoutMs:45000});
     if(!this.current())throw Error('identity-changed');
-    if(!r.ok){const body=await r.json().catch(()=>({})),error=Error(body.error?.message||'同步暂未完成，请稍后重试。');error.code=body.error?.errorType;error.status=r.status;throw error;}
     return r;
    }finally{clearTimeout(timer);}
   }
@@ -76,7 +76,7 @@ const WorkSync = (() => {
   async encode(local){
    const content=empty();
    for(const key of ['assets','archivedAssets'])for(const row of local[key]||[]){if(key==='archivedAssets'&&local.assets.some(a=>a.id===row.id))continue;const {src,blobKey,archived,...rest}=row;content[key].push({...rest,image:await this.image(src,blobKey)});}
-   for(const row of local.books){const book=copy(row);for(const page of book.pages)for(const e of page.elements)if(e.type==='photo'){e.image=await this.image(e.src);delete e.src;}content.books.push(book);}
+   for(const row of local.books){const book=copy(row);for(const page of bookPages(book))for(const e of page.elements)if(e.type==='photo'){e.image=await this.image(e.src);delete e.src;}content.books.push(book);}
    return ordered(content);
   }
   async download(ref,blobs){
@@ -96,9 +96,9 @@ const WorkSync = (() => {
     if(old&&equal(refs.get(row.id),image)){workspace[key].push({...rest,...(old.blobKey?{blobKey:old.blobKey}:{src:old.src})});continue;}
     const {blob,...source}=await this.download(image,blobs);workspace[key].push({...rest,...source});
    }
-   const localPhotos=new Map(local.books.flatMap(b=>b.pages.flatMap(p=>p.elements.filter(e=>e.type==='photo'))).map(e=>[e.id,e.src]));
-   const photoRefs=new Map(encoded.books.flatMap(b=>b.pages.flatMap(p=>p.elements.filter(e=>e.type==='photo'))).map(e=>[e.id,e.image]));
-   for(const row of content.books){const book=copy(row);for(const p of book.pages)for(const e of p.elements)if(e.type==='photo'){
+   const localPhotos=new Map(local.books.flatMap(b=>bookPages(b).flatMap(p=>p.elements.filter(e=>e.type==='photo'))).map(e=>[e.id,e.src]));
+   const photoRefs=new Map(encoded.books.flatMap(b=>bookPages(b).flatMap(p=>p.elements.filter(e=>e.type==='photo'))).map(e=>[e.id,e.image]));
+   for(const row of content.books){const book=copy(row);for(const p of bookPages(book))for(const e of p.elements)if(e.type==='photo'){
     if(localPhotos.has(e.id)&&equal(photoRefs.get(e.id),e.image))e.src=localPhotos.get(e.id);
     else{const source=await this.download(e.image,blobs);e.src=source.src||await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(source.blob);});}
     delete e.image;
@@ -116,7 +116,7 @@ const WorkSync = (() => {
    const remote=await(await this.request('/workspace')).json();
    // Previously published image references need no repeated binary upload on login.
    for(const a of [...remote.content.assets,...remote.content.archivedAssets])if(a.image.imageId)this.uploaded.add(a.image.imageId);
-   for(const b of remote.content.books)for(const p of b.pages)for(const e of p.elements)if(e.type==='photo'&&e.image.imageId)this.uploaded.add(e.image.imageId);
+   for(const b of remote.content.books)for(const p of bookPages(b))for(const e of p.elements)if(e.type==='photo'&&e.image.imageId)this.uploaded.add(e.image.imageId);
    const local=await read(this.b.db,this.key);if(!local)throw Error('本机作品暂时无法读取。');
    let committedLocal=local;
    const encoded=await this.encode(local),{content,copies}=merge(meta?.base||empty(),encoded,ordered(remote.content));

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "shiye-editorial-prototype/edgecut.js",
+    "before": "07d397a0a72d4786bd7040826779ebabe9f604253a4731aee363c80c81db8232",
+    "after": "255c88767c017f36970ab7dc11dbc50b7efb06fefa829b5b9fb27ee2e9642f1c",
+    "bytes": 18183
+  },
+  {
+    "path": "shiye-editorial-prototype/edgecut.css",
+    "before": "266bdb03550df89cf67006737d476a45c6cbbb49970fc3e3c5a3436074fc79af",
+    "after": "c6c9f3dc19650a60e64e3513c04ede0cb795b3196ef7ae657504ed365491db8c",
+    "bytes": 5260
+  },
+  {
+    "path": "shiye-editorial-prototype/edgecut-worker.js",
+    "before": "51bd18a226678b8b4c9f25e564905c9fb6c41d0ba02acbfb0fadee418f6a077c",
+    "after": "797df23fbd60048c13a75db7e5aa140f52bec3d6ee8d26e9f70449e44c736c47",
+    "bytes": 1267
+  },
+  {
+    "path": "dist/server/app.js",
+    "before": "e73cfae5ad8f48c75aea1655dc51e1fefe08489d561562fd2f054b6172c3a1a0",
+    "after": "92f29772d4c048bbed5c62bb7956a63e1da6b606651f1c785df71e83320aa371",
+    "bytes": 14973
+  },
+  {
+    "path": "dist/server/app.js.map",
+    "before": null,
+    "after": "ac7e063b15beef0da221b8ce2c17637f9789a786e5f8b8aed1b1ff4344540495",
+    "bytes": 17853
+  },
+  {
+    "path": "dist/server/edge-tool-assets.js",
+    "before": null,
+    "after": "c7ee056594de24cc8b848640408eb9b6ce95acf3d0268f5a43ffccd2376a6159",
+    "bytes": 1758
+  },
+  {
+    "path": "dist/server/edge-tool-assets.js.map",
+    "before": null,
+    "after": "dd68c5a5f85020af34cb2c0815a23ddc1cdd48182385a8fe64f4b4badcb4a5d6",
+    "bytes": 1976
+  }
+]

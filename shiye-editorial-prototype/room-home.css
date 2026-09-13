@@ -1,0 +1,20 @@
+body.room-home-active{overflow:hidden;background:#75684d}
+.room-home{position:fixed;inset:0;isolation:isolate;background:#75684d;font-family:"Songti SC",STSong,serif}
+.room-home-frame{display:block;width:100%;height:100%;border:0}
+.room-home button{cursor:pointer;font:inherit}
+.room-account,.room-create{position:absolute;z-index:5;border:1px solid #d5c6a94d;background:rgba(58,51,39,.84);color:#eee5d2;box-shadow:0 2px 8px #211b191f;transition:background .2s,transform .2s}
+.room-account:hover,.room-create:hover{background:rgba(73,64,48,.94);transform:translateY(-1px)}
+.room-account:focus-visible,.room-create:focus-visible{outline:3px solid #f6dd8f;outline-offset:4px}
+.room-account{right:24px;top:24px;min-height:42px;padding:9px 17px;border-radius:24px;font-size:15px!important;letter-spacing:1px}
+.room-account.is-account{width:44px;height:44px;min-height:0;padding:0;overflow:hidden;border-radius:50%;font-size:20px!important}
+.room-account img{width:100%;height:100%;object-fit:cover}
+.room-create{right:auto;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:12px;align-items:center;justify-content:center;min-height:40px;box-sizing:border-box;padding:8px 18px;border:1px solid #d5c6a94d;border-radius:24px;background:rgba(58,51,39,.84);color:#eee5d2;box-shadow:0 2px 8px #211b191f;font-size:14px!important;line-height:1.4;letter-spacing:1px;white-space:nowrap}
+.room-create:hover{background:rgba(73,64,48,.94);transform:translateX(-50%) translateY(-1px)}
+.room-create span{font:17px sans-serif}
+.room-load-status{position:absolute;left:50%;top:80px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:10px 16px;background:#fff8e9;color:#4a513b;border-radius:12px;font-size:13px;line-height:1.6;text-align:center;pointer-events:none}
+.room-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(max-width:760px){
+ .room-account{top:16px;right:16px;padding:9px 13px;font-size:14px!important}
+ .room-create{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){.room-home button{transition:none}}

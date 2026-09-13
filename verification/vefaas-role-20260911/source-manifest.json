@@ -1,0 +1,1247 @@
+{
+  "createdAt": "2026-09-11T14:08:48.163Z",
+  "status": "local-source-staging-only",
+  "files": [
+    {
+      "path": ".vefaasignore",
+      "bytes": 319,
+      "sha256": "03e2f6a3f63818ee481fb8a93a720abcb424a56e7a872cbbfe1b052db5ba5c50"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 69967,
+      "sha256": "cef610dcf6461461e7e51ecdffa2f3b1c564b44877cb6fdf6739f6fa70dafb80"
+    },
+    {
+      "path": "package.json",
+      "bytes": 946,
+      "sha256": "b7512acb25942de6ba9c2edbba1141185e6c1368d90a0968501a4da27bd6ad39"
+    },
+    {
+      "path": "server/access.ts",
+      "bytes": 7903,
+      "sha256": "e0ae10c4c5895d95dab403612cfdd0524035d639045a5da027c84d61064f40ef"
+    },
+    {
+      "path": "server/account-profile.ts",
+      "bytes": 1206,
+      "sha256": "e9cd298b5e04b7e2864077c6b4543fcce9ccf36a62fe31a59abe27f7500a6a35"
+    },
+    {
+      "path": "server/account-routes.ts",
+      "bytes": 2452,
+      "sha256": "02880a8e45021733a548b574571f6aa592cf8a0ed566afb01b37c8884726eadb"
+    },
+    {
+      "path": "server/admin-routes.ts",
+      "bytes": 4873,
+      "sha256": "827fe849d83ada504e2ea4e9b4fb88580e84214e8db473260ce60c3877388865"
+    },
+    {
+      "path": "server/admin.ts",
+      "bytes": 22081,
+      "sha256": "32203889dbbc67818932b3b94d55479bb176f68fab2cc10cffd0b4473c5a373d"
+    },
+    {
+      "path": "server/ai-copy.ts",
+      "bytes": 12847,
+      "sha256": "0330c4fff9f905644e8144d36676c502742e5422db73eb1b0a70e59abe503f45"
+    },
+    {
+      "path": "server/app.ts",
+      "bytes": 14060,
+      "sha256": "e0e39e378887092a33d2f820607899007d0648a516df94b9ade1e24386e9138b"
+    },
+    {
+      "path": "server/baidu.ts",
+      "bytes": 9452,
+      "sha256": "9da08248bcc5ccc54c8f67315cc9f906ab00762c530aacc3034f355d6282c04e"
+    },
+    {
+      "path": "server/cloud-bootstrap.ts",
+      "bytes": 3617,
+      "sha256": "23bb79efd361a4bc885dff4a840dbbf969234842f15460e66b3797ed0335ffaa"
+    },
+    {
+      "path": "server/cloud-index.ts",
+      "bytes": 715,
+      "sha256": "af404983af338bdfa012e79b377e8172e60a29aa53172c00e3f25653ea4d5210"
+    },
+    {
+      "path": "server/cloud-role-app.ts",
+      "bytes": 1118,
+      "sha256": "264a99c9c75956bb0afcd04820acee7541974bafe5e821c5542daa3ba91e6507"
+    },
+    {
+      "path": "server/cloud-tasks.ts",
+      "bytes": 4880,
+      "sha256": "6b4e085e12c278063c0d1df70adb9fad638c2941e35bc1aeff4cc3e0e69d0f7e"
+    },
+    {
+      "path": "server/copy-prompt.ts",
+      "bytes": 3690,
+      "sha256": "16ff134067daa7bd60821513c0027fed019d89ecf3f83916642889d0f4eab3e0"
+    },
+    {
+      "path": "server/copy-provider.ts",
+      "bytes": 5036,
+      "sha256": "6f0b3d1de55a3c109440b493ebd35480f79c8538deee9ec519490502e43f1c4c"
+    },
+    {
+      "path": "server/copy-routes.ts",
+      "bytes": 2054,
+      "sha256": "dc50614cf6e182c6474ce6fe3c4fd0e5f4278134271e73580d3ef0aaff73e2dc"
+    },
+    {
+      "path": "server/copy-settings.ts",
+      "bytes": 4676,
+      "sha256": "42085c55d85a2b83b3796443a035bc2e31d385d1e6bb5d87b9660ea74a48e147"
+    },
+    {
+      "path": "server/http-policy.ts",
+      "bytes": 1897,
+      "sha256": "ed20e8756cfd7a4478f6003bc1d00e2f5faf39c2c1aa3a747afcb30c74c026f2"
+    },
+    {
+      "path": "server/images.ts",
+      "bytes": 4099,
+      "sha256": "a6019e1e1898a8a6efbd9e829dc4011e301ea25a033adb9ad5c89de1bac9e8a4"
+    },
+    {
+      "path": "server/index.ts",
+      "bytes": 3471,
+      "sha256": "117c7acf8a26f573e8bfff34dd94137e626bd9400bbf5bac0cca4391ba9b6331"
+    },
+    {
+      "path": "server/jobs.ts",
+      "bytes": 15237,
+      "sha256": "c3c99f7a9575e00b7a365e92b291291611a69c24b393fa5806a7797c9583764c"
+    },
+    {
+      "path": "server/local-json.ts",
+      "bytes": 706,
+      "sha256": "f686fad04653f5e45c9fa219c2dc9f0e30de3f7fa2dec2cd192998034450144d"
+    },
+    {
+      "path": "server/naming.ts",
+      "bytes": 3031,
+      "sha256": "3213ab2e5d6e0f90c79de12847cbf99475c995d1fdb2e64a326017804cee049b"
+    },
+    {
+      "path": "server/object-documents.ts",
+      "bytes": 4584,
+      "sha256": "db9ce0ba3b821cca546426236f5d6498956a60f8ae05c929c97d1688bfca8138"
+    },
+    {
+      "path": "server/object-rate-limit.ts",
+      "bytes": 1255,
+      "sha256": "98716cc96ca35c270c7e6d2cb892fa6d39a99415283f9f04c388c72d121880f7"
+    },
+    {
+      "path": "server/room-home-files.ts",
+      "bytes": 5567,
+      "sha256": "7fbe0e7648b08060423a0aaabc2d355664b7c13137f7777ee69d43734823cb54"
+    },
+    {
+      "path": "server/runtime-config.ts",
+      "bytes": 1681,
+      "sha256": "35f07cae7c5684600459821ceb6bc0806424d36c6a148e2700a1107d50043074"
+    },
+    {
+      "path": "server/store.ts",
+      "bytes": 2951,
+      "sha256": "6101b88e587a18d8e2f7dcc5b34d9d9b4e2ab3cc479a45c71d97a60bc70fa92c"
+    },
+    {
+      "path": "server/task-http.ts",
+      "bytes": 3253,
+      "sha256": "a504bd8139d3890ac1b2bcd2ca298a954ae9cda26bc17f8fefed69f009b20733"
+    },
+    {
+      "path": "server/task-identity.ts",
+      "bytes": 1396,
+      "sha256": "3a1981d3a68327d69baf6b235ca2c07b997b7eb304217e0b06b72479458bb571"
+    },
+    {
+      "path": "server/temporary-media.ts",
+      "bytes": 1491,
+      "sha256": "704272d0500934d033985875779beef07351a98a1a1410f89544d03209289026"
+    },
+    {
+      "path": "server/tos-check-app.ts",
+      "bytes": 1538,
+      "sha256": "d18ea20ba799f92552d373a387e434fd5ddf5801ec9840d6c5986f8bea9d7590"
+    },
+    {
+      "path": "server/tos-check-index.ts",
+      "bytes": 521,
+      "sha256": "401d83957b93d6e6a7fcee613e7c5641624510dfcca25442bc11e580b4be40a8"
+    },
+    {
+      "path": "server/tos-client.ts",
+      "bytes": 1275,
+      "sha256": "f3eb7949f24505f060b2a478e9be00143be0f274f607e231eee0b7cd3d727c78"
+    },
+    {
+      "path": "server/tos-objects.ts",
+      "bytes": 3218,
+      "sha256": "7aaeb8e86639f61f94dfe935bd89bcc1ec8c7cd88ef82fbb48675099dbf0645e"
+    },
+    {
+      "path": "server/tos-smoke.ts",
+      "bytes": 2569,
+      "sha256": "280569a9b4b3b08758e5af45ae8991b2133a79a194ca88012ed68dd8713359b4"
+    },
+    {
+      "path": "server/vefaas-credentials.ts",
+      "bytes": 1792,
+      "sha256": "3ab430c74f9f79a5046f6a7ac609f2f4eb5d4c7a981d8839fa179896bfbfd9b0"
+    },
+    {
+      "path": "server/work-routes.ts",
+      "bytes": 2177,
+      "sha256": "52471f20f973446a4bfdda4111ecce583ccd1107490bd37d50776a068ef0985b"
+    },
+    {
+      "path": "server/work-storage.ts",
+      "bytes": 5946,
+      "sha256": "1910bd5babfe98f3bf83cddff8ad0589d9a2e6c2484fe1328aa9fccf0a3298ac"
+    },
+    {
+      "path": "server/works.ts",
+      "bytes": 8030,
+      "sha256": "7df0aa032263e1204fed916dca117b3ff3e92fbe7869e833892ed666203b2914"
+    },
+    {
+      "path": "shared/ai-copy.ts",
+      "bytes": 1214,
+      "sha256": "e4f686d86a8f6411ed23684c539d0a1c7b5c96a2f93ebbf857473d9acefeab43"
+    },
+    {
+      "path": "shared/contracts.ts",
+      "bytes": 5675,
+      "sha256": "36132b3556e64be36ade1f190f308721809857f2ff36cda8f4ef29a81a16653c"
+    },
+    {
+      "path": "shared/copy-source.ts",
+      "bytes": 253,
+      "sha256": "ee3475dfa4dcf971e02500e6dcea19ec3e86c798538fb36fadb20c915b26201f"
+    },
+    {
+      "path": "shared/works.ts",
+      "bytes": 8225,
+      "sha256": "923ba541e6718ea7831df89ecc4ff2f6b9d4b9d5ccf5fb57342e8c5542c9eb6a"
+    },
+    {
+      "path": "shiye-editorial-prototype/account-ui.js",
+      "bytes": 9791,
+      "sha256": "bf1bba673566f51900cf822876fd4929ba04469503c2a9cb327d162350f895d3"
+    },
+    {
+      "path": "shiye-editorial-prototype/admin.css",
+      "bytes": 5924,
+      "sha256": "af64e8f58ae5b62229478ebc40e25e7cc864a9537f428e075b0753f229285784"
+    },
+    {
+      "path": "shiye-editorial-prototype/admin.html",
+      "bytes": 569,
+      "sha256": "5f72e16f2a021a3c65e744954a0afd81b9c3db0fb57dbf99e6b02cc9e1af8600"
+    },
+    {
+      "path": "shiye-editorial-prototype/admin.js",
+      "bytes": 22289,
+      "sha256": "cb3392dc2b2c9b99195be8ccacbb1563ab120128d06827f34b345d8f0a478586"
+    },
+    {
+      "path": "shiye-editorial-prototype/ai-copy.css",
+      "bytes": 1129,
+      "sha256": "ff8ee81d162bbd29b82f3e1d04356dafb962fef64473e558db24fa110242eee1"
+    },
+    {
+      "path": "shiye-editorial-prototype/ai-copy.js",
+      "bytes": 12738,
+      "sha256": "d0dbc122d3a81ebd47b494379a8a8401bf4e8ecb85a754bbfacc98baf7216888"
+    },
+    {
+      "path": "shiye-editorial-prototype/api-client.js",
+      "bytes": 4667,
+      "sha256": "b08efa32a907433f20060119c10002c6057f30cdeb14ed707342a72010063bd8"
+    },
+    {
+      "path": "shiye-editorial-prototype/app.js",
+      "bytes": 186634,
+      "sha256": "6225ee8748c3439668dbdcf5c83a36ac53c04af9faf5dd902c3b0996314976bb"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/coffee.jpg",
+      "bytes": 68894,
+      "sha256": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/forest.jpg",
+      "bytes": 160596,
+      "sha256": "ac1cfbb41a4039c378b9a92ec04de28bb0b287c91855ba201715ea39f2c82202"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/home-landscape-sticker.png",
+      "bytes": 2378208,
+      "sha256": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/lake.jpg",
+      "bytes": 184611,
+      "sha256": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-aged-parchment.jpg",
+      "bytes": 91831,
+      "sha256": "1d6d077ff1e8f432288ae26359a921a02b0a0e5062610d004be3a82e1f594cd8"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-butterfly-botanical.jpg",
+      "bytes": 93119,
+      "sha256": "946f200f75a4ac5a7718c8f6fb93c025c08a72a16aedee96d4b50a290172a61e"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-coffee-scrapbook.jpg",
+      "bytes": 106576,
+      "sha256": "b1340a8c83dabd89a7a9ed691ac2a42bd7371d62e9e6ac312b9585c14ac8b746"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-creased-white.jpg",
+      "bytes": 86808,
+      "sha256": "15935407ae2ce9249d596477116126368639d221bde6f3110f612b2e9e8cce21"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-dried-flower-note.jpg",
+      "bytes": 173370,
+      "sha256": "1ee6cfe6b88f261fa72c07cc530c83643a06a4d1e4b56098f38cfbd0a599167a"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-floral-margin.jpg",
+      "bytes": 104300,
+      "sha256": "364b54fa2bc3550985566e52452ec522ef02be947e849262e215fb053273a640"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-layered-paper.jpg",
+      "bytes": 214960,
+      "sha256": "17b54b7cbf81dce3fa650d54ee5882d0474ae4cf8af641b22512891fcdb31ae7"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-navy-check-note.png",
+      "bytes": 3121803,
+      "sha256": "94cb210f7d9b917a18d7872535aaed7b79f11b6a0966fbf813052331ef0a6d75"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-newsprint-corner.jpg",
+      "bytes": 111383,
+      "sha256": "9b18253f5debd9702f646122501db5e2e922d3ec11f87f4595cdbb40dad1bf15"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0259_m.jpeg",
+      "bytes": 134337,
+      "sha256": "4218f37cb2eec3d242898d08c59335279d0ffc53281a27ab38424462c4712565"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0290_m.jpeg",
+      "bytes": 154636,
+      "sha256": "5a45022624f695e1c5a432ba37b15298df5c3d279dae125f8e33c95128917985"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0292_m.jpeg",
+      "bytes": 317961,
+      "sha256": "ba5cf24db93702ec4b79a616424e165c647298e0c364816487986e09be30aad6"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0297_m.jpeg",
+      "bytes": 246719,
+      "sha256": "00467ea538bdcc1b323a8911e644a69c317ff898edac9884ac6a74c03e7a89e6"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0302_m.jpeg",
+      "bytes": 355232,
+      "sha256": "f24329fd45fcec394fd9fd19aabde5794234f33b7be94c4c228b498fee2e9fcd"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0303_m.jpeg",
+      "bytes": 283604,
+      "sha256": "66c392cf48c33d8cf56608899da69b26e9725692901235d29ad67cb6d2d219ff"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0321_m.jpeg",
+      "bytes": 510193,
+      "sha256": "5324cb2ce42193a93e5a35a0491534cdfc894e2f91bcc2c7dbb7a78539344a55"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0330_m.jpeg",
+      "bytes": 596409,
+      "sha256": "d4cc268e5c1b7bf468f9a4ad89c32c42d6db21804b01dc0aef60b159260c7cf9"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0336_m.jpeg",
+      "bytes": 801005,
+      "sha256": "ef3686a6184b6a8c5e1d14b52e36ba92bff2c60f83478e135db828583942a13d"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0339_m.jpeg",
+      "bytes": 890289,
+      "sha256": "d61b1a693e7e63bb1e1a8f07a8199329a31499f31840c7633f8b18b61748f67b"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0344_m.jpeg",
+      "bytes": 741258,
+      "sha256": "5a5f08fbb16b2cccfcb59e7e7f58065707941f75c0c2eeef3a6f9c756ae36c85"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0362_m.jpeg",
+      "bytes": 599988,
+      "sha256": "7ff9bb3d60334ba2aa233ddb0e983bcdb873c87f7910a408c3fe26ca926aba25"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0366_m.jpeg",
+      "bytes": 644637,
+      "sha256": "4d692d8e8cb0fe4027349039a2129923519aedb254889119129ac9d8314017d2"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0369_m.jpeg",
+      "bytes": 695301,
+      "sha256": "c6be31b9e761031c175a13a47a595b785bd9609a5ddc1faf57525195d9c21849"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0375_m.jpeg",
+      "bytes": 932807,
+      "sha256": "e0037e10bc51d1157da9e7a26e664306b4e451a766a5ea9141b8821a3e46b31f"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0377_m.jpeg",
+      "bytes": 951854,
+      "sha256": "596a40ca1d2dd6e366ff7f09ed10b8d8c0fa7afbd49e593795953cce82dd5db3"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0381_m.jpeg",
+      "bytes": 755039,
+      "sha256": "92a69328a704f6b9d547b87ac91e7c9c2ae0b0683d385be63684a882b0652e91"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0401_m.jpeg",
+      "bytes": 355799,
+      "sha256": "748d7825c51b3854fca52533ec43d293360ee6e8723dce21cde74272c502cda9"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0402_m.jpeg",
+      "bytes": 563629,
+      "sha256": "d340ddd115f883723f9e770058de8031997e55b7766d7cc0be6d8e79c3afcf48"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0405_m.jpeg",
+      "bytes": 608081,
+      "sha256": "b190c78b9d86d403af3bd679fe25dc8755dd49880fcb4c1efa87520494ac8ca3"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0406_m.jpeg",
+      "bytes": 599915,
+      "sha256": "ac5e3f5e7c826477386d95d1b5aed6385afd9deae61ddfdeffd694fe42302184"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0411_m.jpeg",
+      "bytes": 562859,
+      "sha256": "2242e3ecbc24e9c112229f191f8e73fd6401bf1fa0cfd24cfe578f62f34d5d6c"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0420_m.jpeg",
+      "bytes": 547451,
+      "sha256": "bd7f579138fee9a244d28da2aad2296ca6736c8792819fda85a5c1225873dd92"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0427_m.jpeg",
+      "bytes": 696613,
+      "sha256": "82883ee04e96ed47bd08bd0c40d801335f6d6c4311ecf8c54f7a1bc45075cbe1"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0428_m.jpeg",
+      "bytes": 317029,
+      "sha256": "520751c5e3ca8209f093cecd573dbae608652454ab1d0e422ef6a192cc712214"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0429_m.jpeg",
+      "bytes": 451067,
+      "sha256": "5cba18225e4be002c8a4ee44224c2130eaea4eeb0186bce625cc3da846e6903b"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0431_m.jpeg",
+      "bytes": 920281,
+      "sha256": "1ca25db76608b1adf6a84d65e1fc847a749c8f9c117595fa731b787d6279a141"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0433_m.jpeg",
+      "bytes": 970778,
+      "sha256": "633dd7bdbbddddc74c491b1ca478089ad43f61879513b1fc567937b718048f14"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0444_m.jpeg",
+      "bytes": 482702,
+      "sha256": "008f2964ecd63b2ec339e9b0df5521ce0ebfc61c391124a9e6a2424ee74297bc"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0445_m.jpeg",
+      "bytes": 567805,
+      "sha256": "53a16c1b1f656d89a458e62b48f7b7fb767f084b7166a948ecb7566062d85e5c"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0452_m.jpeg",
+      "bytes": 783179,
+      "sha256": "db894884e9daad07252a24f97c54f2611b0052f509a84949deed804a53a38013"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0454_m.jpeg",
+      "bytes": 494263,
+      "sha256": "93088b3b507df220dded93429830e3cfa3b8512f4a9a454b4ea77d887a7a9163"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0474_m.jpeg",
+      "bytes": 845587,
+      "sha256": "eda0e58728e463f298c4c61487255da7b5596a705ee5a91f5fcdd162d8afb7c4"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0476_m.jpeg",
+      "bytes": 851308,
+      "sha256": "8cded558cc37d3f5e221acb5b9a9f0abbf551d06f726b02951f7d5b48738eb95"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0477_m.jpeg",
+      "bytes": 871562,
+      "sha256": "185e1c1c160705cfb6b36ef93947005819d110576931f7c24c97d3eb3b7362df"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0483_m.jpeg",
+      "bytes": 973042,
+      "sha256": "0bd1f3481e8dc7e70313046181b086b7bb3faa85bf796daf4cb8260f2a9bc8c9"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0485_m.jpeg",
+      "bytes": 954027,
+      "sha256": "1101e6062ec98023ce4d1095c537eb243d0fdf7475384f20097a39239bdcaee5"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0486_m.jpeg",
+      "bytes": 883632,
+      "sha256": "e00f110c120ea17141ddce11717b6d53ae3c5eabf3660a79e8bdba570099c14e"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0487_m.jpeg",
+      "bytes": 880368,
+      "sha256": "44b4643aed0da2581103a239dfd075ec39683aa6e07de2e817478556650eefbb"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0518_m.jpeg",
+      "bytes": 556868,
+      "sha256": "1442e6cfc4a8b9e935f5d7f958db325d02919f84e78c42e8ab7999e57f013d36"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0521_m.jpeg",
+      "bytes": 669643,
+      "sha256": "ab2b27671c362f056e4509b31de2a3a5e6fc1386b841a3c193611d4e63c00c41"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0526_m.jpeg",
+      "bytes": 503965,
+      "sha256": "8e4bb09410c36d9901ad03d3ace871dcd1c1efda4620310916839ac32d180542"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-p0527_m.jpeg",
+      "bytes": 376023,
+      "sha256": "1a45404eb9007987319eb85e3d9e581bc29bc7af2b523a9ef4e894f901e4eb8b"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-star-heart-grid.jpg",
+      "bytes": 78026,
+      "sha256": "f2bf0fee50901857cae2d39c1c5f6a332207a8426ea45e6104b3e0a1e3efd902"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-weathered-sepia.png",
+      "bytes": 4485170,
+      "sha256": "1f4a85839da8270022913a2b023a2a6aa8a690d3ca1dee88edb0ee2474b444fb"
+    },
+    {
+      "path": "shiye-editorial-prototype/assets/paper-white-relief.png",
+      "bytes": 4140916,
+      "sha256": "38feb566d54f501994fda5e17b1741297d6bccc215ef1e4ba5115e08836e3207"
+    },
+    {
+      "path": "shiye-editorial-prototype/cover-editor.js",
+      "bytes": 13506,
+      "sha256": "1c3c28c39e186ab6e5236cf73a20d1084bfd77c57115393fc215aff66415c002"
+    },
+    {
+      "path": "shiye-editorial-prototype/edgecut-core.js",
+      "bytes": 4070,
+      "sha256": "7ff72f94fd1083219592c2c945b950dae56008d8c85dfbc48e0026ade4dbf4f6"
+    },
+    {
+      "path": "shiye-editorial-prototype/edgecut-worker.js",
+      "bytes": 618,
+      "sha256": "51bd18a226678b8b4c9f25e564905c9fb6c41d0ba02acbfb0fadee418f6a077c"
+    },
+    {
+      "path": "shiye-editorial-prototype/edgecut.css",
+      "bytes": 4736,
+      "sha256": "266bdb03550df89cf67006737d476a45c6cbbb49970fc3e3c5a3436074fc79af"
+    },
+    {
+      "path": "shiye-editorial-prototype/edgecut.js",
+      "bytes": 16069,
+      "sha256": "07d397a0a72d4786bd7040826779ebabe9f604253a4731aee363c80c81db8232"
+    },
+    {
+      "path": "shiye-editorial-prototype/index.html",
+      "bytes": 1633,
+      "sha256": "43ffc6a92b78c2cc5be99adcf21598ab9ac8dd0b04efc7ac39c9b577471cc95f"
+    },
+    {
+      "path": "shiye-editorial-prototype/page-manager.js",
+      "bytes": 10721,
+      "sha256": "6ca5a5f923f0f48fe2353d2fdca074177ea1ceae0690036d2837109494c733da"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home.css",
+      "bytes": 2144,
+      "sha256": "feb1a4ac4535969e84d3eb6410dabc94f4d7cad652419beb0bed562fed32cf1c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home.js",
+      "bytes": 2882,
+      "sha256": "6bc6790c0f22c21d8ef71af4faf1b9956cd6c2113ceca38f8d25ddddb7c27992"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/LICENSE.md",
+      "bytes": 1068,
+      "sha256": "e314280a2ec86dbdc07c4565ad6f30d7e1220027d271443ce69a91872f842494"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/assets/index-BylXNHBx.css",
+      "bytes": 5625,
+      "sha256": "fbd7b59d33f84b7e2de786dab8a6477098bb477103b02e00c4ff49485b42916c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/assets/room-custom-photos.js",
+      "bytes": 1172933,
+      "sha256": "17a41982f44184c6adfd393a59b0367d9c26e5cd144743acb2120d894fd97bfe"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/audio/music/Married_Life.mp3",
+      "bytes": 995453,
+      "sha256": "509f35cfef6f80f1771ce15fc7501519b7eb4c6e8bee5dbe555ab89288789307"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/basis/basis_transcoder.js",
+      "bytes": 57529,
+      "sha256": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/basis/basis_transcoder.wasm",
+      "bytes": 527333,
+      "sha256": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/assets/dogs.jpg",
+      "bytes": 660528,
+      "sha256": "29aeed206bc44d9296a4959d5cbb9f35e22089f895bd1bd588757c89059bd0bd"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/assets/mountains.jpg",
+      "bytes": 857804,
+      "sha256": "d346002174766308c470a7a1e9331842bf731c059b5fe803247f88205d0f3b71"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/assets/reference-LICENSE.md",
+      "bytes": 1068,
+      "sha256": "e314280a2ec86dbdc07c4565ad6f30d7e1220027d271443ce69a91872f842494"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/assets/sheep.jpg",
+      "bytes": 99617,
+      "sha256": "1df08b334ab3881eb3e3fe1cce9a0cd6620c5a8d173b0a0fbcd9d902ceb33ceb"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/assets/window-shadow.jpg",
+      "bytes": 53148,
+      "sha256": "e2038ff599abe503eac6e6b213353eb0d4932a55662ab6a9c53cb7343b95fefa"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/board-geometry.js",
+      "bytes": 125890,
+      "sha256": "4eae215ab5b7514d28b61ab21f06b3aa8eda1dc8c7d62671405ccc6708f3f63c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/book-controls.css",
+      "bytes": 2685,
+      "sha256": "b3daff4cfd0f36c56cf0c801f1f00183bcc1873740c00c13080f3bd66124bb9a"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/book.js",
+      "bytes": 7556,
+      "sha256": "0a779c425fdc6463e1d99d1b2f54bfcbbe7a943d5f8783a1112c6cbed8cf0214"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/calendar-clean.png",
+      "bytes": 1167719,
+      "sha256": "53d1a9273c0b330e77d223aef4545bce33da8443998669c47c3c110d14a9a924"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/coffee.jpg",
+      "bytes": 68894,
+      "sha256": "d994fc86bf46191f37b3578eae89e207a0840ad30d16f047b9c78cc59aa9e892"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/dogs.jpg",
+      "bytes": 660528,
+      "sha256": "29aeed206bc44d9296a4959d5cbb9f35e22089f895bd1bd588757c89059bd0bd"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/home-landscape-sticker.png",
+      "bytes": 2378208,
+      "sha256": "e9b82b9ee421dbb22d880f9d02c43c0615d31ecdd1d804f276f24813a9028636"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/journey.jpg",
+      "bytes": 94628,
+      "sha256": "7082010b67404712c196553c21e66e79e7fd63244c509c0a277682be9aad0e69"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/lake.jpg",
+      "bytes": 184611,
+      "sha256": "e108d1829e3b56aa2cf028bbd5ed399b97f93494fa6d02bfa3b248e1baee4b75"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/mountains.jpg",
+      "bytes": 857804,
+      "sha256": "d346002174766308c470a7a1e9331842bf731c059b5fe803247f88205d0f3b71"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-floral-margin.jpg",
+      "bytes": 104300,
+      "sha256": "364b54fa2bc3550985566e52452ec522ef02be947e849262e215fb053273a640"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0344_m.jpeg",
+      "bytes": 741258,
+      "sha256": "5a5f08fbb16b2cccfcb59e7e7f58065707941f75c0c2eeef3a6f9c756ae36c85"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0431_m.jpeg",
+      "bytes": 920281,
+      "sha256": "1ca25db76608b1adf6a84d65e1fc847a749c8f9c117595fa731b787d6279a141"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0454_m.jpeg",
+      "bytes": 494263,
+      "sha256": "93088b3b507df220dded93429830e3cfa3b8512f4a9a454b4ea77d887a7a9163"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0476_m.jpeg",
+      "bytes": 851308,
+      "sha256": "8cded558cc37d3f5e221acb5b9a9f0abbf551d06f726b02951f7d5b48738eb95"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0485_m.jpeg",
+      "bytes": 954027,
+      "sha256": "1101e6062ec98023ce4d1095c537eb243d0fdf7475384f20097a39239bdcaee5"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0521_m.jpeg",
+      "bytes": 669643,
+      "sha256": "ab2b27671c362f056e4509b31de2a3a5e6fc1386b841a3c193611d4e63c00c41"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/paper-p0527_m.jpeg",
+      "bytes": 376023,
+      "sha256": "1a45404eb9007987319eb85e3d9e581bc29bc7af2b523a9ef4e894f901e4eb8b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sheep.jpg",
+      "bytes": 99617,
+      "sha256": "1df08b334ab3881eb3e3fe1cce9a0cd6620c5a8d173b0a0fbcd9d902ceb33ceb"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-camera.svg",
+      "bytes": 1027,
+      "sha256": "bc19eeda06b1c19d661ae0aa11470f1cf7953f7fa2afddec71682c5247bb2ce8"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-coffee.svg",
+      "bytes": 988,
+      "sha256": "5c623324b8e475a47898d3762bcff958baa63fb500d1990c512d4fcfb0d6910d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-flower.svg",
+      "bytes": 1383,
+      "sha256": "1106a8732139c8c115469b0aba65b3a330e41554304f2d449f5fc4fca5a4e09a"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-leaf.svg",
+      "bytes": 776,
+      "sha256": "37867a0709eb7b8f9fb707d4709a507abf7e5c30a4ea3fc39f61d1d211e3c907"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-orange.svg",
+      "bytes": 932,
+      "sha256": "fc68ce39b175ec13ec8e71146b757654ae65116fd36ff7edfd7dcc5b559bb49d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-stamp.svg",
+      "bytes": 821,
+      "sha256": "16e0ec4df3276860c2632098c349aa9ee40ee93d38ccea9f7f11187ff362de9d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-star.svg",
+      "bytes": 560,
+      "sha256": "b91faca82bc55bffd5ab61f258674781cd0bf0067ee3eea057821783266acff5"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-tape.svg",
+      "bytes": 628,
+      "sha256": "5f93ec093cef3078932aceab2a42c3c8b51768b0f77927a7006679f8e03082e6"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/assets/sticker-ticket.svg",
+      "bytes": 1140,
+      "sha256": "340c49f36cf22117344ca74e254aeaa9cd3b214f3c3f96b39041df33bbaf0dc5"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/pages.js",
+      "bytes": 10006,
+      "sha256": "9d2210ff106361a7d41291cb98825de9889d32af8ea6de645d313d6a1571ac05"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/papers.css",
+      "bytes": 5254,
+      "sha256": "217c45aff8a67cd74a2c128789cadf57938484283b80dcda34e68b68368a09c9"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/render-pages.js",
+      "bytes": 9079,
+      "sha256": "635ec2dbbf5c66bf50695e7423dcd9e35fc0be0bbfb746154fa6e4b1139ee72c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/content/style.css",
+      "bytes": 7922,
+      "sha256": "d746ad24c0030d24bec3513122a11c9775a89ccba9f1387cd5d3b32ad38731a5"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/room-book.js",
+      "bytes": 23204,
+      "sha256": "630bc1d078b0027ffdbe8905ea09c17f1f03912e5897a013ec0c69758fa37e59"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/book/textures.js",
+      "bytes": 8420,
+      "sha256": "ae8a7f82fa4f3a761809105b0af67268f1e7e5f4eafc3963e57507fc91969e4d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/draco/draco_decoder.js",
+      "bytes": 719410,
+      "sha256": "30e4d486fa020737af10e3c56197693e5b904bdc05b8bfa5d7b06751dec6da04"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/draco/draco_decoder.wasm",
+      "bytes": 285747,
+      "sha256": "c55a594e8ffd18426d36b27fea9618af3df5e173640a3e56d46f09d76f0574f2"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/draco/draco_wasm_wrapper.js",
+      "bytes": 58763,
+      "sha256": "e8049906ef3f8f75d3456c22a3f31bfdfe5b5b5bd09ccdec613b9e9a49d554d8"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/Flowmery-Regular.woff",
+      "bytes": 54972,
+      "sha256": "d904731a70b56b27849d765c7974e9a0a117c100ed848221f4a1aee612a0f1f6"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/Flowmery-Regular.woff2",
+      "bytes": 44788,
+      "sha256": "adfe78c58c91805fd9bb239b46c64a26198976058a12181dd52723ba63f2d7f0"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/HomemadeApple-Regular.woff",
+      "bytes": 65684,
+      "sha256": "c7f91cb656c7fda2c3dd3458b3ff2745dbb7f699e5bbc998f9feb7155d076d6c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/HomemadeApple-Regular.woff2",
+      "bytes": 50220,
+      "sha256": "63bc227f0ca8a0b0964f5063d1d82ee7cae083789ad9b2a460b4ea149c60b2b8"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google.css",
+      "bytes": 1480,
+      "sha256": "66fc5053b6e016decba9cad81c2f18d12bb98d5067f443d2771b20874d645ee4"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/26bad053b5abef0e.ttf",
+      "bytes": 132320,
+      "sha256": "9bfe70fd1d70600c523d7ef66c8a024187270f115570d82baf97df7f05e6c2aa"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/5ae86d38cfa3525e.ttf",
+      "bytes": 123240,
+      "sha256": "1609a54fa3ad1abc8d0037132f73700333241ea0b65672079998e352f151dea7"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/7b56c437cef01b08.ttf",
+      "bytes": 137328,
+      "sha256": "26243fda8cd938cc2734f46d20d7464822d89378c7f375e187e39f9ed3f20907"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/8a70c7995340f54c.ttf",
+      "bytes": 123536,
+      "sha256": "adefc53e7b3d483f1fa5e85edd82b7689ca79db25a1f6786bd7949cdcfeec601"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/9c2c504c5bf6914e.ttf",
+      "bytes": 132672,
+      "sha256": "36120862013ba0d8059ee03b3f6155d6420cabbf0743ccf5542f22ef918c20a2"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/c8f8c7f5ed539bb4.ttf",
+      "bytes": 132188,
+      "sha256": "1d37d1e34c77be80f0119754ad78df9aad30d5b1c78132a4cbdac0fe567f5d4f"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/d0e784ef034da1aa.ttf",
+      "bytes": 110816,
+      "sha256": "6021680663c58b344d8404c289c755aadc662a02189ffe4f5ca79378f9e97840"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/fonts/google/fb084c8b15e94383.ttf",
+      "bytes": 111128,
+      "sha256": "954e20ee10ae685d0a5a6e6ee380165ea9c8eb329c0e22a58739496714f66991"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/index.html",
+      "bytes": 3138,
+      "sha256": "d76f272b47d5bf3986760fcd97c7d72ad1a7a040830fb67eba4fd1db30b4c5f3"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/integration.css",
+      "bytes": 2700,
+      "sha256": "d75940f515032e0bd2fe5e61dfa8867359f1a089c7961032b99abeb8a74aa4be"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/integration.js",
+      "bytes": 1541,
+      "sha256": "04948207b0c3bb254574fd74ec19dccac0196d075c42090803d94e9e5cbd3eec"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/media/apple-touch-icon.png",
+      "bytes": 9205,
+      "sha256": "58462597aa6876727ce4b16a54f9a494dc2d0731b8ce6f21391b100108c02868"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/media/favicon-96x96.png",
+      "bytes": 3421,
+      "sha256": "2d6c8e57b15d61c086622e3e1225b3aee4c4cbefc851115bebf11c4c7eed89df"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/media/favicon.ico",
+      "bytes": 15086,
+      "sha256": "a9b4add1ec2cfd9de3753a415f8145c75344a98bb2b8bfaea5b80bc1fe001275"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/media/favicon.svg",
+      "bytes": 3517,
+      "sha256": "bb65f8e8bf3c4894095c24baa094502d1ed9979cce44bb9a124acaa27e013a84"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/media/site.webmanifest",
+      "bytes": 436,
+      "sha256": "91a78d4fe16316df93ec91b33a15c7ed84aab2b0de8a9959da40f108dfc2154e"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/models/Hitboxes.glb",
+      "bytes": 4944,
+      "sha256": "dcfb1d5651e461e887068112d4eba000cbf72e04c0b93b5f9609e17f295c549c"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/models/Room.glb",
+      "bytes": 4475736,
+      "sha256": "8ceff9b13dd47261eb80cb33bb74d3566506aed174fbc1c14b7ead90e3fa0210"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/photo-replacement/photos-day-calendar.webp",
+      "bytes": 6764616,
+      "sha256": "e4af651d1fa389b5bf7a35872c344395223f28b5ef63e28df21ab75c3991ca8b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/photo-replacement/photos-night-calendar.webp",
+      "bytes": 3836680,
+      "sha256": "24ec04ac8c074ed8141fc6ce8517dccdfd9f3d56ac3166997916a55e5c7c1594"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/preview-health.js",
+      "bytes": 3028,
+      "sha256": "46d60db6d27aead114981fc11cf763823a7725672e6d1ceb4b40e6af352f12bd"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/preview.css",
+      "bytes": 1828,
+      "sha256": "b59178b4077c6f1d8f4b6e3b4a267a5d4074f137215fa2e35a96a6a458f7f9b1"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/butterfly_wing.webp",
+      "bytes": 17790,
+      "sha256": "0992033fad42df4e24748a9825672fe12b654f92bb59c86c98f8fae7e5db8393"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/eighth-decor_day.ktx2",
+      "bytes": 1123928,
+      "sha256": "6f8e2de4430b3445029589cc6020b0ca876f28b28b35a5d88fe105df0c92cae9"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/eighth-decor_day.webp",
+      "bytes": 2691774,
+      "sha256": "5de687bb77b750bee2ec147e5c178324e26b1424c9e795eb240a024700653772"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/fifth-background_day.ktx2",
+      "bytes": 488998,
+      "sha256": "73f7250f7efc8ebe61379b4cb370f2a3e2dbc8571bc78f753deeffddbd884797"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/fifth-background_day.webp",
+      "bytes": 1027654,
+      "sha256": "b5964a8d38a634aa749183f624352079418f318bb725be6cd6e0f47450ca951b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/first-house_day.ktx2",
+      "bytes": 747328,
+      "sha256": "cd3a5c8105c82e3bdc3a6bfe2816195166ffc7e8bfe6ca70fec075a57ccdd1e7"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/first-house_day.webp",
+      "bytes": 1198874,
+      "sha256": "9641f43f080e2fa8deea4c67016acee55c1d5ff3312482fa6a062913a7f0982e"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/fourth-extras_day.ktx2",
+      "bytes": 949362,
+      "sha256": "e4384f410c51f1e8f2d4e4fb7f0f70b82fecc77a2c23c21f31f9ff7b848d8b7e"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/fourth-extras_day.webp",
+      "bytes": 1907768,
+      "sha256": "e051410414e63324473b0592041b06b17d37daab64941c12169389e0cdf68e8b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/ninth-attachment_day.ktx2",
+      "bytes": 231707,
+      "sha256": "6530264c4361079ab4b45bebe938506a290b532e6a40eadb7dab501cd616485d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/ninth-attachment_day.webp",
+      "bytes": 304572,
+      "sha256": "070fb0a7c5d14ea547c5976652e97bb4788ad0bf298f508eb05cf472e52d4ea8"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/second-photos_day.ktx2",
+      "bytes": 636931,
+      "sha256": "b3643083caeb7b220c2ff86688a7f964e52e43ae1f1ca409cb8a7ce38d11d508"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/second-photos_day.webp",
+      "bytes": 1008582,
+      "sha256": "994b8309791ac3d2d3b2d2c519299c4aa9feb2efb701157f672c24f9fdea06f9"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/seventh-large-stuff_day.ktx2",
+      "bytes": 849378,
+      "sha256": "595770c3c87e1e16ab5b5c25be5d69e4ec59003dabb0a667d8beea638ae17c5e"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/seventh-large-stuff_day.webp",
+      "bytes": 1611614,
+      "sha256": "63a757852bb28c9d704851b00587d23f2e8475f7b10c65f7316e3e3c912d6e72"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/sixth-plants_day.ktx2",
+      "bytes": 1061800,
+      "sha256": "22047a0faab0dc3f949c5aec7f1603d62befe8b6b1c3c18d23b7fb54270f30c3"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/sixth-plants_day.webp",
+      "bytes": 2889954,
+      "sha256": "25d11180e8ba16647730bcd669f3733add475c4bbbe7a52bbfbfb79794726e14"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/third-desk_day.ktx2",
+      "bytes": 840951,
+      "sha256": "96fa256312ce0f1847d806ef2416919c9a90c918650419a6a0f895d2e99d4f76"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/day/third-desk_day.webp",
+      "bytes": 1346828,
+      "sha256": "a20c66bb34851d8cd3f55284b20e843d826b948bdce378d05b31f95f8bff4382"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/gobo.jpg",
+      "bytes": 53148,
+      "sha256": "e2038ff599abe503eac6e6b213353eb0d4932a55662ab6a9c53cb7343b95fefa"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/eighth-decor_night.ktx2",
+      "bytes": 999157,
+      "sha256": "2fc2e10f14b2cdbeac1202e7d1f97ccdea928dda0eb70fccd4a523333b695fee"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/eighth-decor_night.webp",
+      "bytes": 1339398,
+      "sha256": "f7f54ac80595e67eaed34bd7038f57938957dfdb407e1f51c2817aa7d43ecad4"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/fifth-background_night.ktx2",
+      "bytes": 375007,
+      "sha256": "09e482b10b1549d5b8bcb33f307d7e4f770da08e6dfb06d63c3a9470bee54c26"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/fifth-background_night.webp",
+      "bytes": 499392,
+      "sha256": "191118ca3714bc572bedc7866d4a6af2a391d4da8f72838ededeac7da499bf1b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/first-house_night.ktx2",
+      "bytes": 516508,
+      "sha256": "70bdbb0b41cf4a8974dc1760b90ed98910d2ed1badf0fdd3fdaf46ef5f16ac3e"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/first-house_night.webp",
+      "bytes": 623104,
+      "sha256": "59b94109eb1ac79c6d9d2100b06c3f84d111983928af8bc47af860cdec9bbb2b"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/fourth-extras_night.ktx2",
+      "bytes": 669788,
+      "sha256": "5e76729719e7c3e5269eebb6ab1ba01167eeb4caa5c98a1b846c14f52f38caa9"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/fourth-extras_night.webp",
+      "bytes": 873752,
+      "sha256": "49a20c6936b3ee08b9ad23ca6dd0b7585eccba9ac6cb62eb11e29eb219734b85"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/ninth-attachment_night.ktx2",
+      "bytes": 300282,
+      "sha256": "804d7ff0562ae3e29b0d84eff69d4e42a31053cc59591f5c142017bd484cf968"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/ninth-attachment_night.webp",
+      "bytes": 311156,
+      "sha256": "e26169a485a4fc7598d02c9f8a6c030010d2ab1ce49ae2346d9879fc51f8f7ff"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/second-photos_night.ktx2",
+      "bytes": 505194,
+      "sha256": "46f488452a5f498e42014206b684900506d0e24414d5643e983616adc9873d39"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/second-photos_night.webp",
+      "bytes": 529562,
+      "sha256": "94ef4480a5db24831c62b599576c4063d58616ccefb4cd6462b2a5b61f798a7d"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/seventh-large-stuff_night.ktx2",
+      "bytes": 564400,
+      "sha256": "bc3351571a51866d3ff6b0996d0b655b1f18ad4177e9a0f7415444e650414679"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/seventh-large-stuff_night.webp",
+      "bytes": 737470,
+      "sha256": "d2fd32736b012adbb5ab7c5f1350e20b966517c55f92ea567ad91ab2bcac1210"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/sixth-plants_night.ktx2",
+      "bytes": 521488,
+      "sha256": "baa83312d492f0c4bb6bfc63bd9e76e623b171b000b55e3e164ed312c69a1707"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/sixth-plants_night.webp",
+      "bytes": 738868,
+      "sha256": "4cf8d838f160f4f9de14357af92093eedf39c0bbc293bea75377a97d5d99dc05"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/third-desk_night.ktx2",
+      "bytes": 553256,
+      "sha256": "81f031335dc787e5b7c19afc3046b372fa62bc0a579e9e40fbbe78ae96733bd0"
+    },
+    {
+      "path": "shiye-editorial-prototype/room-home/textures/night/third-desk_night.webp",
+      "bytes": 565112,
+      "sha256": "945ea25df85aeb2e099b8e90651f952bfc6f2c3924f45179539079fe5aa92e73"
+    },
+    {
+      "path": "shiye-editorial-prototype/segmentation.css",
+      "bytes": 5919,
+      "sha256": "db691223aae41152a066d3518ad48439f4385456848fdf66cb2332b926915ac7"
+    },
+    {
+      "path": "shiye-editorial-prototype/segmentation.js",
+      "bytes": 42869,
+      "sha256": "6e9c2ce9c2a218195871064f154efbb2ac3c7121c96f427426b954a4df876300"
+    },
+    {
+      "path": "shiye-editorial-prototype/selection.js",
+      "bytes": 1713,
+      "sha256": "62036889b7907fcbdbb0029799c1b751ef60ffaec4d4f74354dd43de1d7712f9"
+    },
+    {
+      "path": "shiye-editorial-prototype/specular-buttons.css",
+      "bytes": 1079,
+      "sha256": "7c428ad79f460eb0e430933df3aff0c751234fdc70f8e0d9c8a19a9cfab0c615"
+    },
+    {
+      "path": "shiye-editorial-prototype/specular-buttons.js",
+      "bytes": 4005,
+      "sha256": "0d61051072890ce5b48bac1cd1635f93e235f82d0809762ad63c30eb6fd4a3d2"
+    },
+    {
+      "path": "shiye-editorial-prototype/sticker-preview.js",
+      "bytes": 3696,
+      "sha256": "9b7f38f00cf7488509e6ad81fa777948952b9e63c7d794f5eff32803f912143d"
+    },
+    {
+      "path": "shiye-editorial-prototype/styles.css",
+      "bytes": 122541,
+      "sha256": "1dc6c18797def8b803f5ae5108ec3fb590cb226a96851cfb74930493ba0af262"
+    },
+    {
+      "path": "shiye-editorial-prototype/vendor/opencv-4.13.0/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "shiye-editorial-prototype/vendor/opencv-4.13.0/opencv.js",
+      "bytes": 10964323,
+      "sha256": "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0"
+    },
+    {
+      "path": "shiye-editorial-prototype/work-sync.js",
+      "bytes": 11847,
+      "sha256": "ba7b5008d42a3dea750c1cfb031873d39679eb9095793b0ef48f94117286418b"
+    },
+    {
+      "path": "tsconfig.json",
+      "bytes": 334,
+      "sha256": "5f3920550b611cb3f5b33d12628b1fdaf25e9edbedb631b37a58bd7f76fd47eb"
+    },
+    {
+      "path": "runtime/NODE-LICENSE",
+      "bytes": 143299,
+      "sha256": "e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49"
+    },
+    {
+      "path": "runtime/node",
+      "bytes": 123405064,
+      "sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31"
+    }
+  ],
+  "nodeArchiveSha256": "9aa8e9d2298ab68c600bd6fb86a6c13bce11a4eca1ba9b39d79fa021755d7c37"
+}

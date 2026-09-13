@@ -1,0 +1,20 @@
+/* Paint-only paired highlights. Existing button geometry, fill and focus stay. */
+.specular-position{position:relative}
+.specular-button>.specular-rim{
+ position:absolute;inset:0;display:block;box-sizing:border-box;margin:0;padding:1px;
+ border:0;border-radius:inherit;pointer-events:none;
+ background:repeating-conic-gradient(from var(--specular-angle,140deg),#fffdf2 0deg,#f5dfb6b3 14deg,transparent 50deg 130deg,#f5dfb6b3 166deg,#fffdf2 180deg);
+ -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+ -webkit-mask-composite:xor;
+ mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+ mask-composite:exclude;
+ opacity:var(--specular-brightness,0);
+}
+.specular-button:focus-visible>.specular-rim,.specular-button:active>.specular-rim{opacity:.85}
+.specular-button:is(:disabled,[aria-disabled="true"])>.specular-rim{opacity:0}
+@media(prefers-reduced-motion:reduce){
+ .specular-button>.specular-rim{display:none}
+}
+@supports not ((mask-composite:exclude) or (-webkit-mask-composite:xor)){
+ .specular-button>.specular-rim{display:none}
+}

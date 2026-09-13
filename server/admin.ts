@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { Fault,type Box } from '../shared/contracts.js';
 import { InviteAccess,generateInvites,inviteHash } from './access.js';
 import { editJson } from './local-json.js';
+import type { ObjectDocumentGroup } from './object-documents.js';
+import { ObjectAttemptLimits } from './object-rate-limit.js';
 import { usernameSchema,usernameKey,newPassword,cleanAvatar } from './account-profile.js';
 import { BaiduProvider } from './baidu.js';
 const feature=z.enum(['cutout','naming']);export type Feature=z.infer<typeof feature>;
@@ -11,48 +13,97 @@ const event=z.object({id:z.string(),at:z.number(),actor:z.string(),action:z.stri
 const apiSchema=z.object({enabled:z.boolean(),cipher:z.string(),revision:z.number(),testedAt:z.number().optional(),lastCall:z.object({at:z.number(),status:z.string(),error:z.string().optional()}).optional()});
 const schema=z.object({version:z.literal(1),accountId:z.string().uuid().optional(),role:z.literal('admin').optional(),username:z.string(),avatar:z.string().nullable().optional(),salt:z.string(),passwordHash:z.string(),apis:z.object({cutout:apiSchema,naming:apiSchema}),audit:z.array(event)});
 type Document=z.infer<typeof schema>;
+const apiProofSchema=z.record(z.string(),z.object({fingerprint:z.string(),expiresAt:z.number(),revision:z.number()}));
+type ApiProof=z.infer<typeof apiProofSchema>[string];
+const sessionsSchema=z.record(z.string(),z.object({accountId:z.string().uuid(),role:z.enum(['admin','user']),username:z.string(),expiresAt:z.number(),salt:z.string()}));
+export type AdminObjectState={documents:ObjectDocumentGroup;encryptionKey:Buffer};
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 const passwordHash=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,(e,key)=>e?reject(e):resolve(key)));
 const audit=(actor:string,action:string,target='')=>({id:randomUUID(),at:Date.now(),actor,action,target});
 export class Admin {
  private key!:Buffer;private accountId='';private sessions=new Map<string,{accountId:string;role:'admin'|'user';username:string;expiresAt:number}>();private limits=new Map<string,{count:number;until:number}>();
  private identityQueue:Promise<unknown>=Promise.resolve();
- private identityChange<T>(fn:()=>Promise<T>):Promise<T>{const work=this.identityQueue.catch(()=>{}).then(fn);this.identityQueue=work.catch(()=>{});return work;}
+ private identityChange<T>(fn:()=>Promise<T>):Promise<T>{const work=this.identityQueue.catch(()=>{}).then(()=>this.objectState?this.objectState.documents.transaction(fn):fn());this.identityQueue=work.catch(()=>{});return work;}
  private proofs=new Map<string,{fingerprint:string;expiresAt:number;revision:number}>();private providers=new Map<string,BaiduProvider>();
- constructor(readonly file:string,readonly access:InviteAccess,private factory=(key:string,secret:string)=>new BaiduProvider(key,secret)){}
- async init(initial:{apiKey:string;secretKey:string;cutout:boolean;naming:boolean},receipt:string){
-  try{this.key=await readFile(this.file+'.key');if(this.key.length!==32)throw Error('key');}
+ constructor(readonly file:string,readonly access:InviteAccess,private factory=(key:string,secret:string)=>new BaiduProvider(key,secret),private objectState?:AdminObjectState){
+  if(objectState&&(objectState.documents!==access.documents||objectState.encryptionKey.length!==32))throw Error('账号和邀请码必须使用同一个存储事务与受控密钥。');
+ }
+ private get cell(){return this.objectState?.documents.cell('administrator',v=>schema.parse(v));}
+ private get storedProofs(){return this.objectState?.documents.cell('api-proofs',v=>apiProofSchema.parse(v));}
+ private async apiProof(key:string){return this.storedProofs?(await this.storedProofs.read())[key]:this.proofs.get(key);}
+ private async saveProof(key:string,value:ApiProof){if(this.storedProofs)await this.storedProofs.update(rows=>{for(const k of Object.keys(rows))if(rows[k].expiresAt<Date.now())delete rows[k];if(Object.keys(rows).length>=256&&!rows[key])throw new Fault(429,'TOO_MANY_API_TESTS','请稍后再测试配置。');rows[key]=value;});else this.proofs.set(key,value);}
+ private async removeProof(key:string){if(this.storedProofs)await this.storedProofs.update(rows=>{delete rows[key];});else this.proofs.delete(key);}
+ private get storedSessions(){return this.objectState?.documents.cell('sessions',v=>sessionsSchema.parse(v));}
+ async init(initial:{apiKey:string;secretKey:string;cutout:boolean;naming:boolean},receipt:string|{username:string;password:string}){
+  const bootstrap=typeof receipt==='string'?undefined:z.object({username:usernameSchema,password:newPassword}).strict().parse(receipt);
+  if(this.objectState){
+   if(!bootstrap)throw Error('对象存储初始化需要受控管理员配置。');
+   this.key=Buffer.from(this.objectState.encryptionKey);
+   await this.storedSessions!.initialize({});await this.storedProofs!.initialize({});
+  }else try{this.key=await readFile(this.file+'.key');if(this.key.length!==32)throw Error('key');}
   catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw Error('管理员加密文件无效，已保留原文件。');try{await fileExists(this.file);throw Error('管理员加密密钥缺失，不能重新生成。');}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}this.key=randomBytes(32);await writeFile(this.file+'.key',this.key,{flag:'wx',mode:0o600});}
   try{const d=await this.read();this.decrypt(d.apis.cutout.cipher);this.decrypt(d.apis.naming.cipher);this.accountId=d.accountId&&d.role?d.accountId:await this.update(current=>{current.accountId??=randomUUID();current.role='admin';current.audit.push(audit('本机初始化','绑定管理员账号身份',current.accountId));return current.accountId;});return;}
   catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw Error('管理员数据无法读取，已保留原文件。');}
-  const username='admin',password=randomBytes(18).toString('base64url'),salt=randomBytes(16).toString('hex'),cipher=this.encrypt(JSON.stringify({apiKey:initial.apiKey,secretKey:initial.secretKey}));
-  const data:Document={version:1,accountId:randomUUID(),role:'admin',username,salt,passwordHash:(await passwordHash(password,salt)).toString('hex'),apis:{cutout:{enabled:initial.cutout,cipher,revision:0},naming:{enabled:initial.naming,cipher,revision:0}},audit:[audit('本机初始化','创建管理员')]};
-  await writeFile(receipt,`拾页本机管理员\n地址：http://127.0.0.1:4176/admin\n用户名：${username}\n密码：${password}\n首次登录后可在后台修改密码。请妥善保存本文件。\n`,{flag:'wx',mode:0o600});
-  await writeFile(this.file,JSON.stringify(data),{flag:'wx',mode:0o600});this.accountId=data.accountId!;
+  const username=bootstrap?.username??'admin',password=bootstrap?.password??randomBytes(18).toString('base64url'),salt=randomBytes(16).toString('hex'),cipher=this.encrypt(JSON.stringify({apiKey:initial.apiKey,secretKey:initial.secretKey}));
+  const data:Document={version:1,accountId:randomUUID(),role:'admin',username,salt,passwordHash:(await passwordHash(password,salt)).toString('hex'),apis:{cutout:{enabled:initial.cutout,cipher,revision:0},naming:{enabled:initial.naming,cipher,revision:0}},audit:[audit(bootstrap?'部署初始化':'本机初始化','创建管理员')]};
+  if(typeof receipt==='string')await writeFile(receipt,`拾页本机管理员\n地址：http://127.0.0.1:4176/admin\n用户名：${username}\n密码：${password}\n首次登录后可在后台修改密码。请妥善保存本文件。\n`,{flag:'wx',mode:0o600});
+  if(this.cell){
+   await this.objectState!.documents.transaction(async()=>{
+    const existing=(await this.access.snapshot())?.users||[];
+    if(existing.some(u=>usernameKey(u.username)===usernameKey(data.username)))throw new Fault(409,'USERNAME_TAKEN','管理员用户名已被使用。');
+    await this.cell!.initialize(data);
+   });
+   const persisted=await this.read();this.decrypt(persisted.apis.cutout.cipher);this.decrypt(persisted.apis.naming.cipher);this.accountId=persisted.accountId!;
+  }else{await writeFile(this.file,JSON.stringify(data),{flag:'wx',mode:0o600});this.accountId=data.accountId!;}
  }
  sealProviderData(value:string){return this.encrypt(value);}
  openProviderData(value:string){return this.decrypt(value);}
- private async read(){return schema.parse(JSON.parse(await readFile(this.file,'utf8')));}
- private update<T>(fn:(data:Document)=>T|Promise<T>){return editJson(this.file,v=>schema.parse(v),fn);}
+ private async read(){return this.cell?this.cell.read():schema.parse(JSON.parse(await readFile(this.file,'utf8')));}
+ private update<T>(fn:(data:Document)=>T|Promise<T>){return this.cell?this.cell.update(fn):editJson(this.file,v=>schema.parse(v),fn);}
  private encrypt(text:string){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',this.key,iv),body=Buffer.concat([c.update(text,'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),body]).toString('base64');}
  private decrypt(text:string){const b=Buffer.from(text,'base64'),c=createDecipheriv('aes-256-gcm',this.key,b.subarray(0,12));c.setAuthTag(b.subarray(12,28));return Buffer.concat([c.update(b.subarray(28)),c.final()]).toString('utf8');}
  session(token?:string){if(!token||token.length>128)return null;const entry=this.sessions.get(hash(token));if(!entry||entry.expiresAt<=Date.now()||entry.role==='admin'&&entry.accountId!==this.accountId){this.sessions.delete(hash(token));return null;}return entry;}
+ async resolveSession(token?:string){
+  if(!this.objectState)return this.session(token);
+  if(!token||!/^[a-f0-9]{64}$/.test(token))return null;
+  return this.resolveSessionDigest(hash(token));
+ }
+ async resolveSessionDigest(digest:string){
+  if(!/^[a-f0-9]{64}$/.test(digest))return null;
+  if(!this.objectState){const entry=this.sessions.get(digest);return entry&&entry.expiresAt>Date.now()?entry:null;}
+  return this.objectState.documents.transaction(async()=>{
+   const entry=(await this.storedSessions!.read())[digest];
+   if(!entry||entry.expiresAt<=Date.now())return null;
+   const root=await this.read(),row=entry.role==='admin'?root:(await this.access.snapshot())?.users?.find(u=>u.id===entry.accountId);
+   if(!row||entry.salt!==row.salt||entry.role==='admin'&&(entry.accountId!==root.accountId||root.role!=='admin'))return null;
+   const {salt:_,...publicSession}=entry;return {...publicSession,username:row.username};
+  });
+ }
  async login(username:unknown,password:unknown,ip:string,adminOnly=false){
-  const b=this.limits.get(ip)||{count:0,until:Date.now()+900000};if(b.until<=Date.now()){b.count=0;b.until=Date.now()+900000;}if(b.count>=8)throw new Fault(429,'ADMIN_RATE_LIMIT','尝试次数较多，请 15 分钟后重试。');b.count++;this.limits.set(ip,b);
+  const run=()=>this.loginAttempt(username,password,ip,adminOnly);
+  if(!this.objectState)return run();
+  const limits=new ObjectAttemptLimits(this.objectState.documents,'login-limits');
+  if(!await limits.take([[ip,8]],Date.now()))throw new Fault(429,'ADMIN_RATE_LIMIT','尝试次数较多，请 15 分钟后重试。');
+  try{return await this.objectState.documents.transaction(async()=>{const token=await run();await limits.clear(ip);return token;});}
+  catch(e){if(e instanceof Fault&&e.errorType==='ADMIN_LOGIN_FAILED')await this.update(s=>{s.audit.push(audit('未登录','账号登录失败'));});throw e;}
+ }
+ private async loginAttempt(username:unknown,password:unknown,ip:string,adminOnly=false){
+  if(!this.objectState){const b=this.limits.get(ip)||{count:0,until:Date.now()+900000};if(b.until<=Date.now()){b.count=0;b.until=Date.now()+900000;}if(b.count>=8)throw new Fault(429,'ADMIN_RATE_LIMIT','尝试次数较多，请 15 分钟后重试。');b.count++;this.limits.set(ip,b);}
   const root=await this.read(),key=typeof username==='string'?usernameKey(username):'',users=(await this.access.snapshot())?.users||[];
   const user=users.find(u=>usernameKey(u.username)===key),isAdmin=usernameKey(root.username)===key;
   const d=isAdmin?root:user,candidate=typeof password==='string'&&password.length<=128?password:'';
   const matches=timingSafeEqual(await passwordHash(candidate,d?.salt||root.salt),Buffer.from(d?.passwordHash||root.passwordHash,'hex'));
   if(!d||!matches||adminOnly&&!isAdmin||isAdmin&&(root.accountId!==this.accountId||root.role!=='admin')){await this.update(s=>{s.audit.push(audit('未登录','账号登录失败'));});throw new Fault(401,'ADMIN_LOGIN_FAILED','用户名或密码不正确。');}
   this.limits.delete(ip);for(const [key,value] of this.sessions)if(value.expiresAt<=Date.now())this.sessions.delete(key);
-  const token=randomBytes(32).toString('hex');this.sessions.set(hash(token),{accountId:isAdmin?root.accountId!:user!.id,role:isAdmin?'admin':'user',username:d.username,expiresAt:Date.now()+8*3600000});await this.update(s=>{s.audit.push(audit(isAdmin?root.accountId!:user!.id,'账号登录'));});return token;
+  const token=randomBytes(32).toString('hex'),entry={accountId:isAdmin?root.accountId!:user!.id,role:isAdmin?'admin' as const:'user' as const,username:d.username,expiresAt:Date.now()+8*3600000};
+  if(this.storedSessions)await this.storedSessions.update(s=>{for(const [k,v] of Object.entries(s))if(v.expiresAt<=Date.now())delete s[k];s[hash(token)]={...entry,salt:d.salt};});else this.sessions.set(hash(token),entry);await this.update(s=>{s.audit.push(audit(isAdmin?root.accountId!:user!.id,'账号登录'));});return token;
  }
- async logout(token:string){const s=this.session(token);this.sessions.delete(hash(token));if(s)await this.update(d=>{d.audit.push(audit(s.username,'退出后台'));});}
+ async logout(token:string){const s=await this.resolveSession(token);if(this.storedSessions)await this.storedSessions.update(rows=>{delete rows[hash(token)];});else this.sessions.delete(hash(token));if(s)await this.update(d=>{d.audit.push(audit(s.username,'退出后台'));});}
  async changePassword(actor:string,old:unknown,next:unknown){
   const root=await this.read();await this.setPassword(root.accountId!,old,next);
  }
  async profile(token?:string){
-  const session=this.session(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
+  const session=await this.resolveSession(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
   const row=session.role==='admin'?await this.read():(await this.access.snapshot())?.users?.find(u=>u.id===session.accountId);
   if(!row)throw new Fault(401,'ACCOUNT_REQUIRED','账号不存在，请重新登录。');
   return {id:session.accountId,role:session.role,username:row.username,avatar:row.avatar||null};
@@ -65,7 +116,7 @@ export class Admin {
  async updateProfile(token:string,input:unknown){
   const data=z.object({username:usernameSchema.optional(),avatar:z.string().nullable().optional(),currentPassword:z.string().max(128).optional()}).strict().parse(input),avatar=await cleanAvatar(data.avatar);
   return this.identityChange(async()=>{
-   const session=this.session(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
+   const session=await this.resolveSession(token);if(!session)throw new Fault(401,'ACCOUNT_REQUIRED','请先登录账号。');
    const current=await this.profile(token),name=data.username??current.username;await this.uniqueName(name,current.id);
    const modify=async(row:{username:string;avatar?:string|null;salt:string;passwordHash:string})=>{if(name!==row.username&&!timingSafeEqual(await passwordHash(data.currentPassword||'',row.salt),Buffer.from(row.passwordHash,'hex')))throw new Fault(403,'INVALID_PASSWORD','请正确输入当前密码再修改用户名。');row.username=name;if(avatar!==undefined)row.avatar=avatar;};
    if(session.role==='admin')await this.update(async d=>{await modify(d);d.audit.push(audit(current.id,'修改账户信息'));});
@@ -105,15 +156,17 @@ export class Admin {
  private fingerprint(kind:Feature,candidate:unknown){return hash(JSON.stringify({kind,candidate}));}
  async testApi(actor:string,session:string,kind:Feature,input:unknown){
   const candidate=await this.candidate(kind,input);if(!candidate.apiKey||!candidate.secretKey)throw new Fault(422,'KEYS_REQUIRED','请填写 API Key 和 Secret Key。');
-  try{const result=await this.factory(candidate.apiKey,candidate.secretKey).checkConnection();this.proofs.set(hash(session)+kind,{fingerprint:this.fingerprint(kind,candidate),expiresAt:Date.now()+600000,revision:candidate.revision});await this.update(d=>{d.audit.push(audit(actor,'API 鉴权测试通过',kind));});return result;}
+  try{const result=await this.factory(candidate.apiKey,candidate.secretKey).checkConnection();await this.saveProof(hash(session)+kind,{fingerprint:this.fingerprint(kind,candidate),expiresAt:Date.now()+600000,revision:candidate.revision});await this.update(d=>{d.audit.push(audit(actor,'API 鉴权测试通过',kind));});return result;}
   catch(e){await this.update(d=>{d.audit.push(audit(actor,'API 鉴权测试失败',kind));});throw e;}
  }
  async saveApi(actor:string,session:string,kind:Feature,input:unknown){
-  const candidate=await this.candidate(kind,input),proof=this.proofs.get(hash(session)+kind);
+  const save=async()=>{
+  const candidate=await this.candidate(kind,input),proof=await this.apiProof(hash(session)+kind);
   const current=(await this.read()).apis[kind],existing=JSON.parse(this.decrypt(current.cipher));
   const changed=existing.apiKey!==candidate.apiKey||existing.secretKey!==candidate.secretKey;
   if((candidate.enabled||changed)&&(!proof||proof.expiresAt<Date.now()||proof.fingerprint!==this.fingerprint(kind,candidate)))throw new Fault(409,'TEST_REQUIRED','请先测试当前配置，再保存启用。');
-  await this.update(d=>{if(d.apis[kind].revision!==candidate.revision)throw new Fault(409,'CONFIG_CHANGED','配置已被更新，请刷新。');d.apis[kind]={...d.apis[kind],enabled:candidate.enabled,cipher:this.encrypt(JSON.stringify({apiKey:candidate.apiKey,secretKey:candidate.secretKey})),revision:candidate.revision+1,...(proof?{testedAt:Date.now()}:{})};d.audit.push(audit(actor,candidate.enabled?'保存并启用 API':'停用 API',kind));});this.proofs.delete(hash(session)+kind);this.providers.clear();
+  await this.update(d=>{if(d.apis[kind].revision!==candidate.revision)throw new Fault(409,'CONFIG_CHANGED','配置已被更新，请刷新。');d.apis[kind]={...d.apis[kind],enabled:candidate.enabled,cipher:this.encrypt(JSON.stringify({apiKey:candidate.apiKey,secretKey:candidate.secretKey})),revision:candidate.revision+1,...(proof?{testedAt:Date.now()}:{})};d.audit.push(audit(actor,candidate.enabled?'保存并启用 API':'停用 API',kind));});await this.removeProof(hash(session)+kind);this.providers.clear();
+  };if(this.objectState)await this.objectState.documents.transaction(save);else await save();
  }
  private async provider(kind:Feature){const d=await this.read(),a=d.apis[kind];if(!a.enabled)throw new Fault(503,'API_DISABLED','该功能暂未启用。');let provider=this.providers.get(kind+a.cipher);if(!provider){const keys=JSON.parse(this.decrypt(a.cipher));provider=this.factory(keys.apiKey,keys.secretKey);this.providers.set(kind+a.cipher,provider);}return provider;}
  private async record(kind:Feature,status:string,error?:string){await this.update(d=>{d.apis[kind].lastCall={at:Date.now(),status,...(error?{error}:{})};});}

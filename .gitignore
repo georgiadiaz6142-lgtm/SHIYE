@@ -5,3 +5,7 @@ dist/
 !.env.example
 *.log
 .DS_Store
+.vefaas/
+
+# Local historical backups and cleanup manifests
+/archive/

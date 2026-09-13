@@ -1,0 +1,21 @@
+{
+  "source": "本轮此前Tabbit真实页面验证",
+  "homepageHTTP": 200,
+  "quietEntryVerified": true,
+  "accountHTTP": 200,
+  "accountRole": "admin",
+  "worksStatusHTTP": 200,
+  "storage": "tos",
+  "cloudConnected": true,
+  "notVerified": [
+    "真实百度和千问调用",
+    "跨浏览器作品保存与恢复",
+    "匿名管理接口的新增云端验证"
+  ],
+  "maintenance": {
+    "manualTask": "Succeeded",
+    "timerTask": "Failed",
+    "timerHTTP": 403,
+    "cause": "定时请求未通过命令验签；消息或请求解析原因尚未定位"
+  }
+}

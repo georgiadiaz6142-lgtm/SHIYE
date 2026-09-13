@@ -1,0 +1,15 @@
+{
+  "httpStatus": 200,
+  "result": {
+    "status": "passed",
+    "runId": "77a301ce-bc82-480e-b833-c24b83d1c8e0",
+    "prefix": "shiye-verification/77a301ce-bc82-480e-b833-c24b83d1c8e0/",
+    "checks": [
+      "create-only",
+      "single-writer-cas",
+      "new-client-recovery",
+      "cleanup"
+    ],
+    "realTos": true
+  }
+}

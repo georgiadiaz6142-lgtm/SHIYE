@@ -1,3 +1,4 @@
+import {sessionCookie} from './http-policy.js';
 import { Router,type RequestHandler } from 'express';
 import { z } from 'zod';
 import { Admin,feature } from './admin.js';
@@ -10,19 +11,19 @@ export function accountLogin(admin:Admin,adminOnly=true):RequestHandler {
   const input=z.object({username:z.string().trim().min(1).max(32),password:z.string().min(1).max(128)}).strict().parse(req.body);
   const token=await admin.login(input.username,input.password,req.socket.remoteAddress||'local',adminOnly);
   const previous=adminToken(req.headers.cookie);if(previous)await admin.logout(previous);
-  res.cookie('shiye_admin',token,{httpOnly:true,sameSite:'strict',path:'/api',maxAge:8*3600000});res.clearCookie('shiye_invite',{path:'/api'});
-  const session=admin.session(token)!;
+  res.cookie('shiye_admin',token,sessionCookie(res,8*3600000));res.clearCookie('shiye_invite',sessionCookie(res));
+  const session=(await admin.resolveSession(token))!;
   res.json({authenticated:true,authorized:true,account:{id:session.accountId,username:session.username,role:session.role}});
  };
 }
 export function adminRoutes(admin:Admin,copySettings?:CopySettingsStore,copy?:AICopy){
  const apis=async()=>[...await admin.apiList(),...(copySettings?[await copySettings.public()]:[])];
  const router=Router();router.use((req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
- router.get('/session',(req,res)=>{const candidate=admin.session(adminToken(req.headers.cookie)),session=candidate?.role==='admin'?candidate:null;res.json({authenticated:!!session,...(session?{username:session.username}:{})});});
+ router.get('/session',async(req,res)=>{const candidate=await admin.resolveSession(adminToken(req.headers.cookie)),session=candidate?.role==='admin'?candidate:null;res.json({authenticated:!!session,...(session?{username:session.username}:{})});});
  router.post('/login',accountLogin(admin));
- router.use((req,res,next)=>{const token=adminToken(req.headers.cookie),session=admin.session(token);if(!session||session.role!=='admin')throw new Fault(403,'ADMIN_REQUIRED','请先登录管理员账号。');res.locals.admin=session.username;res.locals.adminToken=token;next();});
- router.post('/logout',async(req,res)=>{await admin.logout(res.locals.adminToken);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});
- router.post('/password',async(req,res)=>{await admin.changePassword(res.locals.admin,req.body?.oldPassword,req.body?.newPassword);res.clearCookie('shiye_admin',{path:'/api'});res.json({ok:true});});
+ router.use(async(req,res,next)=>{const token=adminToken(req.headers.cookie),session=await admin.resolveSession(token);if(!session||session.role!=='admin')throw new Fault(403,'ADMIN_REQUIRED','请先登录管理员账号。');res.locals.admin=session.username;res.locals.adminToken=token;next();});
+ router.post('/logout',async(req,res)=>{await admin.logout(res.locals.adminToken);res.clearCookie('shiye_admin',sessionCookie(res));res.json({ok:true});});
+ router.post('/password',async(req,res)=>{await admin.changePassword(res.locals.admin,req.body?.oldPassword,req.body?.newPassword);res.clearCookie('shiye_admin',sessionCookie(res));res.json({ok:true});});
  router.get('/overview',async(_req,res)=>{const [invites,apiRows,logs]=await Promise.all([admin.invites(),apis(),admin.logs()]);res.json({total:invites.length,counts:Object.fromEntries(['unused','used','unknown','disabled','bound','expired'].map(s=>[s,invites.filter(i=>i.state===s).length])),apis:apiRows,recent:logs.slice(0,8)});});
  router.get('/invites',async(req,res)=>{let rows=await admin.invites();const q=String(req.query.q||'').slice(0,100),state=String(req.query.state||'');if(q)rows=rows.filter(r=>[r.id,r.batch,r.note,r.codeMasked].some(s=>s?.includes(q)));if(state)rows=rows.filter(r=>r.state===state);rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));res.json({items:rows});});
  router.post('/invites',async(req,res)=>res.status(201).json(await admin.createInvites(res.locals.admin,req.body)));

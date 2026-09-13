@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Transparent padding is removed only from the displayed thumbnail",
+    "Tall, wide and square visible subjects keep their proportions",
+    {
+      "width": 390,
+      "uniformCardHeight": 108,
+      "hoverFits": true
+    },
+    {
+      "width": 768,
+      "uniformCardHeight": 145,
+      "hoverFits": true
+    },
+    {
+      "width": 1440,
+      "uniformCardHeight": 157,
+      "hoverFits": true
+    },
+    "Previewing, hovering and resizing do not change any original asset",
+    {
+      "editorWidth": 1440,
+      "contained": true
+    },
+    {
+      "editorWidth": 768,
+      "contained": true
+    },
+    {
+      "editorWidth": 390,
+      "contained": true
+    },
+    "Insert still references the original full-resolution asset",
+    "Re-entering library rebuilds previews from the cache"
+  ],
+  "errors": []
+}

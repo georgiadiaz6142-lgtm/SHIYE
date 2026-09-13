@@ -1,0 +1,88 @@
+{
+  "checks": [
+    {
+      "name": "desktop-reuse-undo-preview-save",
+      "status": "PASS"
+    },
+    {
+      "name": "slow-first-load-exceeds-old-20s-limit",
+      "status": "PASS"
+    },
+    {
+      "name": "load-failure-and-explicit-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "cancel-compute-retains-mask-and-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "compute-timeout-is-distinct-and-recoverable",
+      "status": "PASS"
+    },
+    {
+      "name": "loading-timeout-is-distinct",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-bottom-panel-touch-and-manual",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy-worker-and-browser-cache",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "reuse": {
+    "created": 1,
+    "terminated": 0,
+    "segments": 2,
+    "ready": 1,
+    "results": [
+      {
+        "ok": true,
+        "elapsedMs": 629
+      },
+      {
+        "ok": true,
+        "elapsedMs": 478
+      }
+    ]
+  },
+  "transport": {
+    "requests": 1,
+    "measurements": [
+      {
+        "ok": true,
+        "messages": [
+          "result"
+        ],
+        "elapsedMs": 19,
+        "resources": [
+          {
+            "transferSize": 3526914,
+            "encodedBodySize": 3526614,
+            "decodedBodySize": 10964323
+          }
+        ]
+      },
+      {
+        "ok": true,
+        "messages": [
+          "ready",
+          "result"
+        ],
+        "elapsedMs": 17,
+        "resources": [
+          {
+            "transferSize": 0,
+            "encodedBodySize": 3526614,
+            "decodedBodySize": 10964323
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "First mobile test locator was corrected; product code unchanged after the initial six passing scenarios."
+}

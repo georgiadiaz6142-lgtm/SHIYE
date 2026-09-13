@@ -1,0 +1,39 @@
+.top-right-controls{position:fixed!important;top:24px!important;right:154px!important;z-index:1001!important;gap:10px!important}
+#info-btn{display:none!important}
+.room-music{height:42px;padding:0 14px;border-radius:24px;cursor:pointer;font:14px "Songti SC",STSong,serif}
+#day-night-toggle{width:42px;height:42px}
+.room-music,#day-night-toggle{border:1px solid #d5c6a94d;background:rgba(58,51,39,.84);color:#eee5d2;box-shadow:0 2px 8px #211b191f;transition:background .2s,transform .2s}
+.room-music:hover,#day-night-toggle:hover{background:rgba(73,64,48,.94);transform:translateY(-1px)}
+.room-music:focus-visible,#day-night-toggle:focus-visible{outline:3px solid #f6dd8f;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.room-music,#day-night-toggle{transition:none}}
+.preloader__intro{background:#fff9eded!important}
+.preview-guide{color:#626348}
+#book-controls{bottom:22px}
+#hitbox-markers,#hover-label{display:none!important}
+.back-btn{top:24px!important;left:24px!important}
+.has-account .top-right-controls{right:88px!important}
+@media(max-width:760px){
+ .top-right-controls{top:16px!important;right:134px!important;gap:7px!important}
+ .has-account .top-right-controls{right:76px!important}
+ .room-music{font-size:12px;padding:0 10px}
+ #book-controls{bottom:85px;max-width:calc(100vw - 20px)}
+ .book-controls__hint{font-size:11px}
+ .book-controls__row{gap:7px}
+ .back-btn{top:76px!important;left:16px!important;font-size:13px!important}
+ .preloader__intro{padding:22px 20px!important}
+ .preview-heading{font-size:34px!important}
+ .preview-guide{font-size:13px}
+}
+@media(max-height:600px){.preloader__intro{padding:14px 20px!important}.preview-heading{margin:8px!important}.preview-divider,.preview-guide{display:none!important}.preloader__buttons{margin-top:10px!important}.book-controls__hint{display:none}}
+
+#day-night-toggle{border-radius:50%!important}
+
+/* Never show the original house, old cover or explanation paper during preparation/failure. */
+html:not([data-scene-ready="true"]) #experience-wrapper{visibility:hidden}
+html:not([data-scene-ready="true"]) .top-right-controls{visibility:hidden}
+html:not([data-scene-ready="true"]) .preloader{background:#f3eddf!important;backdrop-filter:none!important}
+html:not([data-scene-ready="true"]) .preloader__intro{display:none!important}
+#room-preparation-status{font:14px/1.7 "Songti SC",STSong,serif;color:#645b46;text-align:center;margin:14px 0}
+#room-preparation-status[hidden],#room-load-retry[hidden]{display:none}
+#room-load-retry{padding:10px 22px;border:1px solid #b5a784;border-radius:20px;background:#fff8e9;color:#4a513b;cursor:pointer;font:14px "Songti SC",STSong,serif}
+.preloader__btn:disabled{opacity:.45;cursor:wait}

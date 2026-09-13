@@ -1,0 +1,10 @@
+{
+  "functionId": "ulvzu4v3",
+  "releaseOK": true,
+  "stableRevisionNumber": 9,
+  "status": "done",
+  "trafficWeight": 100,
+  "releaseRecordId": "9mfsdhftogpnpesf",
+  "url": "https://sm994o19l0g1rajv9qfqf.apigateway-cn-beijing.volceapi.com/",
+  "note": "CLI发布调用曾报告TLS错误；后续真实发布记录确认成功。"
+}

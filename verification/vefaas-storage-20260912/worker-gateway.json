@@ -1,0 +1,20 @@
+{
+  "Id": "s4ca511vrq9r30h8gekpm",
+  "Name": "shiye-worker-test",
+  "GatewayName": "",
+  "Protocol": [
+    "HTTP",
+    "HTTPS"
+  ],
+  "Domains": [
+    {
+      "Domain": "http://s4ca511vrq9r30h8gekpm.apigateway-cn-beijing.volceapi.com",
+      "Type": "public"
+    },
+    {
+      "Domain": "https://s4ca511vrq9r30h8gekpm.apigateway-cn-beijing.volceapi.com",
+      "Type": "public"
+    }
+  ],
+  "CustomDomains": []
+}

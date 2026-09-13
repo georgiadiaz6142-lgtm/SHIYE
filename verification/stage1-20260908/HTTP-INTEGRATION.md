@@ -18,7 +18,7 @@
 | 原型语法和数据合并 | 10/10 通过 | [输出](./http-prototype-checks.txt) |
 | 实际 HTTP 浏览器流程 | 3/3 通过，无页面错误及外部请求 | [最终结果](./http-backend-02/results.json) |
 | 已认可小剪刀回归 | 4/4 通过，无页面错误及外部请求 | [结果](./http-scissors-regression-01/results.json) |
-| 视觉 | 已查看桌面米白绿书首页和模拟移动候选截图 | [首页](./http-backend-02/home.png)、[模拟移动](./http-backend-02/mobile-candidates.png) |
+| 视觉 | 已查看桌面米白绿书首页和模拟移动候选截图 | [首页](../baidu-20260908/local-retouch-regression-01/home.png)、[模拟移动](baidu-regression-run-01/mobile-candidates.png) |
 
 HTTP 流程覆盖：初始两候选、补提第三个合成形状、修正已有候选、透明预览、每枚白边、Blob 收藏重开、原页回填、存储故障注入后的重试无重复，以及模拟移动提示和布局。回填用例检查已烘焙白边不再二次叠加。
 

@@ -1,0 +1,12 @@
+{
+  "httpStatus": 200,
+  "result": {
+    "status": "failed",
+    "runId": "d7ceb64a-8bfe-42de-9f7d-45b3f2fdcbc8",
+    "prefix": "shiye-verification/d7ceb64a-8bfe-42de-9f7d-45b3f2fdcbc8/",
+    "stage": "reject-duplicate-create",
+    "checks": [],
+    "sdkCode": "ConditionNotMet",
+    "httpStatus": 412
+  }
+}

@@ -8,7 +8,7 @@
 
 ## 1. 对象与证据有效性
 
-【已确认/实测事实】测试前人工查看了[首页截图](./identity/cream-home-identity.png)：米白底、左侧品牌及创作／演示按钮、右侧绿皮书和漂浮贴纸，与 Song 指定的首页方向一致。不是木桌版。
+【已确认/实测事实】测试前人工查看了[首页截图](fix-identity/cream-home-identity.png)：米白底、左侧品牌及创作／演示按钮、右侧绿皮书和漂浮贴纸，与 Song 指定的首页方向一致。不是木桌版。
 
 - `index.html`、`app.js`、`styles.css` 与 `checkpoint-before-desk-20260907.tar.gz` 内对应文件逐字节相同。
 - 直接请求现有 4176 服务，没有另起原型服务。三份代码、三张照片、透明首页贴纸共 7 个响应均为 200，与磁盘逐字节相同。
@@ -71,7 +71,7 @@
 
 ### 2）P1：离开工坊后，迟到的照片加载仍会覆盖当前界面
 
-【已确认/实测事实】拦截并暂缓“用山湖照片体验框选”的同源响应；用户切到书架后再放行响应。标题变回“贴纸工坊”，但侧栏仍选中“我的书架”，页面与导航状态不一致。见[截图](./run-02/late-photo-response.png)。
+【已确认/实测事实】拦截并暂缓“用山湖照片体验框选”的同源响应；用户切到书架后再放行响应。标题变回“贴纸工坊”，但侧栏仍选中“我的书架”，页面与导航状态不一致。见[截图](run-02/late-photo-response-failure.png)。
 
 【已确认/代码事实】[app.js:260](/Users/song/Documents/拾页/shiye-editorial-prototype/app.js:260) 等待照片响应后直接调用 `loadPhoto`；[app.js:276](/Users/song/Documents/拾页/shiye-editorial-prototype/app.js:276) 解码完成后直接 `renderWorkshop()`，没有检查当前页面、请求代次或图片会话。
 
@@ -79,7 +79,7 @@
 
 ### 3）P1：保存失败仍可切回翻阅
 
-【已确认/实测事实】已有测试书中添加文字，注入配额错误后出现“保存失败，请重试”；点击“翻阅”仍隐藏工具并进入 read-mode。未保存内容暂时还在内存，测试没有将其描述为已持久保存。见[截图](./run-02/failed-read-switch.png)。
+【已确认/实测事实】已有测试书中添加文字，注入配额错误后出现“保存失败，请重试”；点击“翻阅”仍隐藏工具并进入 read-mode。未保存内容暂时还在内存，测试没有将其描述为已持久保存。见[截图](run-02/failed-read-switch-failure.png)。
 
 【已确认/代码事实】[app.js:245](/Users/song/Documents/拾页/shiye-editorial-prototype/app.js:245) 的 mode 分支不等待保存；与已实现等待保存的归架分支不同。不符合[设计文档:416](/Users/song/Documents/拾页/拾页-产品设计文档.md:416)“失败保留编辑状态”的建议设计。
 
@@ -87,7 +87,7 @@
 
 ### 4）P2：承诺的双击改文字未生效
 
-【已确认/实测事实】新建测试文字后真实双击（100ms 间隔），对话框未打开，见[截图](./run-02/text-doubleclick.png)。另一路“选中 → 工具栏编辑文字”已通过，因此不是文字整体不可编辑。
+【已确认/实测事实】新建测试文字后真实双击（100ms 间隔），对话框未打开，见[截图](run-02/text-doubleclick-failure.png)。另一路“选中 → 工具栏编辑文字”已通过，因此不是文字整体不可编辑。
 
 【合理推断/代码依据】[app.js:85](/Users/song/Documents/拾页/shiye-editorial-prototype/app.js:85) 在每次 pointerup 后立即重建 editor DOM，而 dblclick 处理绑定在旧 canvas 上；连续点击目标被替换，破坏了双击链路。这一具体事件原因尚未用浏览器事件追踪进一步证实。
 

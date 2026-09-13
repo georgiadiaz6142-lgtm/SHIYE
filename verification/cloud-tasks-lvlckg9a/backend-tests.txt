@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: outbox input is encrypted; transport failure and lost acknowledgement recover across instances
+ok 1 - outbox input is encrypted; transport failure and lost acknowledgement recover across instances
+  ---
+  duration_ms: 6.266666
+  type: 'test'
+  ...
+# Subtest: business reservation and outbox roll back together; unknown committed response never launches work
+ok 2 - business reservation and outbox roll back together; unknown committed response never launches work
+  ---
+  duration_ms: 0.433667
+  type: 'test'
+  ...
+# Subtest: failed worker lease is bounded and recovered, expired payloads are removed without work
+ok 3 - failed worker lease is bounded and recovered, expired payloads are removed without work
+  ---
+  duration_ms: 0.754917
+  type: 'test'
+  ...
+# Subtest: worker HTTP rejects unsigned/tampered commands and waits for completion; maintenance survives cleanup failure
+ok 4 - worker HTTP rejects unsigned/tampered commands and waits for completion; maintenance survives cleanup failure
+  ---
+  duration_ms: 38.005709
+  type: 'test'
+  ...
+# Subtest: gateway sender transmits only a signed ID, requires async 202 and disallows redirect
+ok 5 - gateway sender transmits only a signed ID, requires async 202 and disallows redirect
+  ---
+  duration_ms: 0.809416
+  type: 'test'
+  ...
+# Subtest: fresh task authorization rejects logout, password change, disabled and bound invites
+ok 6 - fresh task authorization rejects logout, password change, disabled and bound invites
+  ---
+  duration_ms: 102.787708
+  type: 'test'
+  ...
+# Subtest: stale cloud worker cannot replay a dispatched AI operation after outbox recovery
+ok 7 - stale cloud worker cannot replay a dispatched AI operation after outbox recovery
+  ---
+  duration_ms: 2.736417
+  type: 'test'
+  ...
+# Subtest: public API returns queued work, second HTTP worker completes it, and revoked queued work never reaches AI
+ok 8 - public API returns queued work, second HTTP worker completes it, and revoked queued work never reaches AI
+  ---
+  duration_ms: 97.857709
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 441.999833

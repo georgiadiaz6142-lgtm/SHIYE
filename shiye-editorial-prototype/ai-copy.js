@@ -7,8 +7,8 @@ const aiCopyHash=async value=>[...new Uint8Array(await crypto.subtle.digest('SHA
 function aiCopyCurrent(panel){return aiCopyPanel===panel&&$('#dialog').open&&aiCopyOwner()===panel.owner&&currentView==='editor'&&editing&&activeBookId===panel.bookId&&currentPage()?.id===panel.pageId;}
 async function aiCopyRequest(panel,path,body){
  if(!aiCopyCurrent(panel))throw Error('页面或账号已变化，请重新打开文案面板。');
- const response=await fetch('/api/ai/copy'+path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',headers:{'X-Shiye-Copy-Owner':panel.owner,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(12000)});
- const result=await response.json();if(!aiCopyCurrent(panel))throw Error('页面或账号已变化，请重新打开文案面板。');if(!response.ok){const e=Error(result.error?.message||'文案服务暂不可用。');e.status=response.status;throw e;}return result;
+ const result=await ShiyeAPI.json('/api/ai/copy'+path,{method:body?'POST':'GET',headers:{'X-Shiye-Copy-Owner':panel.owner,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),timeoutMs:12000});
+ if(!aiCopyCurrent(panel))throw Error('页面或账号已变化，请重新打开文案面板。');return result;
 }
 async function aiCopyThumbnail(page){
  const rows=pageElements(page).filter(e=>e.type==='sticker');if(!rows.length)return undefined;
@@ -82,7 +82,7 @@ async function applyAICopy(panel){
  try{
   await refreshIdentity();const latestRevision=await aiCopyHash(aiCopySnapshot());if(!aiCopyCurrent(panel)||panel.result.sourceRevision!==latestRevision)throw Error('账号或页面已发生变化，旧结果不能覆盖当前内容。');
   if(panel.targetId&&!currentPage().elements.some(e=>e.id===panel.targetId&&e.type==='text'))throw Error('原文字已不存在，请重新生成。');
-  change(()=>{if(panel.targetId){const e=currentPage().elements.find(e=>e.id===panel.targetId);e.text=text;e.aiSource=clone(panel.result.source);selectedId=e.id;}else{const e=node('text',{text,font:panel.anchor?.font||newTextFont,direction:'horizontal',x:panel.anchor?.x??15,y:panel.anchor?.y??20,w:panel.anchor?.w??70,size:newTextSize,color:'#505b46',aiSource:clone(panel.result.source)});currentPage().elements.push(e);selectedId=e.id;}drawer=null;});
+  change(()=>{if(panel.targetId){const e=currentPage().elements.find(e=>e.id===panel.targetId);e.text=text;e.aiSource=clone(panel.result.source);selectedId=e.id;}else{const e=node('text',{text,font:panel.anchor?.font||newTextFont,direction:'horizontal',x:panel.anchor?.x??15,y:panel.anchor?.y??20,w:panel.anchor?.w??70,size:newTextSize,bold:newTextBold,color:newTextColor,aiSource:clone(panel.result.source)});currentPage().elements.push(e);selectedId=e.id;}});
   sessionStorage.removeItem(panel.key);aiCopyPanel=null;closeDialog();await saveNow();
  }catch(error){if(aiCopyCurrent(panel)){$('#ai-copy-error').textContent=error.message;$('#ai-copy-apply').disabled=false;}}
 }

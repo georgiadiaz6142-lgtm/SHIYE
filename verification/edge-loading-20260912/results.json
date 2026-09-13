@@ -1,0 +1,52 @@
+{
+  "checks": [
+    {
+      "name": "desktop-reuse-undo-preview-save",
+      "status": "PASS"
+    },
+    {
+      "name": "slow-first-load-exceeds-old-20s-limit",
+      "status": "PASS"
+    },
+    {
+      "name": "load-failure-and-explicit-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "cancel-compute-retains-mask-and-retry",
+      "status": "PASS"
+    },
+    {
+      "name": "compute-timeout-is-distinct-and-recoverable",
+      "status": "PASS"
+    },
+    {
+      "name": "loading-timeout-is-distinct",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile-bottom-panel-touch-and-manual",
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-action=\"nav\"]').first() to be visible\u001b[22m\n\u001b[2m    23 × locator resolved to hidden <button class=\"brand\" data-view=\"home\" data-action=\"nav\" aria-label=\"拾页首页\">…</button>\u001b[22m\n"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": [],
+  "reuse": {
+    "created": 1,
+    "terminated": 0,
+    "segments": 2,
+    "ready": 1,
+    "results": [
+      {
+        "ok": true,
+        "elapsedMs": 629
+      },
+      {
+        "ok": true,
+        "elapsedMs": 478
+      }
+    ]
+  }
+}

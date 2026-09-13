@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { z } from 'zod';
 import { Fault } from '../shared/contracts.js';
-import { saveBookInput,packageImages,workId,saveWorkspaceInput,workspaceImages,type WorkspaceDocument } from '../shared/works.js';
+import { saveBookInput,documentPages,packageImages,workId,saveWorkspaceInput,workspaceImages,type WorkspaceDocument } from '../shared/works.js';
 import type { WorkRepository,WorkObjectStorage } from './work-storage.js';
 
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
@@ -85,7 +85,7 @@ export class Works{
  }
  private bookContent(content:WorkspaceDocument,id:string){
   const book=content.books.find(b=>b.id===id)!;
-  const used=new Set(book.pages.flatMap(p=>p.elements.flatMap(e=>e.type==='sticker'?[e.assetId]:[])));
+  const used=new Set(documentPages(book).flatMap(p=>p.elements.flatMap(e=>e.type==='sticker'?[e.assetId]:[])));
   const all=new Map([...content.assets,...content.archivedAssets].map(a=>[a.id,a]));
   const assets=[...used].map(id=>all.get(id)||{id,name:id,category:'',image:{builtinId:id as 'flower'}});
   return {schemaVersion:1 as const,book,assets};

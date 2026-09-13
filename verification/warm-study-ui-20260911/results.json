@@ -1,0 +1,244 @@
+{
+  "checks": [
+    {
+      "name": "shelf-1440",
+      "elements": 14,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "collection-1440",
+      "elements": 42,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "workshop-1440",
+      "elements": 5,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "editor-1440",
+      "elements": 23,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "text-1440",
+      "elements": 29,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "sticker-1440",
+      "elements": 43,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "paper-1440",
+      "elements": 28,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "pages-1440",
+      "elements": 29,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "cover-1440",
+      "elements": 27,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "shelf-800",
+      "elements": 14,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "collection-800",
+      "elements": 42,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "workshop-800",
+      "elements": 5,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "editor-800",
+      "elements": 23,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "text-800",
+      "elements": 22,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "sticker-800",
+      "elements": 36,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "paper-800",
+      "elements": 21,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "pages-800",
+      "elements": 22,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "cover-800",
+      "elements": 20,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "shelf-390",
+      "elements": 14,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 1
+    },
+    {
+      "name": "collection-390",
+      "elements": 42,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "workshop-390",
+      "elements": 5,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "editor-390",
+      "elements": 22,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "text-390",
+      "elements": 21,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "sticker-390",
+      "elements": 35,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "paper-390",
+      "elements": 20,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "pages-390",
+      "elements": 21,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "cover-390",
+      "elements": 19,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "spread-editor",
+      "elements": 24,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "not-applicable",
+      "pixelMaxDelta": null
+    },
+    {
+      "name": "reader",
+      "elements": 13,
+      "geometry": "identical",
+      "typography": "identical",
+      "artwork": "visible interior stable (1/255 tolerance)",
+      "pixelMaxDelta": 0
+    },
+    {
+      "name": "existing sticker hover retained",
+      "transform": "matrix(1.05855, 0.0554761, -0.0554761, 1.05855, 0, 0)"
+    },
+    {
+      "name": "reduced motion respected"
+    }
+  ],
+  "errors": []
+}

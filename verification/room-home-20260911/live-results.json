@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checks": [
+    "4176 renders integrated scene from same origin",
+    "silent choice works; sound choice retained",
+    "login and create open existing invitation/account dialog",
+    "anonymous works and administrator access remain protected",
+    "existing provider mode and limits retained"
+  ],
+  "errors": [],
+  "realProviderCalls": 0,
+  "realUserWorksUploaded": 0
+}

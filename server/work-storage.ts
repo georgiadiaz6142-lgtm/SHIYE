@@ -4,6 +4,8 @@ import { randomUUID,createHash } from 'node:crypto';
 import { z } from 'zod';
 import { bookPackage,workspaceDocument } from '../shared/works.js';
 import { editJson } from './local-json.js';
+import { ObjectDocumentGroup, type ConditionalObjects } from './object-documents.js';
+import { Fault } from '../shared/contracts.js';
 
 const imageRecord=z.object({id:z.string().uuid(),hash:z.string().regex(/^[a-f0-9]{64}$/),width:z.number().int().positive(),height:z.number().int().positive(),bytes:z.number().int().positive(),createdAt:z.number()}).strict();
 const receipt=z.object({bookId:z.string(),revision:z.number().int().positive(),updatedAt:z.number()}).strict();
@@ -57,4 +59,26 @@ export class LocalWorkObjects implements WorkObjectStorage{
   await atomicWrite(file,bytes);
  }
  async get(owner:string,hash:string){const bytes=await readFile(this.file(owner,hash));if(createHash('sha256').update(bytes).digest('hex')!==hash)throw Error('图片校验失败。');return bytes;}
+}
+
+export class ObjectWorkRepository implements WorkRepository {
+ constructor(private objects:ConditionalObjects){}
+ private cell(owner:string){return new ObjectDocumentGroup(this.objects,`works/${account(owner)}/state.json`).cell('workspace',v=>stateSchema.parse(v));}
+ async read(owner:string){try{return await this.cell(owner).read();}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return empty();throw e;}}
+ async transaction<T>(owner:string,change:(state:WorkState)=>T|Promise<T>){const cell=this.cell(owner);await cell.initialize(empty());return cell.update(change);}
+}
+export class ObjectWorkObjects implements WorkObjectStorage {
+ constructor(private objects:ConditionalObjects){}
+ private key(owner:string,hash:string){return `works/${account(owner)}/images/${digest(hash)}.png`;}
+ async put(owner:string,hash:string,bytes:Buffer){
+  const key=this.key(owner,hash);
+  if(createHash('sha256').update(bytes).digest('hex')!==hash)throw Error('图片校验失败。');
+  if(await this.objects.put(key,bytes,null))return;
+  if(!(await this.get(owner,hash)).equals(bytes))throw new Fault(503,'WORK_IMAGE_UNAVAILABLE','云端图片校验失败，未覆盖原文件。');
+ }
+ async get(owner:string,hash:string){
+  const object=await this.objects.get(this.key(owner,hash));
+  if(!object||createHash('sha256').update(object.bytes).digest('hex')!==hash)throw new Fault(503,'WORK_IMAGE_UNAVAILABLE','云端图片暂时不可用，请保留本机内容。');
+  return object.bytes;
+ }
 }

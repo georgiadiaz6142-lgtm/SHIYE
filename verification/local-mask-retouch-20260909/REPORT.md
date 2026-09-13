@@ -24,7 +24,7 @@
 ## 验证
 
 - [最终桌面／手机结果](./run-04/results.json)：1440 和 390 宽度通过。恢复原 RGB、恢复裁切范围外内容、擦除、撤销／重做、键盘、原图与原蒙版对照、缩放平移、触摸点击、pointercancel 回滚、重置可撤销、应用与刷新、保存失败重试、候选版本隔离、空结果拦截、白边及收藏入书刷新。无页面脚本错误、无外部浏览器请求。
-- [桌面画布](./run-04/retouch-1440.png)、[模拟手机画布](./run-04/retouch-390.png)、[修正后预览](./run-04/preview-1440.png)、[刷新后手帐](./run-04/book-1440.png)。
+- [桌面画布](./run-04/retouch-1440.png)、[模拟手机画布](./run-04/retouch-390.png)、[修正后预览](./run-04/preview-1440.png)、[刷新后手帐](../cutout-new-round-20260909/run-01/book-1440.png)。
 - [既有百度离线回归](../baidu-20260908/local-retouch-regression-01/results.json)：原自动／框选／候选／收藏、手机坐标及 3 个模拟 HTTP 流程通过。
 - [后端测试](./backend-tests.txt)：20 / 20 通过。首次普通沙箱中两个 HTTP 用例因回环监听 EPERM 未能运行；在允许本机监听的环境中运行同一套测试通过。
 - 原型语法和既有合并测试 10 / 10 通过；`git diff --check` 通过。`app.js`、`server/` 和 `shared/` 与基线一致，既有文字输入和字体逻辑没有改动。

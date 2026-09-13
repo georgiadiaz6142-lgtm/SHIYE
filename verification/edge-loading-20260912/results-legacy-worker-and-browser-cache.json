@@ -1,0 +1,45 @@
+{
+  "checks": [
+    {
+      "name": "legacy-worker-and-browser-cache",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": [],
+  "transport": {
+    "requests": 1,
+    "measurements": [
+      {
+        "ok": true,
+        "messages": [
+          "result"
+        ],
+        "elapsedMs": 19,
+        "resources": [
+          {
+            "transferSize": 3526914,
+            "encodedBodySize": 3526614,
+            "decodedBodySize": 10964323
+          }
+        ]
+      },
+      {
+        "ok": true,
+        "messages": [
+          "ready",
+          "result"
+        ],
+        "elapsedMs": 17,
+        "resources": [
+          {
+            "transferSize": 0,
+            "encodedBodySize": 3526614,
+            "decodedBodySize": 10964323
+          }
+        ]
+      }
+    ]
+  }
+}

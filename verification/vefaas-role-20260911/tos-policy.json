@@ -1,0 +1,16 @@
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "tos:GetObject",
+        "tos:PutObject",
+        "tos:DeleteObject"
+      ],
+      "Resource": [
+        "trn:tos:::shiye-private-20260911-c7f2/shiye/*",
+        "trn:tos:::shiye-private-20260911-c7f2/shiye-verification/*"
+      ]
+    }
+  ]
+}

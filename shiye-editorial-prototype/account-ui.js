@@ -1,7 +1,7 @@
 'use strict';
 function profileAvatar(){return currentIdentity?.avatar?`<img src="${esc(currentIdentity.avatar)}" alt="个人头像">`:esc((currentIdentity?.username||'S').slice(0,1));}
 function reloadIdentity(view='home',setup=false){sessionStorage.setItem('shiye-auth-landing',view);if(setup)sessionStorage.setItem('shiye-account-setup','yes');location.reload();}
-async function accountRequest(path='',body){const response=await fetch('/api/account'+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',headers:body===undefined?{}:{'Content-Type':'application/json'},...(body!==undefined?{body:JSON.stringify(body)}:{})});const value=await response.json();if(!response.ok)throw Error(value.error?.message||'操作失败，请重试。');return value;}
+async function accountRequest(path='',body){return ShiyeAPI.json('/api/account'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},...(body!==undefined?{body:JSON.stringify(body)}:{})});}
 async function openAccountPanel(){
  try{
   const data=await accountRequest();

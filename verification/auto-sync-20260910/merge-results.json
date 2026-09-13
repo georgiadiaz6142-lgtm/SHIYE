@@ -1,9 +1,0 @@
-{
-  "status": "PASS",
-  "checks": [
-    "stale deletion keeps concurrent newer content",
-    "edit after remote deletion survives as a copy",
-    "asset conflict keeps both names and remaps local book references",
-    "archived sticker keeps book reference"
-  ]
-}

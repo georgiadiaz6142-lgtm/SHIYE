@@ -52,13 +52,9 @@ window.ShiyeSegmentation = function createWorkshop(bridge) {
     e.onchange=()=>{const u=document.querySelector('[data-action="seg-retouch-undo"]'),r=document.querySelector('[data-action="seg-retouch-redo"]');if(u)u.disabled=!e.canUndo;if(r)r.disabled=!e.canRedo;};e.render();
   }
   async function api(path, body, signal) {
-    let response;
-    try { response = await fetch('/api'+path, { method:body===undefined?'GET':'POST', headers:body===undefined?{}:{'Content-Type':'application/json'}, body:body===undefined?undefined:JSON.stringify(body), signal }); }
-    catch { throw fault('LOCAL_CONNECTION_FAILED','无法连接服务。请保留页面，检查网络后查询原任务状态，避免重复提交。'); }
-    let value;try {value=await response.json();}catch{throw Error('当前预览未连接任务后端。本地小剪刀仍可使用。');}
-    if(!response.ok)throw fault(value.error?.errorType,value.error?.message||'操作未完成，请重试。');
-    return value;
+    return ShiyeAPI.json('/api'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal});
   }
+
   const live=()=>data.mode==='live';
   const button=(name,label,disabled=false)=>`<button class="button outline small" data-action="seg-${name}" ${disabled?'disabled':''}>${label}</button>`;
   const busy=()=>data.busy||['queued','running'].includes(data.job?.status);

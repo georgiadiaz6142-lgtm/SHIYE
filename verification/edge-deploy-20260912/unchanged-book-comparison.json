@@ -1,0 +1,20 @@
+[
+  {
+    "item": "手账翻页",
+    "localSha256": "6225ee8748c3439668dbdcf5c83a36ac53c04af9faf5dd902c3b0996314976bb",
+    "publicSha256": "6225ee8748c3439668dbdcf5c83a36ac53c04af9faf5dd902c3b0996314976bb",
+    "same": true
+  },
+  {
+    "item": "主样式",
+    "localSha256": "1dc6c18797def8b803f5ae5108ec3fb590cb226a96851cfb74930493ba0af262",
+    "publicSha256": "1dc6c18797def8b803f5ae5108ec3fb590cb226a96851cfb74930493ba0af262",
+    "same": true
+  },
+  {
+    "item": "首页书本",
+    "localSha256": "0a779c425fdc6463e1d99d1b2f54bfcbbe7a943d5f8783a1112c6cbed8cf0214",
+    "publicSha256": "0a779c425fdc6463e1d99d1b2f54bfcbbe7a943d5f8783a1112c6cbed8cf0214",
+    "same": true
+  }
+]

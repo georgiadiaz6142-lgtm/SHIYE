@@ -45,7 +45,7 @@ export type Session = {
 export type Job = {
   jobId: string; owner: string; operationId: string; fingerprint: string; kind: 'auto' | 'refine';
   status: Status; input: StartInput | RefineInput; createdAt: number; updatedAt: number;
-  expiresAt: number; provider: 'mock' | 'baidu'; providerAttemptedAt?: number; providerRequestId?: string; candidates?: Candidate[];
+  expiresAt: number; provider: 'mock' | 'baidu'; executionId?:string; leaseUntil?:number; providerAttemptedAt?: number; providerRequestId?: string; candidates?: Candidate[];
   error?: ApiError; mock: boolean; cost: { currency: 'USD'; amount: 0; simulated: true } | { currency: 'CNY'; amount: null; simulated: false };
 };
 export type Media = { mediaId: string; owner: string; imageSessionId: string; expiresAt: number };
@@ -66,7 +66,7 @@ const sessionSchema = z.object({
 const jobSchema = z.object({
   jobId:id,owner:z.string().min(1),operationId:id,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),kind:z.enum(['auto','refine']),
   status:z.enum(['queued','running','succeeded','failed','cancelled','expired']),input:z.union([startJob,refineJob]),
-  createdAt:timestamp,updatedAt:timestamp,expiresAt:timestamp,provider:z.enum(['mock','baidu']),providerAttemptedAt:timestamp.optional(),providerRequestId:z.string().optional(),
+  createdAt:timestamp,updatedAt:timestamp,expiresAt:timestamp,provider:z.enum(['mock','baidu']),executionId:id.optional(),leaseUntil:timestamp.optional(),providerAttemptedAt:timestamp.optional(),providerRequestId:z.string().optional(),
   candidates:z.array(candidateSchema).optional(),error:z.object({errorType:z.string(),message:z.string(),retryable:z.boolean()}).strict().optional(),
   mock:z.boolean(),cost:z.union([z.object({currency:z.literal('USD'),amount:z.literal(0),simulated:z.literal(true)}).strict(),z.object({currency:z.literal('CNY'),amount:z.null(),simulated:z.literal(false)}).strict()]),
 }).strict();

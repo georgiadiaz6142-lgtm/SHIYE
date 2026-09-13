@@ -1,5 +1,0 @@
-{
-  "checks": [],
-  "errors": [],
-  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'false' !== 'true'\n\n    at /private/tmp/shiye-shelf-menu.cjs:2:1075"
-}

@@ -3,13 +3,50 @@
 // This experiment is attached to the existing scissors and its save flow.
 // No uploads, API credentials, model requests, or IndexedDB writes happen here.
 window.ShiyeEdge = (() => {
-  const sessions = new WeakMap(); let running = null, queued = null;
+  const sessions = new WeakMap(); let running = null, queued = null, engine = null, requestId = 0;
+  const LOAD_TIMEOUT = 60000, COMPUTE_TIMEOUT = 20000;
+  function stopEngine(entry, error) {
+    if(!entry)return;
+    clearTimeout(entry.timer);clearTimeout(entry.pending?.timer);
+    entry.worker.terminate();entry.rejectReady(error);entry.pending?.reject(error);entry.pending=null;
+    if(engine===entry)engine=null;
+  }
+  function prepareEngine(w) {
+    if(engine?.owner===w)return engine;
+    stopEngine(engine,Error('已切换照片'));
+    const entry={owner:w,worker:new Worker('edgecut-worker.js?v=20260912-reuse-1'),initialized:false,pending:null,timer:null};
+    engine=entry;
+    entry.ready=new Promise((resolve,reject)=>{entry.resolveReady=resolve;entry.rejectReady=reject;});
+    entry.timer=setTimeout(()=>stopEngine(entry,Error('贴边工具加载超时，请检查网络后重试。照片和选区已保留。')),LOAD_TIMEOUT);
+    entry.worker.onerror=()=>stopEngine(entry,Error(entry.initialized?'贴边计算中断，请重试。':'贴边工具加载失败，请检查网络后重试。'));
+    entry.worker.onmessage=({data})=>{
+      if(engine!==entry)return;
+      if(data.type==='ready'){
+        clearTimeout(entry.timer);entry.initialized=true;entry.resolveReady();
+      }else if(data.type==='load-error'){
+        stopEngine(entry,Error('贴边工具初始化失败，请重新加载工具后重试。'));
+      }else if(data.type==='result'&&entry.pending?.id===data.id){
+        const pending=entry.pending;entry.pending=null;clearTimeout(pending.timer);
+        if(data.ok)pending.resolve(data);else pending.reject(Error(data.message||'分割计算失败，请调整选区后重试。'));
+      }
+    };
+    return entry;
+  }
+  function segment(entry, input) {
+    return new Promise((resolve,reject)=>{
+      const id=++requestId;
+      entry.pending={id,resolve,reject,timer:setTimeout(()=>stopEngine(entry,Error('贴边计算超过 20 秒，请调整选区后重试。照片和上次结果已保留。')),COMPUTE_TIMEOUT)};
+      try{entry.worker.postMessage({type:'segment',id,input},[input.rgba.buffer]);}
+      catch(error){stopEngine(entry,error);}
+    });
+  }
   const session = w => { if (!sessions.has(w)) sessions.set(w, { cache: new Map(), confirmed: new Map(), last: new Map(), enabled: true, tool: null, message: '', blocked: null, more: false }); return sessions.get(w); };
   const signature = r => JSON.stringify({ x:r.x, y:r.y, w:r.w, h:r.h, points:r.points, seeds:r.edgeSeeds || [] });
   const current = w => w === workshop && currentView === 'workshop' && w.step === 1 && !segmentedWorkshop?.active;
   const result = (w, r) => {if(!r)return;const s=session(w),key=signature(r),saved=s.confirmed.get(r.edgeId);return s.cache.get(key)||(saved?.key===key?saved.result:undefined);};
   const active = w => w.crops[w.activeCrop ?? w.crops.length - 1];
-  const cancel = () => { if(queued){clearTimeout(queued.timer);queued=null;} if (running) { running.worker?.terminate(); clearTimeout(running.timer); running.reject?.(Error('已取消本次计算')); running = null; } };
+  const cancel = (release=true) => { if(queued){clearTimeout(queued.timer);queued=null;} if(running||release)stopEngine(engine,Error('已取消本次计算'));running=null; };
+  window.addEventListener('pagehide',()=>cancel());
   const button = (action, label, disabled=false, selected=false) => `<button class="chip ${selected?'active':''}" data-action="edge-${action}" ${disabled?'disabled':''}>${label}</button>`;
 
   function mount(w) {
@@ -28,7 +65,7 @@ window.ShiyeEdge = (() => {
       stage.after(panel);aside.remove();return;
     }
     const selectionList=aside.querySelector('.crop-selection-list');
-    const hint=busy?'正在更新边缘…':s.tool==='keep'?'在漏掉的地方点一下，自动补回来。':s.tool==='remove'?'在多余的地方点一下，自动去掉。':r?'绿色部分会留下。看看有没有多了或少了。':(w.cropMode==='rect'?'拖出一个框，松手后自动贴边。':'大致圈住想留下的东西，不必贴着边缘。');
+    const hint=busy?(running.phase==='loading'?'正在准备贴边工具，首次加载可能需要一点时间…':'正在更新边缘…'):s.tool==='keep'?'在漏掉的地方点一下，自动补回来。':s.tool==='remove'?'在多余的地方点一下，自动去掉。':r?'绿色部分会留下。看看有没有多了或少了。':(w.cropMode==='rect'?'拖出一个框，松手后自动贴边。':'大致圈住想留下的东西，不必贴着边缘。');
     aside.innerHTML=`<div id="edge-picked"></div><details class="edge-more" ${s.more?'open':''}><summary>更多调整</summary><div class="edge-more-buttons">${button('range','调整圈选',busy||!r)}${button('redraw','重新圈',busy||!r)}${button('clear','清空修正点',busy||!r?.edgeSeeds?.length)}<button class="chip" data-action="redo-crop" ${busy||!w.cropFuture?.length?'disabled':''}>恢复撤销</button></div></details>`;
     aside.querySelector('details').addEventListener('toggle',e=>{s.more=e.target.open;});
     if(selectionList&&w.crops.length>1)aside.querySelector('details').appendChild(selectionList);
@@ -42,10 +79,9 @@ window.ShiyeEdge = (() => {
     const photoTools=document.createElement('div');photoTools.className='edge-photo-tools';
     photoTools.innerHTML='<button class="text-link muted edge-change-photo" data-action="workshop-reset">换一张照片</button>';
     stage.before(photoTools);
-    stage.after(panel);
     panel.appendChild(aside.querySelector('#edge-picked'));
     panel.appendChild(aside.querySelector('.edge-more'));
-    aside.remove();
+    aside.classList.add('edge-sidebar');aside.setAttribute('aria-label','照片修边工具');aside.replaceChildren(panel);
     const overlay=document.createElement('div');overlay.className='edge-overlay';stage.appendChild(overlay);
     if(display){const img=document.createElement('img');img.src=display.overlay;img.alt='分割后保留区域';img.className='edge-mask';overlay.appendChild(img);}
     for(const [i,p] of (r?.edgeSeeds||[]).entries()){
@@ -76,8 +112,8 @@ window.ShiyeEdge = (() => {
   }
 
   async function compute(w) {
-    cancel(); const s=session(w),r=active(w);if(!r)return;
-    const key=signature(r),navigation=navigationVersion,job={w,key,worker:null,timer:null,reject:null};running=job;
+    cancel(false); const s=session(w),r=active(w);if(!r)return;
+    const key=signature(r),navigation=navigationVersion,job={w,key,phase:engine?.initialized?'computing':'loading'};running=job;
     const valid=()=>running===job&&current(w)&&navigationVersion===navigation&&signature(active(w)||{})===key;
     s.blocked=null;s.message='正在更新边缘…';renderWorkshop();
     try {
@@ -86,13 +122,10 @@ window.ShiyeEdge = (() => {
       input.width=Math.max(8,Math.round(image.width*scale));input.height=Math.max(8,Math.round(image.height*scale));
       const context=input.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,input.width,input.height);
       const pixels=context.getImageData(0,0,input.width,input.height);
-      const output=await new Promise((resolve,reject)=>{
-        job.reject=reject;job.worker=new Worker('edgecut-worker.js');
-        job.timer=setTimeout(()=>reject(Error('本次计算超过 20 秒，请缩小选区后重试')),20000);
-        job.worker.onerror=()=>reject(Error('贴边工具加载失败，请刷新后重试'));
-        job.worker.onmessage=({data})=>data.ok?resolve(data):reject(Error(data.message));
-        job.worker.postMessage({rgba:pixels.data,width:input.width,height:input.height,region:clone(r),seeds:r.edgeSeeds||[]},[pixels.data.buffer]);
-      });
+      const entry=prepareEngine(w);await entry.ready;
+      if(!valid())return;
+      job.phase='computing';renderWorkshop();
+      const output=await segment(entry,{rgba:pixels.data,width:input.width,height:input.height,region:clone(r),seeds:r.edgeSeeds||[]});
       if(!valid())return;
       // Alpha is computed by GrabCut. RGB comes exclusively from the existing
       // normalized photo; the rough polygon is never used as a Canvas clip.
@@ -118,7 +151,7 @@ window.ShiyeEdge = (() => {
       if(s.cache.size>16)s.cache.delete(s.cache.keys().next().value);
       s.message='绿色是计算出的保留区域。多余部分点“排除”，漏掉部分点“保留”，再重新计算。';
     } catch(error) { if(valid()){s.blocked=key;s.message=error.message||'计算未完成，请调整选区后重试';} }
-    finally {job.worker?.terminate();clearTimeout(job.timer);if(running===job){running=null;if(current(w))renderWorkshop();}}
+    finally {if(running===job){running=null;if(current(w))renderWorkshop();}}
   }
 
   async function action(name) {
@@ -151,6 +184,7 @@ window.ShiyeEdge = (() => {
     document.querySelector('#edge-panel')?._edgeCleanup?.();
     if(queued){clearTimeout(queued.timer);queued=null;}
     if(running&&(!current(running.w)||signature(active(running.w)||{})!==running.key))cancel();
+    if(engine&&(engine.owner!==workshop||currentView!=='workshop'||workshop.step===0||segmentedWorkshop?.active||!session(workshop).enabled))cancel();
   }
   return {mount,mountPreview,action,beforeRender,cancel,isManual:w=>!session(w).enabled,resetTool:()=>{if(workshop)session(workshop).tool=null;session(workshop).adjusting=false;}};
 })();

@@ -1,0 +1,11 @@
+{
+  "httpStatus": 200,
+  "result": {
+    "status": "failed",
+    "runId": "e9d72439-72e8-4b69-adbc-3d96304abaa8",
+    "prefix": "shiye-verification/e9d72439-72e8-4b69-adbc-3d96304abaa8/",
+    "stage": "empty-path",
+    "checks": [],
+    "httpStatus": 404
+  }
+}

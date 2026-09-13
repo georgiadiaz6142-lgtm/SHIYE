@@ -1,4 +1,0 @@
-PASS home-and-mock-refine-blob-save-reload
-PASS source-page-save-failure-retry
-PASS mobile-candidate-prompts-layout
-{"out":"/Users/song/Documents/拾页/verification/stage1-20260908/baidu-regression-run-01","layer":"real local HTTP backend with synthetic fixtures; NOT real model validation","checks":[{"name":"home-and-mock-refine-blob-save-reload","status":"PASS"},{"name":"source-page-save-failure-retry","status":"PASS"},{"name":"mobile-candidate-prompts-layout","status":"PASS"}],"errors":[],"external":[],"screenshots":["home.png","candidates.png","transparent-preview.png","collection-restored.png","mobile-candidates.png"]}

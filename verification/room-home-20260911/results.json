@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Account login reachable while scene loads",
+    "Both entry choices retained; silent entry stays silent",
+    "Book turns; login dialog pauses scene and auto paging, closing resumes",
+    "Create → existing account login → shelf; scene disposed",
+    "Authenticated avatar opens account panel; create goes directly to shelf",
+    "Private/source paths remain inaccessible",
+    "Mobile sound entry, room and book layouts, no horizontal overflow",
+    "Half-window layout and day/night toggle retained"
+  ],
+  "errors": [],
+  "failed": []
+}

@@ -1,0 +1,74 @@
+{
+  "files": [
+    {
+      "name": "edgecut.js",
+      "status": 200,
+      "sha256": "255c88767c017f36970ab7dc11dbc50b7efb06fefa829b5b9fb27ee2e9642f1c"
+    },
+    {
+      "name": "edgecut-worker.js",
+      "status": 200,
+      "sha256": "797df23fbd60048c13a75db7e5aa140f52bec3d6ee8d26e9f70449e44c736c47"
+    },
+    {
+      "name": "edgecut.css",
+      "status": 200,
+      "sha256": "c6c9f3dc19650a60e64e3513c04ede0cb795b3196ef7ae657504ed365491db8c"
+    }
+  ],
+  "assets": [
+    {
+      "status": 200,
+      "encoding": "gzip",
+      "length": "3526614",
+      "cache": "public, max-age=31536000, immutable"
+    },
+    {
+      "status": 200,
+      "encoding": "gzip",
+      "length": "3526614",
+      "cache": "public, max-age=31536000, immutable"
+    }
+  ],
+  "runs": [
+    {
+      "ready": 1,
+      "initMs": 5003,
+      "totalMs": 5688,
+      "values": [
+        {
+          "ok": true,
+          "id": 1,
+          "computeMs": 373,
+          "foregroundPixels": 56721
+        },
+        {
+          "ok": true,
+          "id": 2,
+          "computeMs": 300,
+          "foregroundPixels": 56721
+        }
+      ]
+    },
+    {
+      "ready": 1,
+      "initMs": 1286,
+      "totalMs": 1965,
+      "values": [
+        {
+          "ok": true,
+          "id": 1,
+          "computeMs": 366,
+          "foregroundPixels": 56721
+        },
+        {
+          "ok": true,
+          "id": 2,
+          "computeMs": 303,
+          "foregroundPixels": 56721
+        }
+      ]
+    }
+  ],
+  "status": "PASS"
+}

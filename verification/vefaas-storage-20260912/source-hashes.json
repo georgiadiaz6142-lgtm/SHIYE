@@ -1,0 +1,5 @@
+{
+  "server/tos-check-app.ts": "945d267dde212e626d64eda98b3de4c1d85cd702917fb20dee6b604b529a63c6",
+  "server/tos-smoke.ts": "7d7ff0cce0c7875742775652db5d256ce4cbd2c6dcc8f79175e085c0efaa056b",
+  "server/tests/vefaas-credentials.test.ts": "7d3fa26fe1f23a5199baa644e9ec7c0cc53a9fd86933a5e89054a916c5d055d8"
+}

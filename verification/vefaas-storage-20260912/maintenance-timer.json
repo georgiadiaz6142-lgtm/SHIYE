@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "code": null,
+  "message": "Timer trigger created.",
+  "data": {
+    "FunctionId": "9bm54f2f",
+    "Id": "pbp8s3ytna",
+    "Name": "shiye_maintenance",
+    "Enabled": true,
+    "Crontab": "*/15 * * * *",
+    "EnableConcurrency": false,
+    "Retries": 0
+  }
+}
