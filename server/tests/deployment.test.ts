@@ -72,7 +72,8 @@ test('gateway-style requests enforce public Host/Origin, secure cookies, authori
   assert.equal((await call('/')).status, 200);
   assert.equal((await call('/', 'GET', undefined, {'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document'})).status, 200);
   assert.equal((await call('/index.html', 'GET', undefined, {'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document'})).status, 200);
-  assert.equal((await call('/', 'GET', undefined, {'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate'})).status, 403);
+  assert.equal((await call('/', 'GET', undefined, {'sec-fetch-site':'cross-site'})).status, 200);
+  assert.equal((await call('/', 'GET', undefined, {'sec-fetch-site':'cross-site','sec-fetch-mode':'cors'})).status, 403);
   assert.equal((await call('/', 'GET', undefined, {origin:'https://foreign.example','sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document'})).status, 403);
   assert.equal((await call('/api/health')).status, 200);
   const rejectedHeaders:Record<string,string>[] = [{host:'evil.example'}, {host:'evil.example','x-forwarded-host':new URL(origin).host}, {origin:'https://foreign.example'}, {origin:'null'}, {'sec-fetch-site':'cross-site'}];

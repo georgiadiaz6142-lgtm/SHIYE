@@ -17,11 +17,13 @@ export function requestPolicy(configuredOrigin?: string): RequestHandler {
   return (req, res, next) => {
     const origin = external ?? `http://127.0.0.1:${req.socket.localPort}`;
     const crossSite = req.headers['sec-fetch-site'] === 'cross-site';
+    const fetchMode = req.headers['sec-fetch-mode'];
+    const fetchDestination = req.headers['sec-fetch-dest'];
     const publicEntryNavigation = crossSite &&
       ['GET', 'HEAD'].includes(req.method) &&
       ['/', '/index.html'].includes(req.path) &&
-      req.headers['sec-fetch-mode'] === 'navigate' &&
-      req.headers['sec-fetch-dest'] === 'document';
+      (fetchMode === undefined || fetchMode === 'navigate') &&
+      (fetchDestination === undefined || fetchDestination === 'document');
     res.locals.secureCookies = !!external;
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
