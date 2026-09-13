@@ -8,7 +8,7 @@
 
 ## 当前预览
 
-- 地址：[http://127.0.0.1:4176/](http://127.0.0.1:4176/)
+- 地址：[拾页线上预览](https://sm994o19l0g1rajv9qfqf.apigateway-cn-beijing.volceapi.com/)
 - 页面标题：拾页 SHIYE — 把日子，慢慢收好。
 - 当前入口包含书房首页、手帐和贴纸制作；历史外观描述与旧实验不作为当前版本入口。
 - 入口文件：`shiye-editorial-prototype/index.html`。
